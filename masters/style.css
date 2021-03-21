@@ -1,8 +1,14 @@
 body {
-    margin-top: 2em;
+    margin-top: 1em;
     margin-right: 2em;
     max-width: 49em;
 }
 p {
     font-size: 17;
+}
+
+.date{
+    text-align: left;
+    font-style: italic;
+    font: italic 17px Roboto;
 }
