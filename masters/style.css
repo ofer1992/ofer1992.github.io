@@ -12,3 +12,22 @@ p {
     font-style: italic;
     font: italic 17px Roboto;
 }
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+.quote {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+  background: #eee;
+  font-size: 19;
+  font-style: italic;
+  padding: 1em;
+  border-radius: 1em;
+}
