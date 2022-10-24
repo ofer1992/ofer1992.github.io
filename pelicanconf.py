@@ -1,5 +1,5 @@
 AUTHOR = 'Ofer Yehuda'
-SITENAME = 'The Title'
+SITENAME = 'Thoughts'
 SITEURL = ''
 
 PATH = 'content'
