@@ -22,7 +22,7 @@ AUTHOR_FEED_RSS = None
 #          ('You can modify those links in your config file', '#'),)
 
 # Social widget
-SOCIAL = (('github', 'htpps://github.com/ofer1992'),)
+SOCIAL = (('github', 'https://github.com/ofer1992'),)
 
 PLUGINS = ['pelican.plugins.render_math']
 
