@@ -30,7 +30,7 @@ which only contains algebraic manipulations and calculus. While the algebraic pe
 &lt;/p&gt;
 &lt;div class="math"&gt;$$x''=-x$$&lt;/div&gt;
 &lt;p&gt;
-It can be solved algebraically using the &lt;em&gt;characteristic polynomial&lt;/em&gt; to get the solutions &lt;span class="math"&gt;\(x=\sin t, \cos t\)&lt;/span&gt;, but we will consider a different approach. Let's define a new variable &lt;span class="math"&gt;\(v=x'\)&lt;/span&gt;. This transforms the second-order differential equation to a first-order system of two equations
+It can be solved algebraically using the &lt;em&gt;characteristic polynomial&lt;/em&gt; to get two basis solutions &lt;span class="math"&gt;\(x_1(t)=\sin t\)&lt;/span&gt; and &lt;span class="math"&gt;\(x_2(t)=\cos t\)&lt;/span&gt;, but we will consider a different approach. Let's define a new variable &lt;span class="math"&gt;\(v=x'\)&lt;/span&gt;. This transforms the second-order differential equation to a first-order system of two equations
 &lt;/p&gt;
 &lt;div class="math"&gt;$$\begin{align*}
 x' &amp;amp;= v\\
