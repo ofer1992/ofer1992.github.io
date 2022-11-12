@@ -1,5 +1,157 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Thoughts - Math</title><link href="https://ofer1992.github.io/" rel="alternate"></link><link href="https://ofer1992.github.io/feeds/math.atom.xml" rel="self"></link><id>https://ofer1992.github.io/</id><updated>2022-10-24T13:10:00+03:00</updated><entry><title>Adventures In Differential Equations I</title><link href="https://ofer1992.github.io/adventures-in-differential-equations-i.html" rel="alternate"></link><published>2022-10-24T13:10:00+03:00</published><updated>2022-10-24T13:10:00+03:00</updated><author><name>Ofer Yehuda</name></author><id>tag:ofer1992.github.io,2022-10-24:/adventures-in-differential-equations-i.html</id><summary type="html">&lt;h1&gt;On the insanity of Differential Equations books&lt;/h1&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Integrably Sorry - Math</title><link href="https://ofer1992.github.io/" rel="alternate"></link><link href="https://ofer1992.github.io/feeds/math.atom.xml" rel="self"></link><id>https://ofer1992.github.io/</id><updated>2022-11-12T20:30:00+02:00</updated><entry><title>Adventures In Differential Equations II</title><link href="https://ofer1992.github.io/adventures-in-differential-equations-ii.html" rel="alternate"></link><published>2022-11-12T20:30:00+02:00</published><updated>2022-11-12T20:30:00+02:00</updated><author><name>Ofer Yehuda</name></author><id>tag:ofer1992.github.io,2022-11-12:/adventures-in-differential-equations-ii.html</id><summary type="html">&lt;h1&gt;Several outlooks on differential equations&lt;/h1&gt;
+&lt;p&gt;In math as in life, the same object of study can be looked upon from multiple perspectives. Each perspective offers a different insight into a problem, and often the same problem can be very difficult from one perspective, yet clear from another. &lt;/p&gt;
+&lt;p&gt;In this post …&lt;/p&gt;</summary><content type="html">&lt;h1&gt;Several outlooks on differential equations&lt;/h1&gt;
+&lt;p&gt;In math as in life, the same object of study can be looked upon from multiple perspectives. Each perspective offers a different insight into a problem, and often the same problem can be very difficult from one perspective, yet clear from another. &lt;/p&gt;
+&lt;p&gt;In this post I will discuss three different ways to think about differential equations.&lt;/p&gt;
+&lt;h2&gt;The algebraic perspective&lt;/h2&gt;
+&lt;p&gt;The algebraic way to think about differential equations is perhaps the most familiar, as at least on first sight it might look similar to the regular equations we encounter in school. Some examples are:
+&lt;/p&gt;
+&lt;div class="math"&gt;$$x''+x=0$$&lt;/div&gt;
+&lt;p&gt;
+or
+&lt;/p&gt;
+&lt;div class="math"&gt;$$x'=x^{\frac15}$$&lt;/div&gt;
+&lt;p&gt;
+where the variable &lt;span class="math"&gt;\(x\)&lt;/span&gt; stands for an unknown function of a variable &lt;span class="math"&gt;\(t\)&lt;/span&gt;, and &lt;span class="math"&gt;\(x'\)&lt;/span&gt; is the derivative etc. This presentation suggests that some algebraic manipulations will reveal the answer, again like solving equations in school. &lt;/p&gt;
+&lt;p&gt;The technique of separation of variables (mentioned in the &lt;a href="https://ofer1992.github.io/adventures-in-differential-equations-i.html"&gt;previous post&lt;/a&gt;) belongs to this category. For example, the second example above can be solved by
+&lt;/p&gt;
+&lt;div class="math"&gt;$$\begin{align*}
+x' &amp;amp;= x^\frac15\\
+x^{-\frac15}x'&amp;amp;=1\\
+\int x^{-\frac15}x'dt&amp;amp;=\int 1dt\\
+\frac54x^\frac45+C &amp;amp;=t\\
+x &amp;amp;=(\frac45t+C)^\frac54
+\end{align*}$$&lt;/div&gt;
+&lt;p&gt;
+which only contains algebraic manipulations and calculus. While the algebraic perspective is straightforward, it doesn't tell the whole story, and it might leave us hanging when the equation is (or seems) insoluble.&lt;/p&gt;
+&lt;h2&gt;The geometric perspective&lt;/h2&gt;
+&lt;p&gt;This perspective is very much the focus of the book &lt;em&gt;"Nonlinear Dynamics and Chaos"&lt;/em&gt; by Steven Strogatz, at least the part I read so far (which is admittedly not much). Let's consider the equation
+&lt;/p&gt;
+&lt;div class="math"&gt;$$x''=-x$$&lt;/div&gt;
+&lt;p&gt;
+It can be solved algebraically using the &lt;em&gt;characteristic polynomial&lt;/em&gt; to get the solutions &lt;span class="math"&gt;\(x=\sin t, \cos t\)&lt;/span&gt;, but we will consider a different approach. Let's define a new variable &lt;span class="math"&gt;\(v=x'\)&lt;/span&gt;. This transforms the second-order differential equation to a first-order system of two equations
+&lt;/p&gt;
+&lt;div class="math"&gt;$$\begin{align*}
+x' &amp;amp;= v\\
+v' &amp;amp;= -x
+\end{align*}$$&lt;/div&gt;
+&lt;p&gt;
+We can imagine the &lt;span class="math"&gt;\((x,v)\)&lt;/span&gt; plane.&lt;/p&gt;
+&lt;p style="width:50%; margin:auto"&gt;
+  &lt;img src="https://ofer1992.github.io/images/diff_eq2/grid.png" /&gt;
+&lt;/p&gt;
+
+&lt;p&gt;We can think of these equations as defining a vector field over the plane
+&lt;/p&gt;
+&lt;div class="math"&gt;$$f(x,v)=(v,-x)$$&lt;/div&gt;
+&lt;p&gt;
+We usually visualize vector fields by drawing arrows originating from points in the plane, with the size indicating magnitude:&lt;/p&gt;
+&lt;p style="width:50%; margin:auto"&gt;
+  &lt;img src="https://ofer1992.github.io/images/diff_eq2/vec_field.png" /&gt;
+&lt;/p&gt;
+
+&lt;p&gt;If we imagine a particle starting from some point on the plane, the vector field tells us where it will flow on the next moment. We can further imagine it flowing from moment to moment, and get a trajectory, or a curve, through the plane. Here is a plot of curves from three different starting points, generated using the same process:&lt;/p&gt;
+&lt;p style="width:50%; margin:auto"&gt;
+  &lt;img src="https://ofer1992.github.io/images/diff_eq2/flow.png" /&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Let's call the curve we got &lt;span class="math"&gt;\(\phi\)&lt;/span&gt;. So &lt;span class="math"&gt;\(\phi\)&lt;/span&gt; is a function mapping time &lt;span class="math"&gt;\(t\)&lt;/span&gt; to a point on the plane, and from how we "defined" it, the tangent to the curve at each point on the curve &lt;span class="math"&gt;\((\phi_x(t),\phi_v(t))\)&lt;/span&gt; is the vector field at that point &lt;span class="math"&gt;\(f(\phi_x(t),\phi_v(t))\)&lt;/span&gt;. I claim that &lt;span class="math"&gt;\(\phi_x\)&lt;/span&gt;, the first coordinate of the curve, is a solution to the differential equation:&lt;/p&gt;
+&lt;!-- $$\begin{align*}
+\phi_x''&amp;=\frac{d\phi_x}{d^2t}\\
+&amp;=\frac{d}{dt}\left(\frac{d\phi_x}{dt}\right)\\
+&amp;=\frac{d}{dt}\left(f_x(\phi_x,\phi_v)\right)\\
+&amp;=\frac{d}{dt}(\phi_v)\\
+&amp;=f_v(\phi_x,\phi_v)\\
+&amp;=-\phi_x\\
+\end{align*}$$ --&gt;
+
+&lt;div class="math"&gt;$$\begin{align*}
+\phi_x''&amp;amp;=\left(\phi_x'\right)'\\
+&amp;amp;=\left(f_x(\phi_x,\phi_v)\right)'\\
+&amp;amp;=\phi_v'\\
+&amp;amp;=f_v(\phi_x,\phi_v)\\
+&amp;amp;=-\phi_x\\
+\end{align*}$$&lt;/div&gt;
+&lt;p&gt;
+In fact, any curve that satisfies this property, that the tangent to the curve at a point is equal to the vector field at that point, is a solution to the differential equation. The beauty of this approach is that it is intuitively clear from the picture of the vector field that solutions exist for every initial condition, and how the solution will look like (for example, that it is periodic). We can also read off qualitative properties, like stationary points.&lt;/p&gt;
+&lt;p&gt;Of course, existence (and uniqueness) of solutions requires a proof, which is not trivial. Still, looking at the picture shows it to be plausible, whereas looking at the differential equation gives us no such clue.&lt;/p&gt;
+&lt;h2&gt;The operator perspective&lt;/h2&gt;
+&lt;p&gt;On this perspective I have little to say, as I still don't know much about it. Still, I find it intriguing, but I warn that this section is more of a "ramble".&lt;/p&gt;
+&lt;p&gt;The most general definition of differential equation of order &lt;span class="math"&gt;\(n\)&lt;/span&gt; as an equation
+&lt;/p&gt;
+&lt;div class="math"&gt;$$f(t,x,x',\dots,x^{(n)})=0$$&lt;/div&gt;
+&lt;p&gt;
+where &lt;span class="math"&gt;\(f\)&lt;/span&gt; is smooth and a solution is a function &lt;span class="math"&gt;\(\phi\)&lt;/span&gt; that satisfies this equation
+&lt;/p&gt;
+&lt;div class="math"&gt;$$f(t,\phi,\phi',\dots,\phi^{(n)})=0$$&lt;/div&gt;
+&lt;p&gt;
+In the case of a linear differential equation then &lt;span class="math"&gt;\(f\)&lt;/span&gt; is a linear operator, which we can for convenience note as &lt;span class="math"&gt;\(L\)&lt;/span&gt;. If we take the level of abstraction a bit higher, we can think of &lt;span class="math"&gt;\(L\)&lt;/span&gt; as linear operator on the vector space of smooth functions. For example, we can think of the equation &lt;span class="math"&gt;\(x''-x'+x=0\)&lt;/span&gt; as defining an operator &lt;span class="math"&gt;\(L(\phi)(t)=\phi''(t)-\phi'(t)+\phi(t)\)&lt;/span&gt; that maps &lt;span class="math"&gt;\(\phi\)&lt;/span&gt; to some new function &lt;span class="math"&gt;\(\psi\)&lt;/span&gt; so defined.  Then a solution to the differential equation is simply a function that maps to the zero function!&lt;/p&gt;
+&lt;p&gt;Now, in linear algebra we talk about the kernel of linear transformations, the set of vectors mapped to the zero vector, and the various cases where it is or is not trivial. To be honest, I don't know how much of that carries over to the case above, since some care is required (for example, the space of smooth functions is infinite-dimensional). Still, something to think about.&lt;/p&gt;
+&lt;!-- vis notebook: https://colab.research.google.com/drive/1T-uaikMXWYToB7b2tDaMCo82q828nd-y --&gt;
+
+&lt;script type="text/javascript"&gt;if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width &lt; 768) ? "left" : align;
+        indent = (screen.width &lt; 768) ? "0em" : indent;
+        linebreak = (screen.width &lt; 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+&lt;/script&gt;</content><category term="Math"></category></entry><entry><title>Adventures In Differential Equations I</title><link href="https://ofer1992.github.io/adventures-in-differential-equations-i.html" rel="alternate"></link><published>2022-10-24T13:10:00+03:00</published><updated>2022-10-24T13:10:00+03:00</updated><author><name>Ofer Yehuda</name></author><id>tag:ofer1992.github.io,2022-10-24:/adventures-in-differential-equations-i.html</id><summary type="html">&lt;h1&gt;On the insanity of Differential Equations books&lt;/h1&gt;
 &lt;p&gt;When one wishes to study the topic of Differential Equations, there is no shortage (and perhaps an overabundance) of books. Thus I was immediately confronted with a first difficulty: which book to pick? &lt;!-- add something about difference from calculus? --&gt;
 After some googling and browsing through Reddit I settled on …&lt;/p&gt;</summary><content type="html">&lt;h1&gt;On the insanity of Differential Equations books&lt;/h1&gt;
 &lt;p&gt;When one wishes to study the topic of Differential Equations, there is no shortage (and perhaps an overabundance) of books. Thus I was immediately confronted with a first difficulty: which book to pick? &lt;!-- add something about difference from calculus? --&gt;
