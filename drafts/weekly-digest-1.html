@@ -4,9 +4,9 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="generator" content="Pelican" />
-        <title>Adventures In Differential Equations I</title>
+        <title>Weekly Digest #1</title>
         <link rel="stylesheet" href="/theme/css/main.css" />
-        <meta name="description" content="On the insanity of Differential Equations books When one wishes to study the topic of Differential Equations, there is no shortage (and perhaps an..." />
+        <meta name="description" content="Seems like I don't get enough ignition to write a well-developed post about something, so I'm trying something new, collecting "micro-posts" about..." />
 </head>
 
 <body id="index" class="home">
@@ -14,62 +14,46 @@
                 <h1><a href="/">Integrably Sorry</a></h1>
                 <nav><ul>
                     <li><a href="/pages/about.html">About</a></li>
-                    <li><a href="/category/life.html">Life</a></li>
-                    <li class="active"><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
 <section id="content" class="body">
   <article>
     <header>
       <h1 class="entry-title">
-        <a href="/adventures-in-differential-equations-i.html" rel="bookmark"
-           title="Permalink to Adventures In Differential Equations I">Adventures In Differential Equations I</a></h1>
+        <a href="/drafts/weekly-digest-1.html" rel="bookmark"
+           title="Permalink to Weekly Digest #1">Weekly Digest #1</a></h1>
     </header>
 
     <div class="entry-content">
 <footer class="post-info">
-        <abbr class="published" title="2022-10-24T13:10:00+03:00">
-                Published: Mon 24 October 2022
+        <abbr class="published" title="2023-03-02T00:00:00+02:00">
+                Published: Thu 02 March 2023
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
         </address>
-<p>In <a href="/category/math.html">Math</a>.</p>
+<p>In <a href="/category/life.html">Life</a>.</p>
 
-</footer><!-- /.post-info -->      <h1>On the insanity of Differential Equations books</h1>
-<p>When one wishes to study the topic of Differential Equations, there is no shortage (and perhaps an overabundance) of books. Thus I was immediately confronted with a first difficulty: which book to pick? <!-- add something about difference from calculus? -->
-After some googling and browsing through Reddit I settled on a book called "<em>A First Course in Ordinary Differential Equations</em>", as it seemed quite short and to the point. Soon enough though, I started running into some peculiarities.
-I come from a Math background, so when I see things like
+</footer><!-- /.post-info -->      <p>Seems like I don't get enough ignition to write a well-developed post about something, so I'm trying something new, collecting "micro-posts" about stuff I've done or read during the week. </p>
+<h2>Physics</h2>
+<h2>Replacing Guilt</h2>
+<h2>Economics</h2>
+<h2>Mathematics</h2>
+<h2>Hiking</h2>
+<h2>ChatGPT's API is released</h2>
+<p>OpenAI just released API access to ChatGPT, and compared to the regular interface, it's blazing fast. The way it works is, you send a request with the message history and you receive a response. Each message in the history is assigned either to the "user" or to the "assistant", with an optional "system" message to define the assistant's behavior. This way you can use the API for both the chat experience and as a regular text completion language model. </p>
+<p>The pricing was also updated, with 0.002<span class="math">\( per 1k tokens. In human terms, this is approximately 600,000 words costing 2\)</span>. However, there is a catch, at least when using it for conversation. Each additional message requires the conversation history, which counts toward the used tokens. Hence, the number of tokens required for a conversation is quadratic in its length. If each message and reply take ~60 tokens (the tokens account for both the user's message and the assistant's reply), then the tokens required for each message would grow as
 </p>
-<div class="math">$$M(x)dx+N(y)dy=0$$</div>
+<div class="math">$$60,120,180,\dots,60n\dots$$</div>
 <p>
-or
+and the total token usage grows as
 </p>
-<div class="math">$$\frac{dx}{x}=-kdt$$</div>
-<p> <!--long one--></p>
-<p>I get a stroke. As any math freshman will tell you (if he was successfully indoctrinated by his professors) <span class="math">\(\frac{dy}{dx}\)</span> is merely a form of notation for the derivative
-</p>
-<div class="math">$$\frac{dy}{dx}(x_0)=\lim_{x\to x_0}\frac{y(x)-y(x_0)}{x-x_0}$$</div>
+<div class="math">$$60, 180, 360,\dots,60\frac{(n+1)n}{2},\dots$$</div>
 <p>
-and is most certainly not a fraction. Or is it?</p>
-<!-- Something about history of differentials -->
-<p>Being already a couple of years out of school, I have seen some of the "apocryphal" interpretations and reinterpretations of calculus. For example, in later courses such as <em>Differential Geometry</em>, differential forms are introduced and given notation such as <span class="math">\(dx\)</span>, <span class="math">\(dy\)</span>. I don't expect readers of DE books, especially those coming from the engineering or natural science world, to be familiar with this material, so that seemed unlikely. Historically the derivative was defined by Leibniz in terms of these "differentials", which were infinitesimal mystical beings. Later the derivative was availed by Cauchy who defined it through the concept of the limit. The differential were regiven a purpose, by defining them through the derivative as <span class="math">\(dy:\mathbb R^2\to \mathbb R\)</span>,
-</p>
-<div class="math">$$dy(x,dx)=f'(x)dx$$</div>
-<p>
-which indeed restores an algebraic meaning to <span class="math">\(\frac{dy}{dx}=f'(x)\)</span>. You might hope this solves all our difficulties, but we are immediately confronted with the "manipulation" of the formula <span class="math">\(M(x)dx+N(y)dy=0\)</span> into 
- </p>
-<div class="math">$$\int M(x)dx+\int N(y)dy=0$$</div>
-<p>
-Again the indoctrinated student yells "<em>The <span class="math">\(dx\)</span> in <span class="math">\(\int\cdot dx\)</span> is just a notational device!</em>".</p>
-<p>I attempt to carry on without much hope, but soon I realize this book was not meant for me. On every page I see it written, in bold letters</p>
-<div align="center" style="font-size:30px;bold;">
-For Physicists Only
-</div>
-<p>And so, I shamefully slink away, looking for another book, this time one geared towards mathematicians, by <em>Coddington</em>. Now all is well defined, and the only price to pay is the use of complex numbers.</p>
-<h2>P.S.</h2>
-<p>If you wish to read a comforting explanation, read this <a href="https://en.wikipedia.org/wiki/Separation_of_variables#Ordinary_differential_equations_(ODE)">wiki article</a> which sheds some light on the matter.</p>
+How bad is that? well, if the messages are short then it's not too bad, but if you want to discuss some text or iterate over code, then pretty quickly the tokens per message count will be in the thousands. Comparing this pricing model to ChatGPT Pro's 20$ flat rate, the latter can buy around 10 million tokens. I would guess that's way more than what you need for personal use, even if you plan to use it heavily. So why did I call it a catch? I think there is something counterintuitive about having to "pay" for words you already said over and over, but it's not that bad.
+Performance-wise, it does seem to be less guarded than the chat version, although it's still nice. And now it remains to be seen what cool uses people would find.</p>
 <script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
     var align = "center",
         indent = "0em",
