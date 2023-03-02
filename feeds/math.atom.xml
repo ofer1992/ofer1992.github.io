@@ -42,6 +42,7 @@ We can imagine the &lt;span class="math"&gt;\((x,v)\)&lt;/span&gt; plane.&lt;/p&
   &lt;img src="https://ofer1992.github.io/images/diff_eq2/grid.png" /&gt;
 &lt;/p&gt;
 
+&lt;!-- Expand --&gt;
 &lt;p&gt;We can think of these equations as defining a vector field over the plane
 &lt;/p&gt;
 &lt;div class="math"&gt;$$f(x,v)=(v,-x)$$&lt;/div&gt;
