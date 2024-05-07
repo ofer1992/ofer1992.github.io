@@ -1,0 +1,14 @@
+Title: My first PR
+Date: 2024-05-07 13:10
+Category: Math
+Status: draft
+
+So the company I worked at went bankrupt. I decided to take this time off to do some projects, figure out what's interesting to me. I'm one of these chronic project stallers: I always start stuff and almost never finish. I guess a lot of people are like that, but I realized that it makes me feed insecure about my abilities. with with all my education and knowledge and experience, what do I have to show for it? not much. Now can be a nice opportunity to step-up my execution game.
+
+Now, the danger in any period of free roaming is the lack of structure and what it can lead to, namely, the death spiral. You wake up everyday later, you watch a shit ton of youtube and generally have no iden where the day went. I've been there many times in the past, and I really hope not to end up there again. Certain measures need to be taken, rules. Routine is not a bal word.
+
+Planning is also important. Goals. Where do I want to be at the end of this period? what would make me proud having acheived? On the basic, level being consistent and productive. Having products of my work to show for. It could be code which is "complete" in some sense. It could be writing, posts, videos with some meaningful content or value. This is nice, but a little low-level, lacking long-term vision. so what could it be? perhaps I could do a top-down thing, think about topics or fields that would be interesting to explore.
+
+Anyway, moving on to the actual topic of this post. I've never contributed to an open source project before. It always seemed daunting, and I couldn't think of an idea etc. Hence I saw this time now as an opportunity to change that, and I had just the perfect thing in mind. I use an application called *logseq* which can be described as a note-taking app on steroids. The notes are stored as markdown files, which means you can use git to handle sync across devices. The current implementation only offers git on the PC mac, so no android. The reason is technical: the library they use for git integration requires a git client.
+
+Luckily, some nice folks went and implemented git in js in a project called isomorphic-git. So, my idea is simply to change the dependency from dugite to iso-git and enable it for other platforms. Sounds straight forward enough, I know the program quite well and it's also technologies I'm curious about (clojure, app building etc). Anyway, I thought it might be worthwhile to document my journey to show how it looks like to tackle such a project for the first time, what are the challenges, strategies, dead ends and so forth. I'm already two days in so some of it would be written retroactively.
