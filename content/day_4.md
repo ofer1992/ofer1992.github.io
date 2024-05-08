@@ -17,5 +17,29 @@ I then moved on to rewriting the basic git functions in the code with isomorphic
 I patted myself on the back for my success, but then quickly realized this was the easy part. Nothing was actually happening on the git side. You see, since using dugite already restricted the git integration to computers, the code naturally became tied to the electron build, so the git configuration and the callbacks that manage the git lifecycle didn't actually work. I had to refactor those dependencies out to the more general `frontend` build.
 
 ## Day 3 - Moving state from electron to frontend
+Where was logseq's state located? and how? my investigation began by trying to trace a simple toggle button present in the editor tab of the settings page. After searching for the toggle's label in the codebase I found the following
+```clojure
+(defn outdenting-row [t logical-outdenting?]
+  (toggle "preferred_outdenting"
+          [(t :settings-page/preferred-outdenting)
+           (ui/tippy {:html        (outdenting-hint)
+                      :class       "tippy-hover ml-2"
+                      :interactive true
+                      :disabled    false}
+                     (svg/info))]
+          logical-outdenting?
+          config-handler/toggle-logical-outdenting!))
+```
+There was a getter called `logical-outdenting?` and a setter called `toggle-logical-outdenting!`. They were both under the `frontend` namespace, but in different files, `state.cljs` and `config.cljs`. The getter referred to an atom called state, but it must have been loaded from somewhere on disk, since the info was persisted. The setter changed the values on a file called `config.edn`. This is actually just the config file which is even accessible from logseq itself.
 
+I was a bit puzzled about how the config file and the state atom are maintained in sync, but I decided to just hope it works. Initially after adding new getters and setters for the git configuration, I thought it wasn't working, but playing around a bit I noticed that the config.edn file was indeed updated.
+
+From there on it was fairly straightforward work of replacing all the references to the usage of electron state to the new properties I defined. I even did some ui coding refactoring with the help of ChatGPT. It definitely seems like the git integration was written in an earlier part of development, since it's somewhat inconsistent in style from the rest of the code.
 ## Day 4 - How do I even access the file system
+Today was mostly spent puzzling over the file system access and how it works in the browser. Again, an example of implementation details, the understanding of which is earned through sweat and tears. Or asking around on Discord, which is something I'm not good at and should probably do more often. 
+
+Since logseq runs on several platform, there is an abstraction implemented in `fs.cljs` that create a unified interface. It is implemented through the use of protocols, which is a clojure construct that implements polymorphism, and one I have not used before. The combination of protocol, browser filesystem access, promises and maybe more really slowed me down today. I would say it was around 3 hours just to figure out how access to the fs works, what I can expect to be able to do, why did some files not appear initialliy (they were filtered), why were some calls not working (promises are so obtuse, but I probably could have used `.catch`). I think I understand enough to try and use iso-git with this abstraction, but there are still some question marks remaining.
+
+There is also one weird thing I need to make a decision about: the old git implementation maintains the gitdir (`.git`) not in the actual repo but on logseq's appdata folder. Can I handle that? what about access permissions? all will be seen tomorrow.
+
+## Looking ahead
