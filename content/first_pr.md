@@ -1,6 +1,6 @@
 Title: My first PR
 Date: 2024-05-07 13:10
-Category: Math
+Category: Life
 Status: draft
 
 So the company I worked at went bankrupt. I decided to take this time off to do some projects, figure out what's interesting to me. I'm one of these chronic project stallers: I always start stuff and almost never finish. I guess a lot of people are like that, but I realized that it makes me feed insecure about my abilities. with with all my education and knowledge and experience, what do I have to show for it? not much. Now can be a nice opportunity to step-up my execution game.
