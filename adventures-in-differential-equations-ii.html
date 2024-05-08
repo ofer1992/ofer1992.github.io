@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Adventures In Differential Equations II</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+        <meta name="description" content="Several outlooks on differential equations In math as in life, the same object of study can be looked upon from multiple perspectives. Each..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li class="active"><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/tils.html">TILs</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/adventures-in-differential-equations-ii.html" rel="bookmark"
+           title="Permalink to Adventures In Differential Equations II">Adventures In Differential Equations II</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2022-11-12T20:30:00+02:00">
+                Published: Sat 12 November 2022
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/math.html">Math</a>.</p>
+
+</footer><!-- /.post-info -->      <h1>Several outlooks on differential equations</h1>
+<p>In math as in life, the same object of study can be looked upon from multiple perspectives. Each perspective offers a different insight into a problem, and often the same problem can be very difficult from one perspective, yet clear from another. </p>
+<p>In this post I will discuss three different ways to think about differential equations.</p>
+<h2>The algebraic perspective</h2>
+<p>The algebraic way to think about differential equations is perhaps the most familiar, as at least on first sight it might look similar to the regular equations we encounter in school. Some examples are:
+</p>
+<div class="math">$$x''+x=0$$</div>
+<p>
+or
+</p>
+<div class="math">$$x'=x^{\frac15}$$</div>
+<p>
+where the variable <span class="math">\(x\)</span> stands for an unknown function of a variable <span class="math">\(t\)</span>, and <span class="math">\(x'\)</span> is the derivative etc. This presentation suggests that some algebraic manipulations will reveal the answer, again like solving equations in school. </p>
+<p>The technique of separation of variables (mentioned in the <a href="/adventures-in-differential-equations-i.html">previous post</a>) belongs to this category. For example, the second example above can be solved by
+</p>
+<div class="math">$$\begin{align*}
+x' &amp;= x^\frac15\\
+x^{-\frac15}x'&amp;=1\\
+\int x^{-\frac15}x'dt&amp;=\int 1dt\\
+\frac54x^\frac45+C &amp;=t\\
+x &amp;=(\frac45t+C)^\frac54
+\end{align*}$$</div>
+<p>
+which only contains algebraic manipulations and calculus. While the algebraic perspective is straightforward, it doesn't tell the whole story, and it might leave us hanging when the equation is (or seems) insoluble.</p>
+<h2>The geometric perspective</h2>
+<p>This perspective is very much the focus of the book <em>"Nonlinear Dynamics and Chaos"</em> by Steven Strogatz, at least the part I read so far (which is admittedly not much). Let's consider the equation
+</p>
+<div class="math">$$x''=-x$$</div>
+<p>
+It can be solved algebraically using the <em>characteristic polynomial</em> to get two basis solutions <span class="math">\(x_1(t)=\sin t\)</span> and <span class="math">\(x_2(t)=\cos t\)</span>, but we will consider a different approach. Let's define a new variable <span class="math">\(v=x'\)</span>. This transforms the second-order differential equation to a first-order system of two equations
+</p>
+<div class="math">$$\begin{align*}
+x' &amp;= v\\
+v' &amp;= -x
+\end{align*}$$</div>
+<p>
+We can imagine the <span class="math">\((x,v)\)</span> plane.</p>
+<p style="width:50%; margin:auto">
+  <img src="/images/diff_eq2/grid.png" />
+</p>
+
+<!-- Expand -->
+<p>We can think of these equations as defining a vector field over the plane
+</p>
+<div class="math">$$f(x,v)=(v,-x)$$</div>
+<p>
+We usually visualize vector fields by drawing arrows originating from points in the plane, with the size indicating magnitude:</p>
+<p style="width:50%; margin:auto">
+  <img src="/images/diff_eq2/vec_field.png" />
+</p>
+
+<p>If we imagine a particle starting from some point on the plane, the vector field tells us where it will flow on the next moment. We can further imagine it flowing from moment to moment, and get a trajectory, or a curve, through the plane. Here is a plot of curves from three different starting points, generated using the same process:</p>
+<p style="width:50%; margin:auto">
+  <img src="/images/diff_eq2/flow.png" />
+</p>
+
+<p>Let's call the curve we got <span class="math">\(\phi\)</span>. So <span class="math">\(\phi\)</span> is a function mapping time <span class="math">\(t\)</span> to a point on the plane, and from how we "defined" it, the tangent to the curve at each point on the curve <span class="math">\((\phi_x(t),\phi_v(t))\)</span> is the vector field at that point <span class="math">\(f(\phi_x(t),\phi_v(t))\)</span>. I claim that <span class="math">\(\phi_x\)</span>, the first coordinate of the curve, is a solution to the differential equation:</p>
+<!-- $$\begin{align*}
+\phi_x''&=\frac{d\phi_x}{d^2t}\\
+&=\frac{d}{dt}\left(\frac{d\phi_x}{dt}\right)\\
+&=\frac{d}{dt}\left(f_x(\phi_x,\phi_v)\right)\\
+&=\frac{d}{dt}(\phi_v)\\
+&=f_v(\phi_x,\phi_v)\\
+&=-\phi_x\\
+\end{align*}$$ -->
+
+<div class="math">$$\begin{align*}
+\phi_x''&amp;=\left(\phi_x'\right)'\\
+&amp;=\left(f_x(\phi_x,\phi_v)\right)'\\
+&amp;=\phi_v'\\
+&amp;=f_v(\phi_x,\phi_v)\\
+&amp;=-\phi_x\\
+\end{align*}$$</div>
+<p>
+In fact, any curve that satisfies this property, that the tangent to the curve at a point is equal to the vector field at that point, is a solution to the differential equation. The beauty of this approach is that it is intuitively clear from the picture of the vector field that solutions exist for every initial condition, and how the solution will look like (for example, that it is periodic). We can also read off qualitative properties, like stationary points.</p>
+<p>Of course, existence (and uniqueness) of solutions requires a proof, which is not trivial. Still, looking at the picture shows it to be plausible, whereas looking at the differential equation gives us no such clue.</p>
+<h2>The operator perspective</h2>
+<p>On this perspective I have little to say, as I still don't know much about it. Still, I find it intriguing, but I warn that this section is more of a "ramble".</p>
+<p>The most general definition of differential equation of order <span class="math">\(n\)</span> as an equation
+</p>
+<div class="math">$$f(t,x,x',\dots,x^{(n)})=0$$</div>
+<p>
+where <span class="math">\(f\)</span> is smooth and a solution is a function <span class="math">\(\phi\)</span> that satisfies this equation
+</p>
+<div class="math">$$f(t,\phi,\phi',\dots,\phi^{(n)})=0$$</div>
+<p>
+In the case of a linear differential equation then <span class="math">\(f\)</span> is a linear operator, which we can for convenience note as <span class="math">\(L\)</span>. If we take the level of abstraction a bit higher, we can think of <span class="math">\(L\)</span> as linear operator on the vector space of smooth functions. For example, we can think of the equation <span class="math">\(x''-x'+x=0\)</span> as defining an operator <span class="math">\(L(\phi)(t)=\phi''(t)-\phi'(t)+\phi(t)\)</span> that maps <span class="math">\(\phi\)</span> to some new function <span class="math">\(\psi\)</span> so defined.  Then a solution to the differential equation is simply a function that maps to the zero function!</p>
+<p>Now, in linear algebra we talk about the kernel of linear transformations, the set of vectors mapped to the zero vector, and the various cases where it is or is not trivial. To be honest, I don't know how much of that carries over to the case above, since some care is required (for example, the space of smooth functions is infinite-dimensional). Still, something to think about.</p>
+<!-- vis notebook: https://colab.research.google.com/drive/1T-uaikMXWYToB7b2tDaMCo82q828nd-y -->
+
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
