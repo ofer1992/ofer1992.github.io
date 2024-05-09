@@ -1,4 +1,4 @@
-Title: Learning Biology with flasheards
+Title: Learning Biology with flashcards
 Date: 2024-05-09 22:12
 Category: Life
 Status: published
