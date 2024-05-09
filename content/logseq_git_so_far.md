@@ -1,7 +1,7 @@
 Title: Switching Logseq's git dependency from dugite to isomorphic-git: The journey so far
 Date: 2024-05-08 18:10
 Category: Life
-Status: draft
+Status: published
 
 ## The goal
 A short recap of where we are (will probably refactor this to retroactive posts eventually): I'm trying to switch logseq's git dependency from `dugite` to `isomorphic-git`, so it can run on android, browser etc. The problem with dugite is that it depends on the presence of a git client. Since git in logseq is only expected to work on a pc or mac using electron, the implementation is tied to electron specific code like a separate config and state, and a different access to the file system. Also, dugite can run arbitrary git commands while iso-git has specific functions that implement most of the functionality of git, but obviously it is more restricted.
@@ -43,3 +43,4 @@ Since logseq runs on several platform, there is an abstraction implemented in `f
 There is also one weird thing I need to make a decision about: the old git implementation maintains the gitdir (`.git`) not in the actual repo but on logseq's appdata folder. Can I handle that? what about access permissions? all will be seen tomorrow.
 
 ## Looking ahead
+I estimate I've put in about 15 hours so far. Today was the first day I felt a little fatigued. I guess it's a little frustrating, as this is a mostly technical task. Still, this is the skill: getting into an unfamiliar project, figuring out the ups and down, and executing a set of changes that accomplishes what you are after. For me it's important to get it done, even just for the completionist side.
