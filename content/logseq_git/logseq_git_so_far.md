@@ -1,6 +1,6 @@
 Title: Switching Logseq's git dependency from dugite to isomorphic-git: The journey so far
 Date: 2024-05-08 18:10
-Category: Life
+Category: Programming
 Status: published
 
 ## The goal
