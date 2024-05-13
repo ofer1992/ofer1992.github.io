@@ -12,7 +12,7 @@ Some of my urge to plan (which goes un-acted upon) comes from this feeling: if o
  
 I guess I do plan on a very elementary level, which is simply to write in my journal each morning what my intentions for the day are, like study physics, train this and that. Even this simple action has a positive effect - it seems to increase the chance of me being productive.
 
-Maybe I need to remember that if I'm unhappy during this period then it isn't worth it. I'm not talking about working hard, working hard is okay. But since I trying to save humanity then...
+Maybe I need to remember that if I'm unhappy during this period then it isn't worth it. I'm not talking about working hard, working hard is okay. But since I am not trying to save humanity then...
 
 Another thing I thought trying was to decide that this week I'll work harder. Last week was very chill, some work, interspersed with yoga and surfing, and a lot of dead time. I wanna see what happens when I'm more driven, would I feel better about myself? The trick is to do that without sacrificing most of my other daily goals. It's very easy to go single-minded on something and ignore everything else, but it expect it will bring it back to the same situation of feeling unhappy and frustrated. Again, planning is probably helpful here.
 
