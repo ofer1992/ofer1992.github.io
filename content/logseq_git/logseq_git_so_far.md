@@ -1,4 +1,4 @@
-Title: Switching Logseq's git dependency from dugite to isomorphic-git - The journey so far
+Title: At the door steps of Mordor
 Date: 2024-05-08 18:10
 Category: Programming
 Status: published
