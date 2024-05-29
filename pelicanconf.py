@@ -24,7 +24,7 @@ AUTHOR_FEED_RSS = None
 # Social widget
 SOCIAL = (('github', 'https://github.com/ofer1992'),)
 
-PLUGINS = ['pelican.plugins.render_math']
+PLUGINS = ['pelican.plugins.render_math', 'obsidian']
 
 DEFAULT_PAGINATION = 10
 

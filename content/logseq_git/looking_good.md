@@ -1,7 +1,7 @@
 Title: Yet another retrospective
 Date: 2024-05-21 21:24
 Category: Programming
-Status: ‫published
+Status: published
 
 I expect another couple of days before I can submit a pull request. Today after some horrendous debugging I finally got some tangible progress. status, log, add-all and commit all seem to be working, perhaps even init (but still inconclusive). Still need to add push and pull. Then I need to connect it to config and add the necessary callbacks. In the end the minimal set of changes I converged to are just android git support, and keeping it in the same UX as the already existing implementation.
 
