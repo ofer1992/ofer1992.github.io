@@ -92,7 +92,10 @@ Counter({'the': 334760,
 		 ...
 ```
 Of course, all the most common words are quite generic. We can plot the this on a graph.
-![[plot_words.png]]
+<p style="width:50%; margin:auto">
+  <img src="{static}images/plot_words.png" />
+</p>
+%%     ![[plot_words.png]] %%
 We look at the log of occurences because of [Zipf's law](https://en.wikipedia.org/wiki/Zipf%27s_law). What can we deduce from this graph?
 - About half the words only appear once.
 - The most common words are actually not useful at all on their own.
@@ -144,22 +147,28 @@ X_train, y_train = get_subset(data["train"], train_idxs, vocab)
 X_val, y_val = get_subset(data["train"], val_idxs, vocab)
 ```
 ## Build a simple baseline model
-The only thing left now is to train a logistic regression model. We'll use sklearn (perhaps in a future project I'll do the pure numpy approach). Using sklearn is quite straightforward
+The only thing left now is to train a logistic regression model. We'll use sklearn (perhaps in a future project I'll do a pure numpy approach). Using sklearn is quite straightforward
 
 ```python
 from sklearn.linear_model import LogisticRegression
-logreg = LogisticRegression(penalty=None) # disabling regularization for now
-logreg.fit(X_train / X_train.sum(axis=1, keepdims=True), y_train) # normalizing for convergence
+logreg = LogisticRegression(penalty=None)
+logreg.fit(X_train, y_train)
 
 print(f'train acc={np.mean(logreg.predict(X_train) == y_train)}')
 print(f'val acc={np.mean(logreg.predict(X_val) == y_val)}')
-# train acc=0.7544
-# val acc=0.752
+
+# train acc=0.9420888888888889
+# val acc=0.8636
 ```
 
-We get 75% on both datasets in our first try. Not too bad! and this being without any regularization. Now, if this were a NN I would guess we are undertrained, because we usually want some discrepancy between the train and val sets. Logistic regression is a convex optimization problem though, so there should theoretically be only one unique solution. Maybe we're facing some numerical issues? the features vectors are quite sparse. Also, since we're using sklearn we don't exactly know what's going under the hood, which is always a tricky point when using libraries. I would start by seeing if we can get the model to overfit.
+Okay, so out of the box we get a 85% on the validation set. We also see we are overfitted. In fact, if we increase the max_iter parameter to 2000 we get up to
+```
+train acc=1.0
+val acc=0.8252
+```
+A perfect fit on the training set, while the validation set took a hit. It's a good test to see if we can perfectly fit on the train set. It's not always possible, as it depends on the capacity of the model. In our case, since the model has 5k features to choose from, the training set has ~20k samples and regularization is disabled, it isn't surprising. In fact, the default value of max_iter=100 serves as early stopping which is a kind of regularization!
 
-**Okay I basically did L1 normalization and this helps a bit but is stupid. Need to address normalization more carefully and its reasons: sensitivity of regression to feature sizes, differences. Hmm actually without **
+Anyway, we have a baseline. In the next section we face the realm of infinite possibilities of tweaking.
 ## Iterate and improve the model
 
 ## Evaluate the results
