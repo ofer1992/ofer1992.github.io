@@ -1,7 +1,7 @@
 Title: IMDB Reviews sentiment analysis
 Date: 2024-07-02 14:17
 Category: Programming
-Status: draft
+Status: published
 
 >"It’s better to do something simple which is real. It’s something you can build on because you know what you’re doing. Whereas, if you try to approximate something very advanced and you don’t know what you’re doing, you can’t build on it." - Bill Evans
 
