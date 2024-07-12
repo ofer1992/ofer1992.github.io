@@ -1,7 +1,7 @@
 Title: CNN summarization task
-Date: 2024-07-10 11:38
+Date: 2024-07-12 21:43
 Category: Programming
-Status: draft
+Status: published
 
 Today we're gonna dip our fingers into the first generative NLP task - text summarization. We're gonna use the [CNN/Daily Mail dataset](https://github.com/abisee/cnn-dailymail) as done in [this paper](https://arxiv.org/pdf/1704.04368). Let's get to it.
 
@@ -68,6 +68,9 @@ class EncoderRNN(nn.Module):
 
 ```
 The encoder gets the token indexes, replaces each one with an trainable embedding vector. During training the embeddings undergo dropout for regularization etc. The embeddings are then fed to the GRU block, which is a thing I should totally read more about, but for our purposes it produces the required output and hidden vectors. The syntax actually hides the sequential nature of the recurrence: each token is fed to the GRU, which produces an an output and a hidden state vector. 
+<p style="width:50%; margin:auto">
+  <img src="{static}images/rnn_diagram.png" />
+</p>
 ![[rnn_diagram.png]]
 This hidden vector is then passed as input to the GRU activation on the next token, ie, if we wrote it by hand it would look something like
 ```python
@@ -117,8 +120,7 @@ class DecoderRNN(nn.Module):
         return output, hidden
 ```
 
-You might wonder why it appears more complicated if it's similar to the encoder. To answer that we need to consider the difference between training and inference, and the loss criterion we are using.
- TODO
+You might wonder why it appears more complicated if it's similar to the encoder. To answer that we need to consider the difference between training and inference, and the loss criterion we are using. I hope to get to that in a future post, so for now I'll just mention that we will use the cross-entropy loss, which tries to maximize the likelihood of the dataset. 
 ### Training loop
 Steps:
 - Select hyperparams (hidden size, lr) and initialize model.
@@ -258,4 +260,24 @@ train_dataloader = DataLoader(tmp_ds, batch_size=bs, shuffle=True)
 ```
 Here the net basically memorizes the few examples. That's how I eventually figured out the order was wrong, since it managed to memorize the samples but the predicted summaries didn't match the targets.
 
-### Metrics and babysitting the learning process
+## Before you go
+Once again I end this post in the middle. I guess I prefer to publish something than to have another half-baked draft floating around. But before you go, I did let the model train for a couple of hours on my gaming laptop. It has a 3070 GTX but it has a limited power supply. It squeezes out an iteration every second or so, which is pretty bad, and I suspect a transformer will train much faster and better. Still, after a couple of hours I got outputs the like of
+
+```
+Target:
+Cressida Bonas went to Wembley Arena for the WE Day UK youth event.
+The 24-year-old dance student dressed down in jeans and silver Converse.
+Harry was key speaker, while others included Ellie Goulding, Dizzee Rascal and former footballer, Gary Neville.
+Harry apologised for not being Harry Styles and said he wouldn't sing.
+29-year-old prince said: 'Helping others is the coolest thing in the world'
+After his 10-minute speech he joined girlfriend Cressida in the VIP seats.
+12,000 students attended the London event listen to motivational speakers.
+They earned their tickets to it by doing charitable acts at home and abroad.<|endoftext|>
+
+Predicted:
+Theoupleley,,, to the in for the first.....
+She couple-year-old has the's in the the after has to..
+She Red born to of but he to the of.. andorset and.och. her club. who..
+She, for the to'by's'he would't be the<|endoftext|>But-year-old has to she 'I is'' a best'' the world'<|endoftext|>The the wifethyear-, was the,isse,, the UK of.<|endoftext|>She-000 followers with the show, in to be..<|endoftext|>The are the first to be out the a and. the. the.<|endoftext|>
+```
+Which is pretty bad. At first I thought there was a bug, but there was an improvement trend. I suspect the model which is RNN without attention has a hard time learning this task, before we even talk about optimizing hyperparameters and all the other possible things. 
