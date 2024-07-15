@@ -71,7 +71,7 @@ The encoder gets the token indexes, replaces each one with an trainable embeddin
 <p style="width:50%; margin:auto">
   <img src="{static}images/rnn_diagram.png" />
 </p>
-![[rnn_diagram.png]]
+  ![[rnn_diagram.png]]
 This hidden vector is then passed as input to the GRU activation on the next token, ie, if we wrote it by hand it would look something like
 ```python
 hidden = ? # TODO how do we initialize the hidden layer?
