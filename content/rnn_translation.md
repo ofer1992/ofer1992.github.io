@@ -1,6 +1,6 @@
-Title: 
+Title: Shifting to translation with RNNs
 Date: 2024-07-15 16:53
-Category: 
+Category: Programming
 Status: published
 
 I'm pivoting the RNN summarization code to an easier example - Machine translation. Easier in the sense of the [dataset](https://huggingface.co/datasets/yhavinga/ccmatrix), which consists of much shorter en-de sentence pairs compared to the summarization task. I have some suspicion that the there is a bug or something in my code, so today, after repurposing to the new dataset, we're gonna work on monitoring, babysitting the learning process and debugging.
