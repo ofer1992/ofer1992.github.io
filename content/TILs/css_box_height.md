@@ -1,6 +1,6 @@
 Title: The mysteries of HTML box heights
 Date: 2024-04-02 18:30
-Category: TILs
+Category: Dailies
 Status: published
 
 Today's post is not "fully cooked", I still don't think I figured this topic out, but I did learn a few things.

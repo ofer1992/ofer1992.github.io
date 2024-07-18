@@ -1,5 +1,7 @@
 Title: About
 
-# About me
+---
 
-hmm
+I love to learn new things and think about hard problems. 
+
+---

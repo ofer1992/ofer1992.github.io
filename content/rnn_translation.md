@@ -1,6 +1,6 @@
 Title: Shifting to translation with RNNs
 Date: 2024-07-15 16:53
-Category: Programming
+Category: Dailies
 Status: published
 
 I'm pivoting the RNN summarization code to an easier example - Machine translation. Easier in the sense of the [dataset](https://huggingface.co/datasets/yhavinga/ccmatrix), which consists of much shorter en-de sentence pairs compared to the summarization task. I have some suspicion that the there is a bug or something in my code, so today, after repurposing to the new dataset, we're gonna work on monitoring, babysitting the learning process and debugging.
@@ -13,7 +13,7 @@ The first and most obvious thing to track is the training loss. Here we can trac
   <img src="{static}images/loss_graph.png" />
 </p>
 
-![[loss_graph.png]]
+<!--![[loss_graph.png]]-->
 
 There's suppose to be a nice check one can do to verify the NN is initalized correctly. If it gives all the tokens a uniform probability then the loss should be 
 $$
@@ -54,7 +54,7 @@ Now I'm playing around with the training. I'm logging the loss, I also added the
   <img src="{static}images/loss2.png" />
 </p>
 
-![[loss2.png]] 
+<!--![[loss2.png]] -->
 
 The thing bothering me now is that in the blog post, Andrej says that within 300 iterations it was already quite coherent, and I'm still getting stuff like
 ```

@@ -1,6 +1,6 @@
 Title: Update with join in sqlite
 Date: 2024-03-31 16:10
-Category: TILs
+Category: Dailies
 Status: published
 
 I converted a csv containing customer information to a sqlite table, and it needed breaking down to several tables. Specifically, some columns where really about the employer, so it was better to normalize the employers in the table out and bring these columns along.

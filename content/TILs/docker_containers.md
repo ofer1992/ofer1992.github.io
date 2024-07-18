@@ -1,6 +1,6 @@
 Title: A tidbit about docker containers
 Date: 2024-04-02 18:30
-Category: TILs
+Category: Dailies
 Status: published
 
 I played around with docker containers today. Tried to install mssql on an M2 mac. Didn't go smoothly at first, but I attribute it to inexperience. The arm architecture crops up here and there when you're on one of those. Anyway, cool thing:
