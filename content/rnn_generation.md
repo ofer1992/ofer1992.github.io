@@ -150,7 +150,10 @@ Okay, spent Saturday on this, I think it's enough. I'm gonna let stuff train, an
 <hr>
 
 So afterwards I trained an 8-layer RNN and managed to get the loss down to below 0.6 for a while (although the net deteriorated afterwards)
-![[rnn_loss2.png]]
+<p style="width:50%; margin:auto">
+  <img src="{static}images/rnn_loss2.png" />
+</p>
+<!--![[rnn_loss2.png]]-->
 but I still got things like
 <pre>
 <div style="display: flex;">
