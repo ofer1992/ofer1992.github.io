@@ -2,6 +2,7 @@ Title: RNN generations
 Date: 2024-07-20 17:51
 Category: Dailies
 Status: published
+
 On advice from my uncle I'm continuing to fallback on task difficulty with RNNs.
 
 Unc's tips:
@@ -145,3 +146,64 @@ Okay, spent Saturday on this, I think it's enough. I'm gonna let stuff train, an
   <img src="{static}images/rnn_loss.png" />
 </p>
 <!--![[rnn_loss.png]]-->
+
+<hr>
+
+So afterwards I trained an 8-layer RNN and managed to get the loss down to below 0.6 for a while (although the net deteriorated afterwards)
+![[rnn_loss2.png]]
+but I still got things like
+<pre>
+<div style="display: flex;">
+    <div style="flex: 1; padding-right: 10px;">
+        <strong>Target:</strong>
+        <p>our, my lord.
+
+COMINIUS:
+'Tis not a mile; briefly we heard their drums:
+How couldst thou in a mile confound an hour,
+And bring thy news so late?
+
+Messenger:
+Spies of the Volsces
+Held me in chase, that</p>
+    </div>
+    <div style="flex: 1; padding-left: 10px;">
+        <strong>Predicted:</strong>
+        <p>au   my lord.
+
+CORINIUS:
+HTis not a pile- buiefly mi haard the r heym::
+Haw fauldst thou sn m mill aoafound an hour,
+Ynd bling thy news wo late?
+
+Messenger:
+Spies of the Volsces
+Hald me in chase, that</p>
+    </div>
+</div>
+</pre>
+seemingly many misspellings etc. But then I realized, no, I'm being stupid, it's the visualization that's misleading. You can't compare the target vs predicted, because the model will always make mistakes! it can't 100% guess the first letter of a new word without memorization for example. What we really want to see is generation. So here I present to you my model's creation
+
+> If he did not care whether he had their love or no, henge him:
+> Though inducedly lord hath cloudy nothing cursed
+> With lasting Richard see'st, is a noble
+
+And it's great! a better visualization is to color each wrongly predicted letter, like below
+
+<pre><hr>
+<div style="display: flex; flex-direction: column;">
+    <div style="flex: 1; padding-right: 10px;">
+        <strong>Colored Target:</strong>
+        <p>e way<span style="background-color: rgba(255, 0, 0, 0.8080017603933811)">
+</span>To <span style="background-color: rgba(255, 0, 0, 0.7611069642007351)">c</span><span style="background-color: rgba(255, 0, 0, 0.44487322866916656)">a</span>ll h<span style="background-color: rgba(255, 0, 0, 0.2429172247648239)">e</span>r<span style="background-color: rgba(255, 0, 0, 0.12379290349781513)">s</span><span style="background-color: rgba(255, 0, 0, 0.40236301720142365)"> </span>e<span style="background-color: rgba(255, 0, 0, 0.48491030000150204)">x</span><span style="background-color: rgba(255, 0, 0, 0.5533246099948883)">q</span>uis<span style="background-color: rgba(255, 0, 0, 0.8359964936971664)">i</span><span style="background-color: rgba(255, 0, 0, 0.13271648064255714)">t</span>e, in question more:
+The<span style="background-color: rgba(255, 0, 0, 0.6615011841058731)">s</span>e happy masks that ki<span style="background-color: rgba(255, 0, 0, 0.311726450920105)">s</span>s fair ladies' brows
+B<span style="background-color: rgba(255, 0, 0, 0.7029342502355576)">e</span>ing <span style="background-color: rgba(255, 0, 0, 0.7771769464015961)">b</span><span style="background-color: rgba(255, 0, 0, 0.8608919084072113)">l</span>ack put us in mind<span style="background-color: rgba(255, 0, 0, 0.01918923668563366)"> </span>the<span style="background-color: rgba(255, 0, 0, 0.2754880413413048)">y</span> hide the <span style="background-color: rgba(255, 0, 0, 0.949237123131752)">f</span>a<span style="background-color: rgba(255, 0, 0, 0.7102702558040619)">i</span>r<span style="background-color: rgba(255, 0, 0, 0.6184905171394348)">;</span>
+He that is <span style="background-color: rgba(255, 0, 0, 0.769390907138586)">s</span>tr<span style="background-color: rgba(255, 0, 0, 0.7905977666378021)">u</span>cken <span style="background-color: rgba(255, 0, 0, 0.9159816205501556)">b</span>l<span style="background-color: rgba(255, 0, 0, 0.2735106647014618)">i</span>nd cannot <span style="background-color: rgba(255, 0, 0, 0.8729353547096252)">f</span>orget
+The <span style="background-color: rgba(255, 0, 0, 0.7710949033498764)">p</span>recious <span style="background-color: rgba(255, 0, 0, 0.8862327337265015)">t</span>reas</p>
+    </div>
+</div>
+</pre>
+
+We can see that the biggest mistakes are when there is a lot of uncertainty on the next letter which is natural. In fact, I by the lack of mistakes here I suspect it might already be memorizing the dataset.
+
+What's the lesson here? making mistakes is part of the process, Show your work, and have fun! I do wonder though how many of my previous puzzled moments were caused by this confusion. Still, for now, we have a first victory.
