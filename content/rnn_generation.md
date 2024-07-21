@@ -210,3 +210,5 @@ The <span style="background-color: rgba(255, 0, 0, 0.7710949033498764)">p</span>
 We can see that the biggest mistakes are when there is a lot of uncertainty on the next letter which is natural. In fact, I by the lack of mistakes here I suspect it might already be memorizing the dataset.
 
 What's the lesson here? making mistakes is part of the process, Show your work, and have fun! I do wonder though how many of my previous puzzled moments were caused by this confusion. Still, for now, we have a first victory.
+
+[Link to notebook](https://github.com/ofer1992/notebooks/blob/main/rnn_generation.ipynb)
