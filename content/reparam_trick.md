@@ -1,11 +1,11 @@
 Title: Musings on the reparametrization trick
 Date: 2024-07-27 15:45
 Category: Math
-Status: draft
+Status: published
 
-Reading the *variational autoencoder* chapter from the ["Understanding Deep Learning"](https://udlbook.github.io/udlbook/) book (which is available for free!). Not trivial, which is why I never got around to learning it I guess. There are a lot of moving math parts to figure out. One of them is called "the reparametrization trick". So what is it about?
+Reading the *variational autoencoder* chapter from the ["Understanding Deep Learning"](https://udlbook.github.io/udlbook/) book (which is available for free!). Not trivial, which is why I never got around to learning it, I guess. There are a lot of moving math parts to figure out. One of them is called "the reparametrization trick". So what is it about?
 
-Let's say we have a distribution over a variable $x$ parametrized by $\theta$ $P(x;\theta)$, and we also have some differentiable function $f(x)$, and we want to find $\theta^*$ that maximizes the expression
+Let's say we have a distribution over a variable $x$ parametrized by $\theta$, $P(x;\theta)$, and we also have some differentiable function $f(x)$. We want to find $\theta^*$ that maximizes the expectation of $f$ over this distribution:
 $$
 \mathbb E_{P(x;\theta)}\left[f(x)\right]
 $$
@@ -18,11 +18,11 @@ $$
 \frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]=
 \frac{\partial}{\partial \theta}\int{P(x;\theta)}f(x)dx
 $$
-Can we switch the derivative and the integral? never been able to answer this confidently. It depends on [Leibniz's integral rule](https://en.wikipedia.org/wiki/Leibniz_integral_rule). Let's assume we can, and we get
+Can we switch the derivative and the integral? I've never been able to answer this confidently. It depends on [Leibniz's integral rule](https://en.wikipedia.org/wiki/Leibniz_integral_rule). Let's assume we can, and we get
 $$
 \int\frac{\partial}{\partial \theta}P(x;\theta)f(x)dx
 $$
-Well, in practice this is almost never tractable, so we want to estimate it. We can use the following trick to convert it to an expectation and then use sampling to estimate it
+In practice this is almost never tractable, so we want to estimate it. We can use the following trick to convert it to an expectation and then use sampling to estimate it:
 $$
 \begin{align}
 \int\frac{\partial}{\partial \theta}P(x;\theta)f(x)dx &=
@@ -31,14 +31,16 @@ $$
 &= \mathbb E_{P(x;\theta)}\left[f(x)\frac{\partial}{\partial \theta}\log{P(x;\theta)} \right]
 \end{align}
 $$
-The expression $\frac{\partial}{\partial \theta}\log{P(x;\theta)}$ is called the score function and is often denoted $s(x;\theta)$. So to sum up what we did so far, we found the following relation
+The expression $\frac{\partial}{\partial \theta}\log{P(x;\theta)}$ is called the *score function* and is often denoted $s(x;\theta)$. To sum up what we did so far, we found the following relation
 $$
 \frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]
 = \mathbb E_{P(x;\theta)}\left[f(x)s(x;\theta)\right]
 $$
+which we can go on to estimate with sampling.
+
 Well, the reparametrization trick takes another approach. Let's say we already estimated the expectation using sampling, ie we have $N$ samples $x_i\sim P(x;\theta$) (abuse of notation but I mean sampled according to this distribution), then we can approximate the expectation with
 $$\mathbb E_{P(x;\theta)}\left[f(x)\right]\approx \frac{1}{N}\sum_{i}f(x_i)$$
-What if we tried to differentiate that with respect to $\theta$? let's try using the chain rule
+What if we tried to differentiate that with respect to $\theta$? let's try using the chain rule:
 $$\frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]\approx
 \frac{1}{N}\sum_{i}\frac{\partial}{\partial \theta}f(x_i)=
 \frac{1}{N}\sum_{i}\frac{df}{dx}\frac{\partial x_{i}}{\partial \theta}(??)$$
@@ -59,3 +61,5 @@ $$
 \frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]\approx
 \frac{1}{N}\sum_{i}\frac{df}{dx_\theta}\frac{\partial x_\theta}{\partial \theta}(\varepsilon_i)
 $$
+
+
