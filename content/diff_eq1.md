@@ -6,7 +6,7 @@ Status: published
 # On the insanity of Differential Equations books
 When one wishes to study the topic of Differential Equations, there is no shortage (and perhaps an overabundance) of books. Thus I was immediately confronted with a first difficulty: which book to pick? <!-- add something about difference from calculus? -->
 After some googling and browsing through Reddit I settled on a book called "*A First Course in Ordinary Differential Equations*", as it seemed quite short and to the point. Soon enough though, I started running into some peculiarities.
-I come from a Math background, so when I see things like
+I come from a math background, so when I see things like
 $$M(x)dx+N(y)dy=0$$
 or
 $$\frac{dx}{x}=-kdt$$ <!--long one-->
