@@ -56,7 +56,7 @@ $$
 $$
 In general, we would have 
 $$\frac{\partial x}{\partial \theta}=\frac{\partial x_\theta}{\partial\theta}(\varepsilon)$$
-Putting it all together, we can estimate the gradient by sampling $N$ times from the independet distribution $\varepsilon_i$ and calculating
+Putting it all together, we can estimate the gradient by sampling $N$ times from the independent distribution $\varepsilon_i$ and calculating
 $$
 \frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]\approx
 \frac{1}{N}\sum_{i}\frac{df}{dx_\theta}\frac{\partial x_\theta}{\partial \theta}(\varepsilon_i)

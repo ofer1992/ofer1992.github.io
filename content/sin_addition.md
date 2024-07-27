@@ -5,7 +5,7 @@ Status: published
 
 If you're like me, you don't remember trig identities. If you're like me, you prefer rederiving stuff yourself. It's a perk of math that we replace memorization with derivation. Still, it takes time, and distracts you from what you're actually doing. Also, deriving trig identities isn't so easy without some extra knowledge.
 
-I once read this text about the use of proofs in mathematics. There was a quote from a math professor which went along the lines "it's a mnemonic device", and thats the point of this post. For a long time my inability to recall trig facts has been bugging me, until a day ago I skimmed "Trigonometry" by Gelfand and downloaded some knowledge into my brain. Turns out many identities can be derived just from the addition identity, so today we'll see two proofs, and hopefully you will be able to recall them in time of need.
+I once read this text about the use of proofs in mathematics. There was a quote from a math professor which went along the lines "it's a mnemonic device", and thats the point of this post. For a long time my inability to recall trig facts has been bugging me, until a day ago I skimmed "Trigonometry" by Gelfand and downloaded some knowledge into my brain. Turns out many identities can be derived just from the addition identity, so today we'll see two proofs, and hopefully you will be able to recall them in times of need.
 
 ## Proof 1: Euler's identity
 

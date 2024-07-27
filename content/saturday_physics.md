@@ -1,6 +1,6 @@
 Title: Saturday Physics
 Date: 2024-05-11 20:56
-Category: Physics
+Category: Life
 Status: published
 
 Originally I intended to write about a physics problem I did today, but then this turned into more of a journal thing, so feel free to skip it.
