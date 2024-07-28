@@ -2,7 +2,7 @@ Title: Building up PyTorch abstractions: Part 1
 Date: 2024-07-28 18:01
 Category: Dailies
 Status: published
-Today we will retrace lesson 13-14's notebook that "build up" pytorch abstractions from scratch. As a first step we'll rederive everything in hardcore numpy (maybe hardcore should be reserved for C). Then we'll start building the abstractions.
+Today we will retrace lesson [13](https://www.youtube.com/watch?v=vGdB4eI4KBs)-[14](https://www.youtube.com/watch?v=veqj0DsZSXU)'s notebook that "builds up" pytorch abstractions from scratch. As a first step we'll rederive everything in hardcore numpy (maybe hardcore should be reserved for C). Then we'll start building the abstractions.
 
 First up we load `mnist` data:
 
@@ -56,7 +56,7 @@ $$
 l=-\log p_y
 $$
 where $p$ is the predicted probability for label $y$. Then,
-$$\frac{dl}{d\log p_i}=\begin{cases}
+$$\frac{\partial l}{\partial \log p_i}=\begin{cases}
 -1 && i=y
 \\
 0 && i\neq y
@@ -68,7 +68,7 @@ $$
 $$
 and so
 $$
-\frac{d\log p_i}{dout_j}=
+\frac{\partial \log p_i}{\partial out_j}=
 \begin{cases}
 1-\frac{e^{out_i}}{\sum_ke^{out_k}} && i=j
 \\
@@ -77,7 +77,7 @@ $$
 $$
 combined with the chain rule for vector functions
 $$
-\frac{dl}{dout_j}=\sum_k \frac{dl}{d\log p_k}\frac{d\log p_k}{dout_j}=\frac{dl}{d\log p_y}\frac{d\log p_y}{dout_j}=
+\frac{\partial l}{\partial out_j}=\sum_k \frac{\partial l}{\partial \log p_k}\frac{\partial \log p_k}{\partial out_j}=\frac{\partial l}{\partial \log p_y}\frac{\partial \log p_y}{\partial out_j}=
 \begin{cases}
 \frac{e^{out_i}}{\sum_ke^{out_k}}-1 && y=j
 \\
