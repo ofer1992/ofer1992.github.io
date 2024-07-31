@@ -71,6 +71,7 @@ So what's the idea behind DiffEdit? we have the following chart from the paper
   <img src="{static}images/diffedit_flow.png" />
 </p>
 <!--![[diffedit_flow.png]]-->
+
 The notation seems to be:
 - $R$ - the reference text, ie the text that describes the original image.
 - $Q$ - the query, ie what describes the new image we wish to have.
@@ -83,7 +84,6 @@ In the first step, we introduce noise into the image. We then feed the noised im
 The mask is binarized, that means that we choose a threshold and every pixel where the difference is above that threshold becomes `True`.
 
 **Qs:**
-
 - How much noise is introduced? what step of the diffusion do we reach?
 - How is the noise introduced? probably the scheduler
 - Do we compute one denoising step? I think so
@@ -91,7 +91,6 @@ The mask is binarized, that means that we choose a threshold and every pixel whe
 
 
 Let's implement this part. Stuff to do:
-
 - Load an image
 - Encode it using vae (stable diffusion acts in latent space)
 - Noise it with scheduler
@@ -120,7 +119,7 @@ im_t = (im_t - .5) * 2
 Now to encode using the autoencoder, it's fairly straightforward.
 ```python
 with torch.no_grad():
-    enc =  vae.encode(im_t).latent_dist.mean
+    enc = vae.encode(im_t).latent_dist.mean
     dec = vae.decode(enc).sample
 ```
 We look at the original vs the decoded for sanity (I found some bugs that way)
@@ -194,4 +193,36 @@ Looking at the masks, it kinda looks reasonable, pixels are located next to the 
 Okay, on to step two.
 
 ### Step 2: Encode with DDIM until encoding ratio r
-TBD
+What the hell is $r$? from the paper
+> In the remainder of the paper, we parameterize the timestep t to be between 0 and 1, so that t = 1 corresponds to T steps of diffusion in the original formulation.
+
+>as proposed by Song et al. (2021), we can also use this ODE to encode an image $x_0$ onto a latent variable $x_r$ for a timestep $r\leq 1$
+
+and
+>In the remainder of the paper, we refer to this encoding process as DDIM encoding, we denote the corresponding function that maps $x_0$ to $x_r$ as $E_r$ and refer to the variable $r$ as the encoding
+ratio.
+
+So $r$ is the time step. I wonder if the mask phase and decoding phase have to be identical? probably not, since the "strength" of the noise is 50%, if only I knew what that means.
+
+<hr>
+
+Let's get things straight for a second, what are all these letters standing for? according to the paper, the forward diffusion is defined as
+$$
+x_t = \sqrt{\alpha_t}x_0+\sqrt{1-\alpha_t}\varepsilon
+$$
+where $\varepsilon\sim \mathcal N(0, I)$. What would be 50% strength then? when $\alpha_t=1-\frac{1}{2^2}$? 
+
+<hr>
+
+Putting that aside for now, let's get the second step implemented.  Working on this
+
+```python
+r = 0.3
+enc_step = int(steps * (1-r))
+enc_step2 = torch.tensor([scheduler.timesteps[:enc_step]]).cuda()
+enc_r = scheduler.add_noise(enc, noise[:1], enc_step2)
+# latents = latents.to("cuda").half() * scheduler.init_noise_sigma
+
+for i,ts in enumerate(tqdm(scheduler.timesteps[enc_step:])):
+    inp = scheduler.scale_model_input(torch.cat([latents] * 2), ts)
+```
