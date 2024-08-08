@@ -1,7 +1,7 @@
 Title:  MiniAI learner
 Date: 2024-08-04 13:50
 Category: Dailies
-Status: draft
+Status: published
 
 Today I'm recreating the *learner* framework from the FastAI course. It's a flexible and quite powerful abstraction around the optimization of the DNN model, which streamlines the user experience. For example, it will be very easy to add different logging capabilities, learning rate finder etc. It is built during the lesson, but there are a lot of moving parts, and a lot of usage of advanced python, which is both good and bad: good, because the code is quite elegant. Bad, because it's harder to reason about and debug, at least, that's how I feel right now. Perhaps it will change as I build it.
 
