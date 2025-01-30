@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry - Programming</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/visualizing-lissajous-curves-with-p5js.html">Visualizing Lissajous curves with p5.js</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2025-01-30T16:25:00+02:00">
+                Published: Thu 30 January 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info --><p>I've been continuing on my learning physics quests, currently alternating between electromagnetics and waves. I was reading chapter 2 of French's "Vibrations and Waves" and he talked there about Lissajous curves.</p>
+<p style="width:50%; margin:auto">
+<img src="/images/lissajous_curves.jpg" />
+</p>
+
+<p>These are 2d curves whose x-y coordinates are parametrized by cosines, ie
+</p>
+<div class="math">$$\begin{align} x&amp;=A_x\cos (\omega_x t)\\ y&amp;=A_y\cos(\omega_y t+\phi) \end{align} $$</div>
+<p>
+We can deduce that the curves are bounded in a rectangle of sides <span class="math">\(2A_x, 2A_y\)</span>. In general for arbitrary frequencies, the curves can be quite chaotic and infact it can be shown that if the frequencies don't satisfy a kind of integer relationship
+</p>
+<div class="math">$$n_x A_x = n_y A_y$$</div>
+<p>
+then the curves never repeat themselves. When the frequencies have simple integer ratios though, the curves can be quite aesthetic, as seen in the image above.</p>
+<p>In the book they have this cool figure,</p>
+<p style="width:50%; margin:auto">
+  <img src="/images/lissajous2.png" />
+</p>
+
+<p>And I figured (no pun intended) it would be fun to write an interactive version. <code>p5.js</code> is a neat javascript library that can handle this. I even found <a href="https://p5js.org/examples/angles-and-motion-sine-cosine/">this</a> example which gave me a really convenient starting point.</p>
+<p>So, Without further ado, </p>
+<iframe  width="650" height="850" src="https://ofer1992.github.io/tools/lissajous/"></iframe>
+<!--
+-->
+
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/imdb-reviews-sentiment-analysis.html" rel="bookmark"
+                           title="Permalink to IMDB Reviews sentiment analysis">IMDB Reviews sentiment analysis</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-02T14:17:00+03:00">
+                Published: Tue 02 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <blockquote>
+<p>"It’s better to do something simple which is real. It’s something you can build on because you know what you’re doing. Whereas, if you try to approximate something very advanced and you don’t know what you’re doing, you can’t build on it." - Bill Evans …</p></blockquote>
+                <a class="readmore" href="/imdb-reviews-sentiment-analysis.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/yet-another-retrospective.html" rel="bookmark"
+                           title="Permalink to Yet another retrospective">Yet another retrospective</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-21T21:24:00+03:00">
+                Published: Tue 21 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <p>I expect another couple of days before I can submit a pull request. Today after some horrendous debugging I finally got some tangible progress. status, log, add-all and commit all seem to be working, perhaps even init (but still inconclusive). Still need to add push and pull. Then I need …</p>
+                <a class="readmore" href="/yet-another-retrospective.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/pushing-through.html" rel="bookmark"
+                           title="Permalink to Pushing through">Pushing through</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-16T22:17:00+03:00">
+                Published: Thu 16 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <p>I reached a milestone today in my project to integrate git into the mobile version of logseq. Finally the git functions like add, status, init were working. I also realized that all the work and time that I put in so far was to writh this file system adapter that …</p>
+                <a class="readmore" href="/pushing-through.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/more-thoughts-on-logseq-git-and-how-to-approach-open-source-tasks.html" rel="bookmark"
+                           title="Permalink to More thoughts on logseq, git, and how to approach open source tasks">More thoughts on logseq, git, and how to approach open source tasks</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-13T18:00:00+03:00">
+                Published: Mon 13 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <h2>Where I am</h2>
+<p>It's been a couple more days now since my last post on the subject. I spent another 10 hours or so, and haven't gotten much further. Mostly I'm stuck with file system problems. In my last post I said I would use filesystem abstraction already present in …</p>
+                <a class="readmore" href="/more-thoughts-on-logseq-git-and-how-to-approach-open-source-tasks.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/at-the-door-steps-of-mordor.html" rel="bookmark"
+                           title="Permalink to At the door steps of Mordor">At the door steps of Mordor</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-08T18:10:00+03:00">
+                Published: Wed 08 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <h2>The goal</h2>
+<p>A short recap of where we are (will probably refactor this to retroactive posts eventually): I'm trying to switch logseq's git dependency from <code>dugite</code> to <code>isomorphic-git</code>, so it can run on android, browser etc. The problem with dugite is that it depends on the presence of a git …</p>
+                <a class="readmore" href="/at-the-door-steps-of-mordor.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/my-first-pr.html" rel="bookmark"
+                           title="Permalink to My first PR">My first PR</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-07T13:10:00+03:00">
+                Published: Tue 07 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <p>So the company I worked at went bankrupt. I decided to take this time off to do some projects, figure out what's interesting to me. I'm one of these chronic project stallers: I always start stuff and almost never finish. I guess a lot of people are like that, but …</p>
+                <a class="readmore" href="/my-first-pr.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
