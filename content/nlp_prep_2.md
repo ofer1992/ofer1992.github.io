@@ -1,7 +1,7 @@
 Title: Preparing for an NLP interview - Day 2
 Date: 2025-10-29 13:19
 Category: Programming
-Status: draft
+Status: published
 
 Okay, we're now in day 2. Yesterday I was kind of wrestling with whatever I could find on ABSA, trying to figure out what is the right approach to get some hands on experience. We settled for building an E2E ABSA model using BERT, which we based on a [paper](https://arxiv.org/pdf/1910.00883) from 2019 that does exactly that. I would like to continue with that, but first some side quests.
 
