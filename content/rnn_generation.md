@@ -92,10 +92,7 @@ for e in progress_bar:
         update_info(display_handle, y_pred, y)
 ```
 It's pretty standard: we feed in a batch of samples from the text, and use the out vector of each RNN iteration as the logprobs for the next token. We use the cross entropy loss. Here's a peek to the training
-<p style="width:50%; margin:auto">
-  <img src="{static}images/rnn_gen_loss.png" />
-</p>
-<!--![[rnn_gen_loss.png]]-->
+![[rnn_gen_loss.png]]
 
 Up until now, the standard stuff, I'm already pretty good at it, but one would say this is the trivials. And once again, things don't look like they're converging. So from this point on, it's going to turn to more of a blocks of thoughts.
 
@@ -142,18 +139,14 @@ Now I can increase the number of layers to 8 and get the loss down to 0.8, which
 
 Okay, spent Saturday on this, I think it's enough. I'm gonna let stuff train, and hope the loss isn't stuck at 0.78 like it appears below
 
-<p style="width:50%; margin:auto">
-  <img src="{static}images/rnn_loss.png" />
-</p>
-<!--![[rnn_loss.png]]-->
+![[rnn_loss.png|50%]]
 
 <hr>
 
 So afterwards I trained an 8-layer RNN and managed to get the loss down to below 0.6 for a while (although the net deteriorated afterwards)
-<p style="width:50%; margin:auto">
-  <img src="{static}images/rnn_loss2.png" />
-</p>
-<!--![[rnn_loss2.png]]-->
+
+![[rnn_loss2.png|50%]]
+
 but I still got things like
 <pre>
 <div style="display: flex;">

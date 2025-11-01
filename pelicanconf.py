@@ -24,7 +24,23 @@ AUTHOR_FEED_RSS = None
 # Social widget
 SOCIAL = (('github', 'https://github.com/ofer1992'), ('twitter', 'https://x.com/oferyehuda'))
 
-PLUGINS = ['pelican.plugins.render_math', 'obsidian']
+PLUGINS = ['pelican.plugins.render_math']
+
+MARKDOWN = {
+    'extensions': [
+        'markdown.extensions.extra',
+        'obsidian_markdown',
+    ],
+    'extension_configs': {
+        'obsidian_markdown': {
+            'content_root': PATH,
+            'static_dirs': ['images', 'audio'],
+        },
+    },
+    'output_format': 'html5',
+}
+
+STATIC_PATHS = ['images', 'audio']
 
 DEFAULT_PAGINATION = 10
 

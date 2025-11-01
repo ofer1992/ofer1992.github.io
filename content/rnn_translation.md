@@ -9,11 +9,8 @@ I'm pivoting the RNN summarization code to an easier example - Machine translati
 It's a pretty! big dataset. Streaming hangs me up for 30 seconds. Couldn't find a way to extract a subset nicely, so for now just saved first 1000 batches of the data loader.
 # Monitoring
 The first and most obvious thing to track is the training loss. Here we can track the loss during the first 500 iterations. We can see that there's a clear downward trend.
-<p style="width:50%; margin:auto">
-  <img src="{static}images/loss_graph.png" />
-</p>
 
-<!--![[loss_graph.png]]-->
+![[loss_graph.png|width=50%]]
 
 There's suppose to be a nice check one can do to verify the NN is initalized correctly. If it gives all the tokens a uniform probability then the loss should be 
 $$
@@ -50,11 +47,8 @@ The first item is the log-distribution for an output token which is pretty much 
 Also, regarding tokenization: I switched to character level tokenization to make things simpler. Well, it's almost simpler. Now we have a bit of a different behavior, where characters not in the vocabulary are replaced with the unknown token.
 
 Now I'm playing around with the training. I'm logging the loss, I also added the gradient norm for the encoder and decoder. I read a bit of Karpathy's [blog post about RNNs](https://karpathy.github.io/2015/05/21/rnn-effectiveness/), looking for some training tips. I settled for 2 GRU layers with a hidden size of 512, batch size of 128, adam with learning rate of 2e-3 and exponential decay of 0.95 every 500 steps. Here's a graph. It's not from the start as can be see since the beginning lose isn't ~4. The orange line is a smoothed graph, the edges have some boundary artifacts though.
-<p style="width:50%; margin:auto">
-  <img src="{static}images/loss2.png" />
-</p>
 
-<!--![[loss2.png]] -->
+![[loss2.png]] 
 
 The thing bothering me now is that in the blog post, Andrej says that within 300 iterations it was already quite coherent, and I'm still getting stuff like
 ```

@@ -122,6 +122,7 @@ Here's an example of token-level tagging for the joint task (taken from [here](h
 |Joint|O|B|I|E|O|O|O|O|O|O|O|S|O|
 ||O|POS|POS|POS|O|O|O|O|O|O|O|NEG|O|
 |Unified|O|B-POS|I-POS|E-POS|O|O|O|O|O|O|O|S-NEG|O|
+
 And we can imagine a model like this could solve it
 ![[Screenshot 2025-10-28 at 20.35.36.png]]
 

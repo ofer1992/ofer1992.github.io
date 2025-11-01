@@ -68,9 +68,7 @@ class EncoderRNN(nn.Module):
 
 ```
 The encoder gets the token indexes, replaces each one with an trainable embedding vector. During training the embeddings undergo dropout for regularization etc. The embeddings are then fed to the GRU block, which is a thing I should totally read more about, but for our purposes it produces the required output and hidden vectors. The syntax actually hides the sequential nature of the recurrence: each token is fed to the GRU, which produces an an output and a hidden state vector. 
-<p style="width:50%; margin:auto">
-  <img src="{static}images/rnn_diagram.png" />
-</p>
+  
   ![[rnn_diagram.png]]
 This hidden vector is then passed as input to the GRU activation on the next token, ie, if we wrote it by hand it would look something like
 ```python
