@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Implementing DiffEdit</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+        <meta name="description" content="Today we'll work on lesson 11's homework: implementing the DiffEdit paper. In the lesson we went over the paper, and saw that the method is fairly..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li class="active"><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/drafts/implementing-diffedit.html" rel="bookmark"
+           title="Permalink to Implementing DiffEdit">Implementing DiffEdit</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-24T14:55:00+03:00">
+                Published: Wed 24 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+
+</footer><!-- /.post-info -->      <p>Today we'll work on <a href="https://course.fast.ai/Lessons/lesson11.html">lesson 11's</a> homework: implementing the <a href="https://arxiv.org/pdf/2210.11427">DiffEdit</a> paper. In the lesson we went over the paper, and saw that the method is fairly straightforward. In fact, I was tempted to skip this, but then I realized this is classic case of the illusion of knowledge: I think it's easy to implement, but when it comes to it, there are a lot of small details I am not sure about. It's like thinking a song is easy to play on the piano, but when you actually try to play it you see the the chord changes are actually not that familiar and you stutter.</p>
+<p>We start with the manual pipeline code from one of the previous lectures. It's quite short</p>
+<pre><code class="language-python">import torch
+from transformers import CLIPTextModel, CLIPTokenizer
+from diffusers import AutoencoderKL, UNet2DConditionModel
+from diffusers import LMSDiscreteScheduler
+from IPython.display import display
+from tqdm.auto import tqdm
+from PIL import Image
+
+prompts = [
+    'a photograph of an astronaut riding a horse',
+    'an oil painting of an astronaut riding a horse in the style of grant wood'
+]
+height = 512
+width = 512
+num_inference_steps = 70
+guidance_scale = 7.5
+batch_size = 1
+beta_start,beta_end = 0.00085,0.012
+
+tokenizer = CLIPTokenizer.from_pretrained(&quot;openai/clip-vit-large-patch14&quot;, torch_dtype=torch.float16)
+text_encoder = CLIPTextModel.from_pretrained(&quot;openai/clip-vit-large-patch14&quot;, torch_dtype=torch.float16).to(&quot;cuda&quot;)
+vae = AutoencoderKL.from_pretrained(&quot;stabilityai/sd-vae-ft-ema&quot;, torch_dtype=torch.float16).to(&quot;cuda&quot;)
+unet = UNet2DConditionModel.from_pretrained(&quot;CompVis/stable-diffusion-v1-4&quot;, subfolder=&quot;unet&quot;, torch_dtype=torch.float16).to(&quot;cuda&quot;)
+scheduler = LMSDiscreteScheduler(beta_start=beta_start, beta_end=beta_end, beta_schedule=&quot;scaled_linear&quot;, num_train_timesteps=1000)
+
+def text_enc(prompts, maxlen=None):
+    if maxlen is None: maxlen = tokenizer.model_max_length
+    inp = tokenizer(prompts, padding=&quot;max_length&quot;, max_length=maxlen, truncation=True, return_tensors=&quot;pt&quot;)
+    return text_encoder(inp.input_ids.to(&quot;cuda&quot;))[0].half()
+
+def mk_img(t):
+    image = (t/2+0.5).clamp(0,1).detach().cpu().permute(1, 2, 0).numpy()
+    return Image.fromarray((image*255).round().astype(&quot;uint8&quot;))
+
+def mk_samples(prompts, g=7.5, seed=100, steps=70):
+    bs = len(prompts)
+    text = text_enc(prompts)
+    uncond = text_enc([&quot;&quot;] * bs, text.shape[1])
+    emb = torch.cat([uncond, text])
+    if seed: torch.manual_seed(seed)
+
+    latents = torch.randn((bs, unet.in_channels, height//8, width//8))
+    scheduler.set_timesteps(steps)
+    latents = latents.to(&quot;cuda&quot;).half() * scheduler.init_noise_sigma
+
+    for i,ts in enumerate(tqdm(scheduler.timesteps)):
+        inp = scheduler.scale_model_input(torch.cat([latents] * 2), ts)
+        with torch.no_grad(): u,t = unet(inp, ts, encoder_hidden_states=emb).sample.chunk(2)
+        pred = u + g*(t-u)
+        latents = scheduler.step(pred, ts, latents).prev_sample
+
+    with torch.no_grad(): return vae.decode(1 / 0.18215 * latents).sample
+
+images = mk_samples(prompts)
+</code></pre>
+<p>Some imports, loading models, some hyperparams. Inference takes place in <code>mk_samples</code>, and this is where we'll introduce our changes.</p>
+<h2>How DiffEdit works</h2>
+<p>So what's the idea behind DiffEdit? we have the following chart from the paper</p>
+<p style="width:100%; margin:auto">
+  <img src="/images/diffedit_flow.png" />
+</p>
+<!--![[diffedit_flow.png]]-->
+
+<p>The notation seems to be:
+- <span class="math">\(R\)</span> - the reference text, ie the text that describes the original image.
+- <span class="math">\(Q\)</span> - the query, ie what describes the new image we wish to have.
+- <span class="math">\(x_{t}\)</span> - the original image in diffusion step <span class="math">\(t\)</span>.
+- <span class="math">\(y_t\)</span> - the modified image in diffusion step <span class="math">\(t\)</span>.</p>
+<h3>Step 1: Compute a mask</h3>
+<p>In the first step, we introduce noise into the image. We then feed the noised image to the model with the two different prompts, once with <span class="math">\(R\)</span> and once with <span class="math">\(Q\)</span>. We then look at the difference between the predicted noises. The idea is, where these noises differ is where a horse differs from a zebra. For example, for a pixel in the background it doesn't matter whether the animal is a horse or a zebra, therefore the noise there will be the same across the queries. On the other hand, a pixel on the animal's body does depend on the query: a horse will be reddish while a zebra black/white.</p>
+<p>The mask is binarized, that means that we choose a threshold and every pixel where the difference is above that threshold becomes <code>True</code>.</p>
+<p><strong>Qs:</strong>
+- How much noise is introduced? what step of the diffusion do we reach?
+- How is the noise introduced? probably the scheduler
+- Do we compute one denoising step? I think so
+- How is the difference normalized?</p>
+<p>Let's implement this part. Stuff to do:
+- Load an image
+- Encode it using vae (stable diffusion acts in latent space)
+- Noise it with scheduler
+    - generate standard gaussian noise
+    - choose a timestep</p>
+<hr>
+
+<p>Yep, this is definitely good practice, so I'm going to be fairly descriptive. For loading an image, we first use the PIL library:</p>
+<pre><code class="language-python">from PIL import Image
+
+im = Image.open(path)
+</code></pre>
+<p>To convert it to a tensor we use the <code>torchvision</code> library</p>
+<pre><code class="language-python">from torchvision import transforms
+
+im_t = transforms.ToTensor()(im.convert(&quot;RGB&quot;))
+</code></pre>
+<p><code>im_t</code> is now a <code>float32</code> tensor with shape <code>(3, 512, 512)</code> (so color channels are the first index as is torch's convention). The values range from 0 to 1. This is important as the autoencoder expects images to be within -1 and 1, so we have to scale the image</p>
+<pre><code class="language-python">im_t = (im_t - .5) * 2
+</code></pre>
+<p>Now to encode using the autoencoder, it's fairly straightforward.</p>
+<pre><code class="language-python">with torch.no_grad():
+    enc = vae.encode(im_t).latent_dist.mean
+    dec = vae.decode(enc).sample
+</code></pre>
+<p>We look at the original vs the decoded for sanity (I found some bugs that way)</p>
+<!--![[omri_orig.png]]![[omri_dec.png]]-->
+<div style="display: flex; justify-content: center;">
+  <div style="text-align: center; margin: 0 10px;">
+    <img src="/images/omri_orig.png" alt="Original Image" style="max-width: 100%; height: auto;">
+    <div>Original</div>
+  </div>
+  <div style="text-align: center; margin: 0 10px;">
+    <img src="/images/omri_dec.png" alt="Decoded Image" style="max-width: 100%; height: auto;">
+    <div>Decoded</div>
+  </div>
+</div>
+<p>there is a twist though: SD scales the encoding so we need to remember to scale it down and up.</p>
+<pre><code class="language-python">with torch.no_grad():
+    enc =  0.18215 * vae.encode(im_t).latent_dist.mean
+    dec = vae.decode(1 / 0.18215 * enc).sample
+</code></pre>
+<p>We're going to noise it with the scheduler. </p>
+<pre><code class="language-python">scheduler.set_timesteps(steps)
+noise = torch.randn(enc.shape)
+
+step = 64 # the diffusion step we take
+timesteps = torch.tensor([scheduler.timesteps[step]])
+noisy_image = scheduler.add_noise(enc, noise, timesteps)
+</code></pre>
+<p>If we decode the noisy image we get back</p>
+<!--![[omri_noisy.png]]-->
+<p style="width:50%; margin:auto">
+  <img src="/images/omri_noisy.png" />
+</p>
+<p>We will figure out later a proper step choice. Now for the denoising step, this is where things get fuzzy and uncertain. What I did so far is</p>
+<pre><code class="language-python">inp = scheduler.scale_model_input(torch.cat([noisy_image] * 2), timesteps)
+with torch.no_grad():
+    r,q = unet(inp, timesteps, encoder_hidden_states=emb).sample.chunk(2)
+</code></pre>
+<p><code>r</code> and <code>q</code> should be the predicted noises. The question I have now is whether we can visualize the mask. The tricky part is it's in the latent space, so the mapping the pixels is not straightforward. Maybe it's time to read the paper.</p>
+<blockquote>
+<p>In our algorithm, we use a Gaussian noise with strength 50% (see analysis in Appendix A.1), remove extreme values in noise predictions and stabilize the effect by averaging spatial differences over a set of <code>n</code> input noises, with <code>n=10</code> in our default configuration. The result is then rescaled to the range [0, 1], and binarized with a threshold, which we set to 0.5 by default.</p>
+</blockquote>
+<p>Here's the modifications I did based on that (untouched lines omitted)</p>
+<pre><code class="language-python">n_noise = 10
+mask_thresh = 0.5
+
+# change noise to have n_noise copies
+noise = torch.randn(n_noise, *enc.shape[1:]).cuda().half()
+
+# change emb to have n_noise copies
+emb = torch.cat([emb[0][None,...]] * n_noise + [emb[1][None,...]] * n_noise)
+with torch.no_grad():
+    r,q = unet(inp, timesteps, encoder_hidden_states=emb).sample.chunk(2)
+
+# calculate mask according to description
+mask = (r - q).mean(dim=0).abs()
+mask = (mask - mask.min()) / (mask.max() - mask.min())
+mask = mask &gt; mask_thresh
+</code></pre>
+<p>Looking at the masks, it kinda looks reasonable, pixels are located next to the hands, but it's quite sparse. I guess we'll see.</p>
+<!--![[mask_channels.png]]-->
+<p style="width:80%; margin:auto">
+  <img src="/images/mask_channels.png" />
+</p>
+
+<p>Okay, on to step two.</p>
+<h3>Step 2: Encode with DDIM until encoding ratio r</h3>
+<p>What the hell is <span class="math">\(r\)</span>? from the paper</p>
+<blockquote>
+<p>In the remainder of the paper, we parameterize the timestep t to be between 0 and 1, so that t = 1 corresponds to T steps of diffusion in the original formulation.</p>
+<p>as proposed by Song et al. (2021), we can also use this ODE to encode an image <span class="math">\(x_0\)</span> onto a latent variable <span class="math">\(x_r\)</span> for a timestep <span class="math">\(r\leq 1\)</span></p>
+</blockquote>
+<p>and</p>
+<blockquote>
+<p>In the remainder of the paper, we refer to this encoding process as DDIM encoding, we denote the corresponding function that maps <span class="math">\(x_0\)</span> to <span class="math">\(x_r\)</span> as <span class="math">\(E_r\)</span> and refer to the variable <span class="math">\(r\)</span> as the encoding
+ratio.</p>
+</blockquote>
+<p>So <span class="math">\(r\)</span> is the time step. I wonder if the mask phase and decoding phase have to be identical? probably not, since the "strength" of the noise is 50%, if only I knew what that means.</p>
+<hr>
+
+<p>Let's get things straight for a second, what are all these letters standing for? according to the paper, the forward diffusion is defined as
+</p>
+<div class="math">$$
+x_t = \sqrt{\alpha_t}x_0+\sqrt{1-\alpha_t}\varepsilon
+$$</div>
+<p>
+where <span class="math">\(\varepsilon\sim \mathcal N(0, I)\)</span>. What would be 50% strength then? when <span class="math">\(\alpha_t=1-\frac{1}{2^2}\)</span>? </p>
+<hr>
+
+<p>Putting that aside for now, let's get the second step implemented.  Working on this</p>
+<pre><code class="language-python">r = 0.3
+enc_step = int(steps * (1-r))
+enc_step2 = torch.tensor([scheduler.timesteps[:enc_step]]).cuda()
+enc_r = scheduler.add_noise(enc, noise[:1], enc_step2)
+# latents = latents.to(&quot;cuda&quot;).half() * scheduler.init_noise_sigma
+
+for i,ts in enumerate(tqdm(scheduler.timesteps[enc_step:])):
+    inp = scheduler.scale_model_input(torch.cat([latents] * 2), ts)
+</code></pre>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
