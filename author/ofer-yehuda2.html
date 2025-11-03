@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry - Ofer Yehuda</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+                <section id="content" class="body">
+                    <ol id="posts-list" class="hfeed" start="9">
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/rnn-generations.html" rel="bookmark"
+                           title="Permalink to RNN generations">RNN generations</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-20T17:51:00+03:00">
+                Published: Sat 20 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+
+</footer><!-- /.post-info -->                <p>On advice from my uncle I'm continuing to fallback on task difficulty with RNNs.</p>
+<p>Unc's tips:
+- Swirch to generation task
+- Try residuals
+- Go deeper
+- Add projections 
+- No dropout?</p>
+<p>Let's recreate Karpathy's classic post and train a language model on tiny-shakespeare. We can get the entire dataset which is a text …</p>
+                <a class="readmore" href="/rnn-generations.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/recreating-stable-diffusions-pipeline.html" rel="bookmark"
+                           title="Permalink to Recreating Stable Diffusion's Pipeline">Recreating Stable Diffusion's Pipeline</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-18T15:56:00+03:00">
+                Published: Thu 18 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+
+</footer><!-- /.post-info -->                <p>Today I'm going to recreate the pipeline shown in <a href="https://course.fast.ai/Lessons/lesson10.html">lesson 10 of the fast.ai course</a>. We'll go through what's needed on the high-level, using pretrained models for everything. The pipeline is fed in a text prompt and it produces an image. A prompt means we need a tokenizer to …</p>
+                <a class="readmore" href="/recreating-stable-diffusions-pipeline.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/shifting-to-translation-with-rnns.html" rel="bookmark"
+                           title="Permalink to Shifting to translation with RNNs">Shifting to translation with RNNs</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-15T16:53:00+03:00">
+                Published: Mon 15 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+
+</footer><!-- /.post-info -->                <p>I'm pivoting the RNN summarization code to an easier example - Machine translation. Easier in the sense of the <a href="https://huggingface.co/datasets/yhavinga/ccmatrix">dataset</a>, which consists of much shorter en-de sentence pairs compared to the summarization task. I have some suspicion that the there is a bug or something in my code, so today, after …</p>
+                <a class="readmore" href="/shifting-to-translation-with-rnns.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/cnn-summarization-task.html" rel="bookmark"
+                           title="Permalink to CNN summarization task">CNN summarization task</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-12T21:43:00+03:00">
+                Published: Fri 12 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+
+</footer><!-- /.post-info -->                <p>Today we're gonna dip our fingers into the first generative NLP task - text summarization. We're gonna use the <a href="https://github.com/abisee/cnn-dailymail">CNN/Daily Mail dataset</a> as done in <a href="https://arxiv.org/pdf/1704.04368">this paper</a>. Let's get to it.</p>
+<h2>Data prep</h2>
+<p>I started by doing all the preprocessing of the files myself, but then found a the dataset …</p>
+                <a class="readmore" href="/cnn-summarization-task.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/imdb-reviews-sentiment-analysis.html" rel="bookmark"
+                           title="Permalink to IMDB Reviews sentiment analysis">IMDB Reviews sentiment analysis</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-02T14:17:00+03:00">
+                Published: Tue 02 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <blockquote>
+<p>"It’s better to do something simple which is real. It’s something you can build on because you know what you’re doing. Whereas, if you try to approximate something very advanced and you don’t know what you’re doing, you can’t build on it." - Bill Evans …</p></blockquote>
+                <a class="readmore" href="/imdb-reviews-sentiment-analysis.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/remember-the-trigonometric-addition-identity.html" rel="bookmark"
+                           title="Permalink to Remember the trigonometric addition identity">Remember the trigonometric addition identity</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-28T10:14:00+03:00">
+                Published: Tue 28 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/math.html">Math</a>.</p>
+
+</footer><!-- /.post-info -->                <p>If you're like me, you don't remember trig identities. If you're like me, you prefer rederiving stuff yourself. It's a perk of math that we replace memorization with derivation. Still, it takes time, and distracts you from what you're actually doing. Also, deriving trig identities isn't so easy without some …</p>
+                <a class="readmore" href="/remember-the-trigonometric-addition-identity.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/yet-another-retrospective.html" rel="bookmark"
+                           title="Permalink to Yet another retrospective">Yet another retrospective</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-21T21:24:00+03:00">
+                Published: Tue 21 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <p>I expect another couple of days before I can submit a pull request. Today after some horrendous debugging I finally got some tangible progress. status, log, add-all and commit all seem to be working, perhaps even init (but still inconclusive). Still need to add push and pull. Then I need …</p>
+                <a class="readmore" href="/yet-another-retrospective.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/pushing-through.html" rel="bookmark"
+                           title="Permalink to Pushing through">Pushing through</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-16T22:17:00+03:00">
+                Published: Thu 16 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <p>I reached a milestone today in my project to integrate git into the mobile version of logseq. Finally the git functions like add, status, init were working. I also realized that all the work and time that I put in so far was to writh this file system adapter that …</p>
+                <a class="readmore" href="/pushing-through.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/more-thoughts-on-logseq-git-and-how-to-approach-open-source-tasks.html" rel="bookmark"
+                           title="Permalink to More thoughts on logseq, git, and how to approach open source tasks">More thoughts on logseq, git, and how to approach open source tasks</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-13T18:00:00+03:00">
+                Published: Mon 13 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <h2>Where I am</h2>
+<p>It's been a couple more days now since my last post on the subject. I spent another 10 hours or so, and haven't gotten much further. Mostly I'm stuck with file system problems. In my last post I said I would use filesystem abstraction already present in …</p>
+                <a class="readmore" href="/more-thoughts-on-logseq-git-and-how-to-approach-open-source-tasks.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/saturday-physics.html" rel="bookmark"
+                           title="Permalink to Saturday Physics">Saturday Physics</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-11T20:56:00+03:00">
+                Published: Sat 11 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/life.html">Life</a>.</p>
+
+</footer><!-- /.post-info -->                <p>Originally I intended to write about a physics problem I did today, but then this turned into more of a journal thing, so feel free to skip it.</p>
+<h2>More thoughts about sabbatical</h2>
+<p>After another week, a recurring thought that is troubling me is my productivity. I question myself again and …</p>
+                <a class="readmore" href="/saturday-physics.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+<p class="paginator">
+        <a href="/author/ofer-yehuda.html">&#8647;</a>
+        <a href="/author/ofer-yehuda.html">&laquo;</a>
+    Page 2 / 3
+        <a href="/author/ofer-yehuda3.html">&raquo;</a>
+        <a href="/author/ofer-yehuda3.html">&#8649;</a>
+</p>
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
