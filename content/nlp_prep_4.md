@@ -6,11 +6,13 @@ Status: published
 ## Day 5
  
 Today we'll go thru two chapters in the NLP transformers book. The first is QA, which is a task I haven't tried before and it seems interesting. There are two approaches: extractive and generative. Generative might be more common today with LLMs, since its just having the model generate an answer for the question based on the sources. Extractive QA is a little more interesting, since it has as output a substring/span of the source text, ie it highlights where in the text the response is. How do we formulate such output? my guess is with use token classification/tagging, like NER. Maybe even BIO? What kind of challenges do I forsee?
+
 - data processing - converting the labeled string idx spans to token labels.
 - Are the metrics any different?
 That's what I can come up with for now. In terms of data, we're gonna use the *SubjQA* dataset, and the electronics subset. It is a rather small dataset with about 1300 training examples, so we're definitely want to start with a pretrained model. This reflects the fact that a QA dataset is quite laborious to produce.
 
 The important parts of the dataset for us are
+
 - title: Amazon ASIN id
 - question: the question
 - answers.answer_text: the span of text in the review labeled by the annotator
@@ -39,6 +41,7 @@ The rest of the chapter actually talks more about the QA system as a whole: a co
 
 ## Claude practice
 I talked with Claude about some concepts from yesterday to get some level of understanding.
+
 - BLEU - a metric originally for machine translation. Given a reference translation and a candidate translation, you check for a couple of $n$ how many of the n-grams in the candidate are contained in the reference. So for $n=1$ you check whether all the words in the candidate are contained in the reference etc. Then you take an average (possibly weighted).
 - LDA - Linear Dirichlet Analysis. Didn't go deep. The LDA is a graphical model for documents. It has latent "topic" variables which are word distributions, for example sports topic would have high probability for "race", "match" etc. It imagines docs being created by for each word sampling a topic and then from it sampling a word. Then you work backwards, from the "observable" words you try to infer the topics for each document. As with all bayesian methods inference is not straight-forward and requires some special algorithms. The Dirichlet comes from the priors of document-topics and topic-words.
 ## Day 6

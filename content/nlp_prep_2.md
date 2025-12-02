@@ -72,6 +72,7 @@ Doubt I'll have time for all, but I will start with the first one since it compl
 ## HF Token Classification Notebook
 [link](https://huggingface.co/learn/llm-course/en/chapter7/2)
 It uses the conll2003 dataset, which seems to already break the sentence to tokens, and includes pos tags and ner tags for each token. So we can already ask now
+
 - how do we handle the subword tokenization that bert does in terms of labels?
 In terms of NER, here are the tokens
 `Sequence(feature=ClassLabel(num_classes=9, names=['O', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC', 'B-MISC', 'I-MISC'], names_file=None, id=None), length=-1, id=None)`

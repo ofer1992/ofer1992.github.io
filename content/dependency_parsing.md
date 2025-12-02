@@ -6,6 +6,7 @@ Status: draft
 I watched the [dependency parsing lecture](https://www.youtube.com/watch?v=KVKvde-_MYc) from Stanford's NLP course about a month ago. I kinda got it fuzzily back then, but I figured I could use a refresher. Instead of rewatching the lecture I want to experiment with an AI-driven active learning approach, so I hooked up the lecture notes, the lecture transcript and the assignment to the new Gemini 3 Pro and asked it to tutor me on the subject.
 
 We start by talking about dependency parsing as an idea in a dialogue fashion. This does mean that I have to later verify what I learned is correct. Now, in what I know about grammar you have words and relations between them, for example a verb has an object, a subject etc. Dependency parsing define a tree where a word is a head and has dependencies, for example in the phrase "I ate fish", "fish" and "I" are dependents of "ate". Why is that? one heuristic is to use the removal test, does the sentence make sense if I remove the head? in this case, the results are
+
 - I -> ate fish 
 - ate -> I fish
 - fish -> I ate

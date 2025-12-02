@@ -55,6 +55,7 @@ Fine. So we got to implement self-attention ourselves, fumbled around with the e
 
 ## What now?
 I'm trying to decide where to go from here. Obviously there's an infinite amount of things to learn, but I'm trying to decide where to put my time. I found [this](https://trite-song-d6a.notion.site/Ace-your-NLP-Interview-1630af77bef380849679f1345339066d) question list and some stuff I should probably read on are
+
 - BLEU/ROUGE metrics
 - TF-IDF? dunno if its worth the time though
 - Positional embeddings: learned, Sinusoidal, Relative, [RoPE](https://www.youtube.com/watch?v=Mn_9W1nCFLo)?

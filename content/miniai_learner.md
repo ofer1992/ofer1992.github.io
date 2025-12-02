@@ -6,6 +6,7 @@ Status: published
 Today I'm recreating the *learner* framework from the FastAI course. It's a flexible and quite powerful abstraction around the optimization of the DNN model, which streamlines the user experience. For example, it will be very easy to add different logging capabilities, learning rate finder etc. It is built during the lesson, but there are a lot of moving parts, and a lot of usage of advanced python, which is both good and bad: good, because the code is quite elegant. Bad, because it's harder to reason about and debug, at least, that's how I feel right now. Perhaps it will change as I build it.
 
 What is the learner abstraction comprised of?
+
 - we break the training process `fit`, `fit_epoch` and `fit_batch`.
 - we add a callback system by emitting signals before and after each stage and calling relevant callbacks
 - we use exceptions as a control mechanism for the callbacks
@@ -106,6 +107,7 @@ class Learner:
 ```
 
 This is now pretty much aligned with the first version in the notebook. What did we change?
+
 - everything is basically a state variable: the batch, even the input and label of the batch, the loss, the preds. 
 - train/validation logic: `one_batch` performs backprop only when model is set to training.
 - handles device moving

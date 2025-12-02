@@ -9,7 +9,8 @@ Now, in Israel by law all large enough grocery stores must supply price info for
 
 After some snooping around I also found https://www.kaggle.com/datasets/erlichsefi/israeli-supermarkets-2024, which is "A versioned daily dump of the data published by the Israeli supermarkets chain". They already do all the scraping and convert the xmls to csvs. At least for now we can use it to save some time.
 
-So, what does the data look like? for each chain we have a 
+So, what does the data look like? for each chain we have a
+
 - `[name].json`: logs the scraping process for the kaggle dataset creation
 - `price_full_file_[name].csv`: full price snapshot for all products in all locations
 - `price_file_[name].csv`: price changes since last update
