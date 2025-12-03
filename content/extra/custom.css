@@ -1,0 +1,5 @@
+/* Import the main notmyidea theme CSS */
+@import url("main.css");
+
+/* Import ANSI color definitions for Jupyter notebook outputs */
+@import url("ansi-colors.css");

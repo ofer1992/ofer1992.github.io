@@ -29,9 +29,14 @@ PLUGINS = ['pelican.plugins.render_math']
 MARKDOWN = {
     'extensions': [
         'markdown.extensions.extra',
+        'markdown.extensions.codehilite',
         'obsidian_markdown',
     ],
     'extension_configs': {
+        'markdown.extensions.codehilite': {
+            'css_class': 'highlight',
+            'guess_lang': False,
+        },
         'obsidian_markdown': {
             'content_root': PATH,
             'static_dirs': ['images', 'audio'],
@@ -40,7 +45,16 @@ MARKDOWN = {
     'output_format': 'html5',
 }
 
-STATIC_PATHS = ['images', 'audio']
+STATIC_PATHS = ['images', 'audio', 'extra']
+
+# Map extra files to their output locations
+EXTRA_PATH_METADATA = {
+    'extra/ansi-colors.css': {'path': 'theme/css/ansi-colors.css'},
+    'extra/custom.css': {'path': 'theme/css/custom.css'}
+}
+
+# Use custom CSS file that imports main theme + ANSI colors
+CSS_FILE = 'custom.css'
 
 DEFAULT_PAGINATION = 10
 
