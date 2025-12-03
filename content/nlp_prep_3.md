@@ -14,6 +14,7 @@ Otherwise we have stuff to pick up from yesterday. But before that I thought may
 So yesterday I didn't have the opportunity to continue, so this is already day 4. I did get to do learn some more thru conversations with Claude and Gemini. We talked about perplexity, word2vec, and Sentence-BERT.
 
 **Perplexity**: (per token) a measure of the uncertainty of the language model in predicting the next token. One interpretation for the value that it is as if the model has $PP$ options to choose from which are equally likely. Ie the perplexity for a uniformly random LM would be equal to $|V|$ There are two definitions:
+
 - Vanilla: $PP=\sqrt[n]{1/P(w_1\dots w_n)}=\sqrt[n]{\prod_i 1/P(w_i|w_1\dots w_{i-1})}$
 - Information Theoretic: $PP=2^{H(p_{real},p)}$
 Since cross-entropy is used as loss on the dataset we can derive the perplexity from the loss. I wish I could say more but I've done Information Theory so long again I don't want to hand wave stuff.
@@ -27,6 +28,7 @@ I'll get to sentence-bert perhaps tomorrow, maybe we'll try and implement it. Fo
 ## Implementing minBERT
 
 The first step is implementing the attention layer. The input is as follows:
+
 - key - a tensor of all the keys along the batch, dim is (bs, num_attention_heads, seq_len, attention_head_size)
 - same except for queries
 - value - same except for values

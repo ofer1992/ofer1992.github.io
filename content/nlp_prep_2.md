@@ -46,6 +46,7 @@ If we remember for the best sequence probabilities of $P(O_{1...n-1},S_{1...n-1}
 So this is the idea of the Viterbi Algorithm. I don't know if HMMs are used today, but it appears in textbooks so solid to know.
 
 Finally, I employed ChatGPT to search for NLP courses and the kind of assignments to offer, in hopes that doing existing exercises can save me the time of looking for the right resources and building up the code, which I felt took a lot of time yesterday. Some interesting ones:
+
 - **HF Course – Token Classification (NER-style)**
     
     Build a token-tagger with 🤗 Transformers (alignment with word_ids(), label masking, Trainer). Good proxy for ATE/ABSA tagging. 
@@ -86,6 +87,7 @@ we get
 `['[CLS]', 'EU', 'rejects', 'German', 'call', 'to', 'boycott', 'British', 'la', '##mb', '.', '[SEP]']`
 
 We notice a couple of things:
+
 - It added special \[CLS\] and \[SEP\] tokens in the beginning and end. This has to do with the BERT model.
 - It split the word lamb to two tokens: 'la' and '##mb'. This is the subword tokenization, since lamb wasn't part of its vocab. The ## prefix indicates this token is a continuation of the previous token.
 

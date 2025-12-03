@@ -133,6 +133,7 @@ Okay. So let's regroup, what should we do? how about this: we'll remain high lev
 I'm gonna rely here on the NLP with transformers book, and reimplement the paper [Exploiting BERT for End-to-End Aspect-based Sentiment Analysis](https://arxiv.org/pdf/1910.00883). The first stop is to get the dataset. There are several datasets on hugging face. Most are actually structured in a sentence->(aspect span, polarity) form which requires some more processing. 
 
 Here's the pipeline process from the paper:
+
 1. Loading & Parsing (glue_utils.py:_create_examples): Reads files and splits sentence/tag pairs
 2. Tag Schema Conversion (seq_utils.py): Converts tags to BIEOS format (Begin-Inside-End-Outside-Singleton) for precise aspect boundary detection
 3. BERT Tokenization (glue_utils.py:convert_examples_to_seq_features):
