@@ -1,4 +1,4 @@
-Title: AoC 2025 - Day 3
+Title: AoC 2025 - Day 5
 Date: 2025-12-04 11:13
 Category: programming
 Status: published
