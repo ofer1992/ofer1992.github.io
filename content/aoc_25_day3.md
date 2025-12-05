@@ -1,9 +1,10 @@
 Title: AoC 2025 - Day 3
 Date: 2025-12-03 12:54
-Category: programming
+Category: Programming
 Status: published
+Tags: aoc
 
-Day 3 of AoC 2025. Following up on yesterday, today I'm gonna try to solve the question using typescript, but in a Jupyter notebook, writing along while programming. Today's input looks like this:
+Day 3 of AoC 2025. Following up on ![yesterday]({filename}/aoc_25_day2.md), today I'm gonna try to solve the question using typescript, but in a Jupyter notebook, writing along while programming. Today's input looks like this:
 
 
 ```typescript

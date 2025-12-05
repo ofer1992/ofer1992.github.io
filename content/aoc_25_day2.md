@@ -2,6 +2,7 @@ Title: Advent of Code 2025
 Date: 2025-12-02 16:38
 Category: Programming
 Status: published
+Tags: aoc
 
 AoC is back for another year! This time it's a bit shorter, only 12 days. This might be a good change overall, since in 2023 I fizzled out around day 20.
 
