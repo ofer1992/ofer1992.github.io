@@ -2,6 +2,7 @@ Title: Preparing for an NLP interview - Day 3 and 4
 Date: 2025-10-31 11:14
 Category: Programming
 Status: published
+Tags: nlp, interview-prep
 
 Another day has come. This one will be somewhat disjointed, I have an ~1.5 hrs in the morning and maybe some later in the evening.
 

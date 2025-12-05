@@ -2,6 +2,7 @@ Title: Adventures In Differential Equations II
 Date: 2022-11-12 20:30
 Category: Math
 Status: published
+Tags: math, differential-equations
 
 # Several outlooks on differential equations
 In math as in life, the same object of study can be looked upon from multiple perspectives. Each perspective offers a different insight into a problem, and often the same problem can be very difficult from one perspective, yet clear from another. 

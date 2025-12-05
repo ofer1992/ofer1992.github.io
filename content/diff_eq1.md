@@ -2,6 +2,7 @@ Title: Adventures In Differential Equations I
 Date: 2022-10-24 13:10
 Category: Math
 Status: published
+Tags: math, differential-equations
 
 # On the insanity of Differential Equations books
 When one wishes to study the topic of Differential Equations, there is no shortage (and perhaps an overabundance) of books. Thus I was immediately confronted with a first difficulty: which book to pick? <!-- add something about difference from calculus? -->

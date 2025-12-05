@@ -2,6 +2,7 @@ Title: Recreating Stable Diffusion's Pipeline
 Date: 2024-07-18 15:56
 Category: Dailies
 Status: published
+Tags: deep-learning, diffusion, stable-diffusion
 
 Today I'm going to recreate the pipeline shown in [lesson 10 of the fast.ai course](https://course.fast.ai/Lessons/lesson10.html). We'll go through what's needed on the high-level, using pretrained models for everything. The pipeline is fed in a text prompt and it produces an image. A prompt means we need a tokenizer to convert the text into indexes from a vocabulary, and we need an encoder to create a text embedding.
 

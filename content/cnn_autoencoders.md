@@ -2,6 +2,7 @@ Title: A naive autoencoder on FashionMNIST
 Date: 2024-07-31 14:53
 Category: Dailies
 Status: published
+Tags: deep-learning, pytorch, autoencoders
 Today we'll recreate the fastai [notebook on autoencoders](https://github.com/fastai/course22p2/blob/master/nbs/08_autoencoder.ipynb), where we train a vanilla autoencoder in FashionMNIST. Even though the autoencoder was actually doing a pretty bad job, it will be good practice for working with HuggingFace databases, CNNs and autoencoders.
 
 ## Getting the data

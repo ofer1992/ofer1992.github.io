@@ -2,6 +2,7 @@ Title: Preparing for an NLP interview - Day 1
 Date: 2025-10-28 17:55
 Category: programming
 Status: published
+Tags: nlp, interview-prep
 
 I'm interviewing for a NLP Data Science position in a couple of days. Figured it would be fun and focusing to journal about it as I go, could be useful to peeps. Technically I already started a few days ago but now it's for real, already got the technical interview lined up, and I have 5.5 days.
 

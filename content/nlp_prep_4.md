@@ -2,6 +2,7 @@ Title: Preparing for an NLP interview - Day 5 and 6
 Date: 2025-11-02 15:12
 Category: Programming
 Status: published
+Tags: nlp, interview-prep
 
 ## Day 5
  

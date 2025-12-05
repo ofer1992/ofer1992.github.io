@@ -2,6 +2,7 @@ Title: Musings on the reparametrization trick
 Date: 2024-07-27 15:45
 Category: Math
 Status: published
+Tags: math, deep-learning, variational-inference
 
 Reading the *variational autoencoder* chapter from the ["Understanding Deep Learning"](https://udlbook.github.io/udlbook/) book (which is available for free!). Not trivial, which is why I never got around to learning it, I guess. There are a lot of moving math parts to figure out. One of them is called "the reparametrization trick". So what is it about?
 

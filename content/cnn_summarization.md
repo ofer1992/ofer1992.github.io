@@ -2,6 +2,7 @@ Title: CNN summarization task
 Date: 2024-07-12 21:43
 Category: Dailies
 Status: published
+Tags: deep-learning, nlp, rnn
 
 Today we're gonna dip our fingers into the first generative NLP task - text summarization. We're gonna use the [CNN/Daily Mail dataset](https://github.com/abisee/cnn-dailymail) as done in [this paper](https://arxiv.org/pdf/1704.04368). Let's get to it.
 

@@ -2,6 +2,7 @@ Title: Building up PyTorch abstractions: Part 1
 Date: 2024-07-28 18:01
 Category: Dailies
 Status: published
+Tags: deep-learning, pytorch
 Today we will retrace lesson [13](https://www.youtube.com/watch?v=vGdB4eI4KBs)-[14](https://www.youtube.com/watch?v=veqj0DsZSXU)'s notebook that "builds up" pytorch abstractions from scratch. As a first step we'll rederive everything in hardcore numpy (maybe hardcore should be reserved for C). Then we'll start building the abstractions.
 
 First up we load `mnist` data:

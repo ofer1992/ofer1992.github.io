@@ -2,6 +2,7 @@ Title: RNN generations
 Date: 2024-07-20 17:51
 Category: Dailies
 Status: published
+Tags: deep-learning, rnn, nlp
 
 On advice from my uncle I'm continuing to fallback on task difficulty with RNNs.
 
