@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Supermarket Prices</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="Lately with AI agents are all the craze, and indeed their behavior is quite impressive. The nice thing is that you can give them access to stuff..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/drafts/supermarket-prices.html" rel="bookmark"
+           title="Permalink to Supermarket Prices">Supermarket Prices</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-10T12:24:00+03:00">
+                Published: Fri 10 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->      <p>Lately with AI agents are all the craze, and indeed their behavior is quite impressive. The nice thing is that you can give them access to stuff through REST APIs or terminal tools or files and they manage to use them and combine them with other things. Anyway, I was thinking, what if we give an agent access to supermarket prices, what could it do? could it build a shopping list? could it find a recipe and tell you which ingredients to buy?</p>
+<p>Now, in Israel by law all large enough grocery stores must supply price info for all their locations online, updated every couple of hours. While the intention is great, the execution is not so. Every chain has its own publishing system or method, they mostly rely on xmls and there's no easy programmatic way to access stuff. I know its possible though, because the app CHP does just that, aggregates all the info to one nice interface. Even though its free, it doesn't offer an api and even after reverse engineering an api on top of it, it is not expressive enough to be useful for an agent. Also, having some free publicly accessible API seems like a useful thing, and maybe a fun project.</p>
+<p>After some snooping around I also found https://www.kaggle.com/datasets/erlichsefi/israeli-supermarkets-2024, which is "A versioned daily dump of the data published by the Israeli supermarkets chain". They already do all the scraping and convert the xmls to csvs. At least for now we can use it to save some time.</p>
+<p>So, what does the data look like? for each chain we have a</p>
+<ul>
+<li><code>[name].json</code>: logs the scraping process for the kaggle dataset creation</li>
+<li><code>price_full_file_[name].csv</code>: full price snapshot for all products in all locations</li>
+<li><code>price_file_[name].csv</code>: price changes since last update</li>
+<li><code>promo_full_file_[name].csv</code>: full promo snapshot in all locations</li>
+<li><code>promo_file_[name].csv</code>: promo changes since last update</li>
+<li><code>store_file_[name].csv</code>: list of locations for chain</li>
+</ul>
+<p>Let's look at <code>price_full_file_super_yuda.csv</code>. A typical sample looks like (showing some of the columns)</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left">priceupdatedate</th>
+<th align="right">itemcode</th>
+<th align="left">itemname</th>
+<th align="left">manufactureritemdescription</th>
+<th align="left">unitqty</th>
+<th align="right">quantity</th>
+<th align="left">unitofmeasure</th>
+<th align="right">bisweighted</th>
+<th align="right">qtyinpackage</th>
+<th align="right">itemprice</th>
+<th align="right">unitofmeasureprice</th>
+<th align="right">itemid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">49996</td>
+<td align="left">2025-07-29 20:00:18</td>
+<td align="right">7.29e+12</td>
+<td align="left">לחם מחמצת לבן</td>
+<td align="left">לחם מחמצת לבן</td>
+<td align="left">יחידה</td>
+<td align="right">0</td>
+<td align="left">יחידה</td>
+<td align="right">nan</td>
+<td align="right">nan</td>
+<td align="right">21.9</td>
+<td align="right">0</td>
+<td align="right">216346</td>
+</tr>
+<tr>
+<td align="right">74083</td>
+<td align="left">2025-09-07 08:18:45</td>
+<td align="right">7.29e+12</td>
+<td align="left">תמר צהוב</td>
+<td align="left">תמר צהוב</td>
+<td align="left">קילוגרמים</td>
+<td align="right">1</td>
+<td align="left">ק"ג</td>
+<td align="right">1</td>
+<td align="right">nan</td>
+<td align="right">29.9</td>
+<td align="right">29.9</td>
+<td align="right">212648</td>
+</tr>
+<tr>
+<td align="right">13725</td>
+<td align="left">nan</td>
+<td align="right">7.29011e+12</td>
+<td align="left">צבר חומוס צנובר 400</td>
+<td align="left">צבר חומוס צנובר 400</td>
+<td align="left">nan</td>
+<td align="right">nan</td>
+<td align="left">nan</td>
+<td align="right">nan</td>
+<td align="right">nan</td>
+<td align="right">nan</td>
+<td align="right">nan</td>
+<td align="right">176704</td>
+</tr>
+<tr>
+<td align="right">71788</td>
+<td align="left">2025-03-06 13:05:14</td>
+<td align="right">8.02499e+12</td>
+<td align="left">סמוזי שיבולת שועל תפ</td>
+<td align="left">סמוזי שיבולת שועל תפ</td>
+<td align="left">גרמים</td>
+<td align="right">100</td>
+<td align="left">100 גרם</td>
+<td align="right">nan</td>
+<td align="right">nan</td>
+<td align="right">7.5</td>
+<td align="right">7.5</td>
+<td align="right">215969</td>
+</tr>
+<tr>
+<td align="right">47217</td>
+<td align="left">2025-05-05 06:54:47</td>
+<td align="right">7.29001e+12</td>
+<td align="left">מרסס מסיר כתמים "אוק</td>
+<td align="left">מרסס מסיר כתמים "אוק</td>
+<td align="left">nan</td>
+<td align="right">nan</td>
+<td align="left">nan</td>
+<td align="right">nan</td>
+<td align="right">nan</td>
+<td align="right">22.9</td>
+<td align="right">nan</td>
+<td align="right">186712</td>
+</tr>
+<tr>
+<td align="right">Some observations:</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="right">- itemid or itemcode are the product identifier</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="right">- we have some columns for quantities but they are a bit confusing, and we can expect some inconsitencies in the units specification for example</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="right">- some rows even have a missing price, so what's the point of having them?</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+</tbody>
+</table>
+<p>We also have some missing info, for example which store is the price in? I removed these columns because they are null. Why are they null? well, I guess to save space, the dataset has a ffill convention for some of the columns. Let's look at the column breakdown.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Data Type</th>
+<th>% Complete</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>itemid</td>
+<td>int64</td>
+<td>100.0%</td>
+</tr>
+<tr>
+<td>itemcode</td>
+<td>float64</td>
+<td>99.99%</td>
+</tr>
+<tr>
+<td>itemname</td>
+<td>object</td>
+<td>97.7%</td>
+</tr>
+<tr>
+<td>manufactureritemdescription</td>
+<td>object</td>
+<td>97.7%</td>
+</tr>
+<tr>
+<td>itemprice</td>
+<td>float64</td>
+<td>79.2%</td>
+</tr>
+<tr>
+<td>unitofmeasureprice</td>
+<td>float64</td>
+<td>72.6%</td>
+</tr>
+<tr>
+<td>quantity</td>
+<td>float64</td>
+<td>64.6%</td>
+</tr>
+<tr>
+<td>priceupdatedate</td>
+<td>object</td>
+<td>62.7%</td>
+</tr>
+<tr>
+<td>unitofmeasure</td>
+<td>object</td>
+<td>35.4%</td>
+</tr>
+<tr>
+<td>unitqty</td>
+<td>object</td>
+<td>34.6%</td>
+</tr>
+<tr>
+<td>bisweighted</td>
+<td>float64</td>
+<td>2.3%</td>
+</tr>
+<tr>
+<td>allowdiscount</td>
+<td>float64</td>
+<td>2.2%</td>
+</tr>
+<tr>
+<td>manufacturername</td>
+<td>object</td>
+<td>0.55%</td>
+</tr>
+<tr>
+<td>found_folder</td>
+<td>object</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>file_name</td>
+<td>object</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>chainid</td>
+<td>float64</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>subchainid</td>
+<td>float64</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>storeid</td>
+<td>float64</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>bikoretno</td>
+<td>float64</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>itemtype</td>
+<td>float64</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>manufacturecountry</td>
+<td>object</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>qtyinpackage</td>
+<td>object</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>itemstatus</td>
+<td>float64</td>
+<td>0.04%</td>
+</tr>
+<tr>
+<td>- <strong>Total Entries:</strong> 134,940</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>- <strong>Total Columns:</strong> 23</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>If we model the data relationally we arrive at something like </p>
+<p><img src="/images/Screenshot%202025-10-10%20at%2013.30.28.png" alt="Screenshot 2025-10-10 at 13.30.28" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

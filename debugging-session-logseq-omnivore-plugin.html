@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Debugging session: Logseq Omnivore plugin</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="I'm trying to debug a weird issue with the Logseq omnivore plugin where it takes forever to sync and it seemingly creates and deletes pages..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li class="active"><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/debugging-session-logseq-omnivore-plugin.html" rel="bookmark"
+           title="Permalink to Debugging session: Logseq Omnivore plugin">Debugging session: Logseq Omnivore plugin</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-22T14:24:00+03:00">
+                Published: Mon 22 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+
+</footer><!-- /.post-info -->      <p>I'm trying to debug a weird issue with the Logseq omnivore plugin where it takes forever to sync and it seemingly creates and deletes pages needlessly.</p>
+<p>My first step was to properly setting up a dev env (<code>pnpm dev</code>) which didn't work out of the box, instead of just building and printing (too old for this haha). After fiddling with configs for about an hour, I solved it by moving <code>index.html</code> out of <code>public/</code> into the root folder.</p>
+<p>Now that dev was working, I could debug normally. The main culprit seems to be <code>fetchOmnivore</code>. It's a long function that seems to fetch everything. But even when I neuter it I still get the page creation syndrome.</p>
+<p>Aha, but when I comment out the page deleting mechanism I get some more interesting results. Let's look at the code</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="c1">// delete blocks where article has been deleted from omnivore</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">after</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="nx">after</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">size</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">deletedItems</span><span class="p">,</span><span class="w"> </span><span class="nx">hasNextPage</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">getDeletedOmnivoreItems</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">apiKey</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">after</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">size</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">parseDateTime</span><span class="p">(</span><span class="nx">syncAt</span><span class="p">).</span><span class="nx">toISO</span><span class="p">(),</span>
+<span class="w">        </span><span class="nx">endpoint</span>
+<span class="w">      </span><span class="p">)</span>
+<span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">deletedItem</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">deletedItems</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">isSinglePage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nx">pageName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">renderPageName</span><span class="p">(</span>
+<span class="w">            </span><span class="nx">deletedItem</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">pageNameTemplate</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">preferredDateFormat</span>
+<span class="w">          </span><span class="p">)</span>
+<span class="w">          </span><span class="nx">targetBlockId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">getOmnivoreBlockIdentity</span><span class="p">(</span><span class="nx">pageName</span><span class="p">,</span><span class="w"> </span><span class="nx">blockTitle</span><span class="p">)</span>
+
+<span class="w">          </span><span class="c1">// delete page if article is synced to a separate page and page is not a journal</span>
+<span class="w">          </span><span class="kd">const</span><span class="w"> </span><span class="nx">existingPage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">logseq</span><span class="p">.</span><span class="nx">Editor</span><span class="p">.</span><span class="nx">getPage</span><span class="p">(</span><span class="nx">pageName</span><span class="p">)</span>
+<span class="w">          </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">existingPage</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">existingPage</span><span class="p">[</span><span class="s1">&#39;journal?&#39;</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">await</span><span class="w"> </span><span class="nx">logseq</span><span class="p">.</span><span class="nx">Editor</span><span class="p">.</span><span class="nx">deletePage</span><span class="p">(</span><span class="nx">pageName</span><span class="p">)</span>
+<span class="w">            </span><span class="k">continue</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">existingBlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">getBlockByContent</span><span class="p">(</span>
+<span class="w">          </span><span class="nx">pageName</span><span class="p">,</span>
+<span class="w">          </span><span class="nx">targetBlockId</span><span class="p">,</span>
+<span class="w">          </span><span class="nx">deletedItem</span><span class="p">.</span><span class="nx">slug</span>
+<span class="w">        </span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">existingBlock</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="k">await</span><span class="w"> </span><span class="nx">logseq</span><span class="p">.</span><span class="nx">Editor</span><span class="p">.</span><span class="nx">removeBlock</span><span class="p">(</span><span class="nx">existingBlock</span><span class="p">.</span><span class="nx">uuid</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">hasNextPage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">break</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+
+<p>When I removed the commenting, the phenomena didn't reproduce. Why? I had a guess: you can see that <code>getDeletedOmnivoreItems</code> is passed a syncDate argument. That means the first time you sync it will sync all of the pages. After a successful sync it won't happen again, since it only checks for pages after that date.</p>
+<p>But why does this seem to always happen when I use the plugin? because there is some article in my db that is causing it. And it is “Mapping the Mind of a Large Language Model \ Anthropic”! The bad news are, I can't access it from the app, because it's too old!!! maybe I can do an API call? anyway, regardless this shouldn't crash the code. But first things first.</p>
+<p>Starting with the needless page creation. The call to <code>getOmnivoreBlockIdentity</code> triggers it, in which in turn the call to <code>getOmnivorePage</code> triggers it, and in <code>getOmnivorePage</code> we have</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">omnivorePage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">logseq</span><span class="p">.</span><span class="nx">Editor</span><span class="p">.</span><span class="nx">getPage</span><span class="p">(</span><span class="nx">pageName</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">omnivorePage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">omnivorePage</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">newOmnivorePage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">logseq</span><span class="p">.</span><span class="nx">Editor</span><span class="p">.</span><span class="nx">createPage</span><span class="p">(</span><span class="nx">pageName</span><span class="p">,</span><span class="w"> </span><span class="kc">undefined</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">createFirstBlock</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span>
+<span class="w">  </span><span class="p">})</span>
+</code></pre></div>
+
+<p>So this creates a new page. Clearly undesirable behavior when we intend to delete that page in the first place!!</p>
+<p>I ended up moving the call to <code>getOmnivoreBlockIdentity</code> outside of the if statement and wrapped the rest of the code with an else. <a href="https://github.com/omnivore-app/logseq-omnivore/pull/194">Here's the PR</a>.</p>
+<p>So in total the problems I found:
+- Pages to be deleted accidentally created before.
+- I have a deleted article with a <code>\</code> (backslash?) and it crashed the deleting code before the change I did.
+- I have a deleted article with an identical name to an existing article so it deletes the article I actually want to keep. Fixed by changing the deleted article's name.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

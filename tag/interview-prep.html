@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry - interview-prep</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/preparing-for-an-nlp-interview-day-5-and-6.html">Preparing for an NLP interview - Day 5 and 6</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2025-11-02T15:12:00+02:00">
+                Published: Sun 02 November 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info --><h2>Day 5</h2>
+<p>Today we'll go thru two chapters in the NLP transformers book. The first is QA, which is a task I haven't tried before and it seems interesting. There are two approaches: extractive and generative. Generative might be more common today with LLMs, since its just having the model generate an answer for the question based on the sources. Extractive QA is a little more interesting, since it has as output a substring/span of the source text, ie it highlights where in the text the response is. How do we formulate such output? my guess is with use token classification/tagging, like NER. Maybe even BIO? What kind of challenges do I forsee?</p>
+<ul>
+<li>data processing - converting the labeled string idx spans to token labels.</li>
+<li>Are the metrics any different?
+That's what I can come up with for now. In terms of data, we're gonna use the <em>SubjQA</em> dataset, and the electronics subset. It is a rather small dataset with about 1300 training examples, so we're definitely want to start with a pretrained model. This reflects the fact that a QA dataset is quite laborious to produce.</li>
+</ul>
+<p>The important parts of the dataset for us are</p>
+<ul>
+<li>title: Amazon ASIN id</li>
+<li>question: the question</li>
+<li>answers.answer_text: the span of text in the review labeled by the annotator</li>
+<li>answers.answer_start: the start index of the span</li>
+<li>context: the review</li>
+</ul>
+<p>There's a nice analysis in the chapter breaking down the questions by the question word</p>
+<p><img src="/images/Pasted%20image%2020251101155147.png" alt="Pasted image 20251101155147" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<h3>Span classification</h3>
+<p>We frame the supervised learning problem as a span classification algorithm. As I suspected, we are using token-tagging, but we use a two class classifier that predicts whether the token is the start or end of the span. It looks something like this</p>
+<p><img src="/images/Pasted%20image%2020251101162319.png" alt="Pasted image 20251101162319" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>The question is how to extract the span? in the chapter they suggest taking the pair that maximizes the probability. Some possible problems:
+- Can get an illegal pairs (start after end)
+- Can have the span include the question/query
+- Doesn't support non-consecutive spans
+Not sure why its modeled this way, but apparently this is the convention.</p>
+<h3>Context overflow</h3>
+<p>Another possible problem is what happens when the source doc is larger than our context size (BERT has I think 512 tokens). A solution is to use a sliding window with some stride value and feeding each window to the model. How we then combine the candidate spans though is beyond me.</p>
+<p>The rest of the chapter actually talks more about the QA system as a whole: a combination of retriever-reader, where the retriever is responsible for fetching relevant documents to the reader model to extract the answer model. This is actually similar to RAG so I'm gonna skip it, especially with the fact that the chapter talks more about pipeline stuff.</p>
+<h2>Claude practice</h2>
+<p>I talked with Claude about some concepts from yesterday to get some level of understanding.</p>
+<ul>
+<li>BLEU - a metric originally for machine translation. Given a reference translation and a candidate translation, you check for a couple of <span class="math">\(n\)</span> how many of the n-grams in the candidate are contained in the reference. So for <span class="math">\(n=1\)</span> you check whether all the words in the candidate are contained in the reference etc. Then you take an average (possibly weighted).</li>
+<li>LDA - Linear Dirichlet Analysis. Didn't go deep. The LDA is a graphical model for documents. It has latent "topic" variables which are word distributions, for example sports topic would have high probability for "race", "match" etc. It imagines docs being created by for each word sampling a topic and then from it sampling a word. Then you work backwards, from the "observable" words you try to infer the topics for each document. As with all bayesian methods inference is not straight-forward and requires some special algorithms. The Dirichlet comes from the priors of document-topics and topic-words.</li>
+</ul>
+<h2>Day 6</h2>
+<p>Last day today. I am not sure what to do. I feel like as usual I'm at the point where the theory I pretty much know but not super sharp on it, but don't want to churn it, feels kinda dry, and yet I feel like I lack some hands-on "feel", which I don't really have time to acquire. Well, whatever happens tomorrow, I think going forward I will start a habit of doing hands-on stuff, either Kaggle competitions, or follow up on some interesting project idea I have, and we'll see how it goes. For now, I upload the lectures notes and slides from CS224N to NotebookLM, and looked at some mindmaps which are pretty useful. Also tried the quizzes and flashcard features, pretty cool though still don't feel baked enough. </p>
+<h3>Why do we divide the attention score by <span class="math">\(\sqrt d_k\)</span> in self-attention?</h3>
+<p>The dot product scales with dimension.This is problematic since it can lead to very spiky softmax, almost one-hot. In addition this can lead to training instability. It is a similar concept to why we want to normalize activations. </p>
+<p>Don't know if I have time to show it today but it has to do with backprop.</p>
+<h3>ABSA</h3>
+<p>I looked back on some of the ABSA stuff today. I feel like now after studying for a couple of days I can understand better the ways BERT is used. For example, for the ASC task (Aspect Sentiment Classifcation), we formulate it is as 
+<code>[CLS] sentence [SEP] aspect [SEP]</code>
+input and train a (neg, neu, pos) classifier on the <code>[CLS]</code> embedding, for example <a href="https://huggingface.co/yangheng/deberta-v3-base-absa-v1.1">this model</a>. Maybe I can reproduce the fine-tuning step on a base RoBERTa model and compare to this DeBERTaV3 model, since it is includes all sorts of tricks to boost performance.</p>
+<p>The ATE task (Aspect Term Extraction) is then a span token classification task like we talked about before. This leaves an interesting question on the table, which is, once we have this list of aspect terms, we probably want to cluster them somehow. Now, I'm not sure if this counts as the aspect category or what, but this is an open question for me.</p>
+<h3>Finetuning RoBERTa for ASC</h3>
+<p>With the help of GPT-5 we coded a finetuning script for the task. We preprocess this <a href="https://huggingface.co/datasets/jakartaresearch/semeval-absa">dataset</a> to fit the (sentence, aspect, polarity) form and we use the Trainer class for SequenceClassification task. Again the <code>transformers</code> library makes this all pretty straightforward in terms of code, and then the real world I suppose comes down to error analysis and model hyperparams.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Loss</th>
+<th>Accuracy</th>
+<th>Macro-F1</th>
+<th>Runtime (s)</th>
+<th>Samples/s</th>
+<th>Steps/s</th>
+<th>Epoch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>roberta-base (fine-tuned)</td>
+<td>0.6002</td>
+<td>0.8072</td>
+<td>0.7717</td>
+<td>1.7235</td>
+<td>370.167</td>
+<td>23.208</td>
+<td>4.0</td>
+</tr>
+<tr>
+<td>yangheng/deberta-v3-base-absa-v1.1</td>
+<td>0.6287</td>
+<td>0.8276</td>
+<td>0.7902</td>
+<td>3.5801</td>
+<td>178.205</td>
+<td>5.586</td>
+<td>-</td>
+</tr>
+<tr>
+<td>### Revisiting BPE</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Reimplementing from scratch using <a href="https://github.com/karpathy/minbpe">minbpe</a> repo. Had ChatGPT act as a tutor and breakdown the implementation to different exercises. Actually pretty neat.</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/preparing-for-an-nlp-interview-day-3-and-4.html" rel="bookmark"
+                           title="Permalink to Preparing for an NLP interview - Day 3 and 4">Preparing for an NLP interview - Day 3 and 4</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-31T11:14:00+02:00">
+                Published: Fri 31 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->                <p>Another day has come. This one will be somewhat disjointed, I have an ~1.5 hrs in the morning and maybe some later in the evening.</p>
+<p>Yesterday I remembered I watched <a href="https://www.youtube.com/watch?v=FkHAYG8vASQ">this</a> youtube interview with a NLP data scientist and he listed the important stuff you kinda gotta know. I …</p>
+                <a class="readmore" href="/preparing-for-an-nlp-interview-day-3-and-4.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/preparing-for-an-nlp-interview-day-2.html" rel="bookmark"
+                           title="Permalink to Preparing for an NLP interview - Day 2">Preparing for an NLP interview - Day 2</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-29T13:19:00+02:00">
+                Published: Wed 29 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->                <p>Okay, we're now in day 2. Yesterday I was kind of wrestling with whatever I could find on ABSA, trying to figure out what is the right approach to get some hands on experience. We settled for building an E2E ABSA model using BERT, which we based on a <a href="https://arxiv.org/pdf/1910.00883">paper …</a></p>
+                <a class="readmore" href="/preparing-for-an-nlp-interview-day-2.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/preparing-for-an-nlp-interview-day-1.html" rel="bookmark"
+                           title="Permalink to Preparing for an NLP interview - Day 1">Preparing for an NLP interview - Day 1</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-28T17:55:00+02:00">
+                Published: Tue 28 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->                <p>I'm interviewing for a NLP Data Science position in a couple of days. Figured it would be fun and focusing to journal about it as I go, could be useful to peeps. Technically I already started a few days ago but now it's for real, already got the technical interview …</p>
+                <a class="readmore" href="/preparing-for-an-nlp-interview-day-1.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

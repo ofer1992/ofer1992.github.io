@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Preparing for an NLP interview - Day 1</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="I'm interviewing for a NLP Data Science position in a couple of days. Figured it would be fun and focusing to journal about it as I go, could be..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/preparing-for-an-nlp-interview-day-1.html" rel="bookmark"
+           title="Permalink to Preparing for an NLP interview - Day 1">Preparing for an NLP interview - Day 1</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-28T17:55:00+02:00">
+                Published: Tue 28 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->      <p>I'm interviewing for a NLP Data Science position in a couple of days. Figured it would be fun and focusing to journal about it as I go, could be useful to peeps. Technically I already started a few days ago but now it's for real, already got the technical interview lined up, and I have 5.5 days.</p>
+<p>I started by reading parts of <a href="https://web.stanford.edu/~jurafsky/slp3/">Speech and Language Processing</a> which is like the standard textbook. The 3rd edition kinda reorients itself around language modeling and the more modern stuff, which is good, but I think the company is also interested in more classical NLP knowledge as well. This is included in the second section of the book but its definitely of a different flavour (maybe because the language modeling stuff for me is more of a refresher wheres the actual NLP stuff is new). I also have <a href="https://transformersbook.com/">[Natural Language Processing with Transformers Book](https://transformersbook.com/)</a> which is more hands-on, but I'm not sure how deep it goes.</p>
+<p>The company I will interview for is responsible for aspect based sentiment analysis of reviews. This is a field I don't know much about, so I thought it might be a good way to prepare, learn about it and on the way familiarize myself with the different problems one needs to solve, different models and techniques used.</p>
+<p>Going by fast.ai philosophy, a top-down approach could be effective, where I start by learning to use the high-level tools (<code>transformers</code> for example) and then break it down and implement things myself. Browsing around, I found <a href="https://github.com/yangheng95/PyABSA">PyABSA</a> which is an existing package for research to easily run many models on many datasets. It might be too high-level though, this is the difficulty of building your own curriculum I guess.</p>
+<h2>The PyABSA framework</h2>
+<p>This is kind of the minimal example</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyabsa</span><span class="w"> </span><span class="kn">import</span> <span class="n">AspectTermExtraction</span> <span class="k">as</span> <span class="n">ATE</span>
+
+<span class="n">aspect_extractor</span> <span class="o">=</span> <span class="n">ATE</span><span class="o">.</span><span class="n">AspectExtractor</span><span class="p">(</span><span class="n">checkpoint</span> <span class="o">=</span><span class="s2">&quot;multilingual&quot;</span><span class="p">)</span>
+<span class="n">examples</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;But the staff was so nice to us.&quot;</span><span class="p">]</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">aspect_extractor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">text</span> <span class="o">=</span> <span class="n">examples</span><span class="p">)</span> <span class="c1"># simple inference</span>
+</code></pre></div>
+
+<p>For which we get</p>
+<div class="highlight"><pre><span></span><code>[2025-10-28 16:36:09] (2.4.2) Example 0: But the &lt;staff:Positive Confidence:0.9973&gt; was so nice to us .
+</code></pre></div>
+
+<p>Let's let claude code look at the repo and figure out what goes on under the hood. I gave it the following prompt:</p>
+<div class="highlight"><pre><span></span><code>    from pyabsa import AspectTermExtraction as ATE
+
+    aspect_extractor = ATE.AspectExtractor(checkpoint =&quot;multilingual&quot;)
+    examples = [&quot;But the staff was so nice to us.&quot;]
+    results = aspect_extractor.predict(text = examples) # simple inference 
+
+the snippet above runs the whole pipeline end to end. I want you to explore the repo, figure out what goes on under the hood in the pipeline: ie, preprocessing, tokenization,
+
+ extraction etc. Produce a document which contains the overview in three levels of depth, shallow to detailed, and include code references for everything. produce a markdown 
+
+file and save it to the folder root
+</code></pre></div>
+
+<p>It came back with a very long report. I will start with first level for now:</p>
+<h3>Claude Report</h3>
+<p>The PyABSA Aspect Term Extraction (ATE) pipeline performs two main tasks:</p>
+<ol>
+<li><strong>Aspect Term Extraction (ATE)</strong>: Identifies aspect terms in text (e.g., "staff" in "The staff was nice")</li>
+<li><strong>Aspect Polarity Classification (APC)</strong>: Determines sentiment for each aspect (positive, negative, neutral)</li>
+</ol>
+<p><strong>Basic Flow</strong>:</p>
+<div class="highlight"><pre><span></span><code>Input Text → Preprocessing → Tokenization → Model Inference → Post-processing → Results
+</code></pre></div>
+
+<p><strong>Key Components</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Purpose</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AspectExtractor</code></td>
+<td>Main inference class</td>
+<td><code>pyabsa/tasks/AspectTermExtraction/prediction/aspect_extractor.py:45</code></td>
+</tr>
+<tr>
+<td><code>ATEPCProcessor</code></td>
+<td>Data preprocessing</td>
+<td><code>pyabsa/tasks/AspectTermExtraction/dataset_utils/__lcf__/data_utils_for_inference.py:103</code></td>
+</tr>
+<tr>
+<td><code>LCF_ATEPC</code></td>
+<td>Neural network model</td>
+<td><code>pyabsa/tasks/AspectTermExtraction/models/__lcf__/lcf_atepc.py:20</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>What You Get Back</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="s2">&quot;sentence&quot;</span><span class="p">:</span> <span class="s2">&quot;But the staff was so nice to us.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;aspect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;staff&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;sentiment&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Positive&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;confidence&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.95</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>End of report. So over the next few days I will need to learn about:
+- Preprocessing
+- Tokenization
+- Aspect Extraction
+- Aspect Sentiment Classification</p>
+<p>Okay. Let's do a bit of a pivot. Let's download the <a href="https://www.kaggle.com/datasets/charitarth/semeval-2014-task-4-aspectbasedsentimentanalysis">Laptop14</a> dataset, explore it and try to build something for it. Downloading and openining the xml train file we see its consists of sentences of the form</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;sentence</span><span class="w"> </span><span class="na">id=</span><span class="s">&quot;2339&quot;</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="nt">&lt;text&gt;</span>I<span class="w"> </span>charge<span class="w"> </span>it<span class="w"> </span>at<span class="w"> </span>night<span class="w"> </span>and<span class="w"> </span>skip<span class="w"> </span>taking<span class="w"> </span>the<span class="w"> </span>cord<span class="w"> </span>with<span class="w"> </span>me<span class="w"> </span>because<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>good<span class="w"> </span>battery<span class="w"> </span>life.<span class="nt">&lt;/text&gt;</span>
+<span class="w">        </span><span class="nt">&lt;aspectTerms&gt;</span>
+<span class="w">            </span><span class="nt">&lt;aspectTerm</span><span class="w"> </span><span class="na">term=</span><span class="s">&quot;cord&quot;</span><span class="w"> </span><span class="na">polarity=</span><span class="s">&quot;neutral&quot;</span><span class="w"> </span><span class="na">from=</span><span class="s">&quot;41&quot;</span><span class="w"> </span><span class="na">to=</span><span class="s">&quot;45&quot;</span><span class="nt">/&gt;</span>
+<span class="w">            </span><span class="nt">&lt;aspectTerm</span><span class="w"> </span><span class="na">term=</span><span class="s">&quot;battery life&quot;</span><span class="w"> </span><span class="na">polarity=</span><span class="s">&quot;positive&quot;</span><span class="w"> </span><span class="na">from=</span><span class="s">&quot;74&quot;</span><span class="w"> </span><span class="na">to=</span><span class="s">&quot;86&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;/aspectTerms&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/sentence&gt;</span>
+</code></pre></div>
+
+<p>We see the data contains the result of both steps (aspect extraction and sentiment analysis). If we want to build a model, we need to formulate this as some kind of an ML problem. Nowadays, you could technically use LLMs for a lot of NLP problems (even though its not necessarily the best solution). For example, I gave this prompt to Claude</p>
+<div class="highlight"><pre><span></span><code>Perform ABAS on the following sentence: &quot;I charge it at night and skip taking the cord with me because of the good battery life.&quot;
+
+Use the following syntax as in the example below: &lt;aspectTerms&gt; &lt;aspectTerm term=&quot;service center&quot; polarity=&quot;negative&quot; from=&quot;27&quot; to=&quot;41&quot;/&gt; &lt;aspectTerm term=&quot;&amp;quot;sales&amp;quot; team&quot; polarity=&quot;negative&quot; from=&quot;109&quot; to=&quot;121&quot;/&gt; &lt;aspectTerm term=&quot;tech guy&quot; polarity=&quot;neutral&quot; from=&quot;4&quot; to=&quot;12&quot;/&gt; &lt;/aspectTerms&gt;
+</code></pre></div>
+
+<p>And got back</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;aspectTerms&gt;</span>
+<span class="w">    </span><span class="nt">&lt;aspectTerm</span><span class="w"> </span><span class="na">term=</span><span class="s">&quot;battery life&quot;</span><span class="w"> </span><span class="na">polarity=</span><span class="s">&quot;positive&quot;</span><span class="w"> </span><span class="na">from=</span><span class="s">&quot;76&quot;</span><span class="w"> </span><span class="na">to=</span><span class="s">&quot;88&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/aspectTerms&gt;</span>
+</code></pre></div>
+
+<p>Since this is a public dataset I'm not surprised it gave back the right answer since it probably saw the input, but even though this can be seen as one way to solve it. We are interested in solving this in a ML-oriented way, and to that end we can frame the different tasks in a couple of ways (<a href="https://arxiv.org/pdf/2203.01054">survey</a>):
+ - token-level tagging: we break the sentence to tokens and have the model tag which are aspects and which are not. We can use a transformer encoder like BERT to get contextual work embedding and add a classification layer to tag them.
+ - seq2seq: a encoder-decoder approach, which will output a sequence containing the aspects. The claude answer can be thought of as such an approach.
+ - sequence-level classification: the model will receive the sequence and an aspect and classify the sentiment. This is more relevant to the Aspect Sentiment Classification stage.</p>
+<p>Here's an example of token-level tagging for the joint task (taken from <a href="https://isakzhang.github.io/talks/files/llm-sentiment-ijcai2023-tutorial-sharing.pdf">here</a>)</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>The</th>
+<th>AMD</th>
+<th>Turin</th>
+<th>Processor</th>
+<th>seems</th>
+<th>to</th>
+<th>always</th>
+<th>perform</th>
+<th>much</th>
+<th>better</th>
+<th>than</th>
+<th>Intel</th>
+<th>.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Joint</td>
+<td>O</td>
+<td>B</td>
+<td>I</td>
+<td>E</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>S</td>
+<td>O</td>
+</tr>
+<tr>
+<td></td>
+<td>O</td>
+<td>POS</td>
+<td>POS</td>
+<td>POS</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>NEG</td>
+<td>O</td>
+</tr>
+<tr>
+<td>Unified</td>
+<td>O</td>
+<td>B-POS</td>
+<td>I-POS</td>
+<td>E-POS</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>O</td>
+<td>S-NEG</td>
+<td>O</td>
+</tr>
+</tbody>
+</table>
+<p>And we can imagine a model like this could solve it</p>
+<p><img src="/images/Screenshot%202025-10-28%20at%2020.35.36.png" alt="Screenshot 2025-10-28 at 20.35.36" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>Okay. So let's regroup, what should we do? how about this: we'll remain high level today. We'll, use the <code>transformers</code> library to easily get a pretrained BERT model. We'll fine-tune a simple linear classification layer on top of it that classifies the aspect and the polarity (sentiment). Let's see what we can get.</p>
+<h2>First E2E Model</h2>
+<p>I'm gonna rely here on the NLP with transformers book, and reimplement the paper <a href="https://arxiv.org/pdf/1910.00883">Exploiting BERT for End-to-End Aspect-based Sentiment Analysis</a>. The first stop is to get the dataset. There are several datasets on hugging face. Most are actually structured in a sentence-&gt;(aspect span, polarity) form which requires some more processing. </p>
+<p>Here's the pipeline process from the paper:</p>
+<ol>
+<li>Loading &amp; Parsing (glue_utils.py:_create_examples): Reads files and splits sentence/tag pairs</li>
+<li>Tag Schema Conversion (seq_utils.py): Converts tags to BIEOS format (Begin-Inside-End-Outside-Singleton) for precise aspect boundary detection</li>
+<li>BERT Tokenization (glue_utils.py:convert_examples_to_seq_features):<ul>
+<li>Splits words into subword tokens using WordPiece</li>
+<li>First subword gets the original tag, rest get EQ (equivalent)</li>
+<li>Adds [CLS] and [SEP] tokens</li>
+</ul>
+</li>
+<li>Feature Creation: Constructs input_ids, attention masks, segment IDs, and label sequences with padding</li>
+<li>Caching: Saves processed features to avoid reprocessing</li>
+<li>Training Loop (main.py):<ul>
+<li>BERT-base-uncased (768-dim) + task-specific layer (Linear/GRU/CRF)</li>
+<li>AdamW optimizer, learning rate 2e-5</li>
+<li>Batch size 16-32, max 1,500 steps</li>
+<li>Saves checkpoints every 100 steps</li>
+</ul>
+</li>
+<li>Evaluation: Extracts aspect-sentiment pairs from predictions and computes precision/recall/F1 metrics</li>
+</ol>
+<h3>Data processing</h3>
+<p>We're using the laptop14 data from the paper, which is just a text file. A row looks like this</p>
+<div class="highlight"><pre><span></span><code>I was looking for a mac which is portable and has all the features that I was looking for.####I=O was=O looking=O for=O a=O mac=O which=O is=O portable=O and=O has=O all=O the=O features=T-POS that=O I=O was=O looking=O for=O .=O
+</code></pre></div>
+
+<p>It tags on a word basis. The <code>####</code> separates the sentence from the tagging. The data uses the Targeted Sentiment format, which basically tags a word as T-POS/T-NEU/T-NEG. I am a bit surprised by this since usually the tagging is for aspects/NERs is something like the BIESO scheme, (B-beginning, I-In, E-End, S-Singleton, O-Outside). Looking at the paper's code they actually convert the TS format to BIO. Should we do it ourselves? maybe we can start without that. Not yet sure what the drawbacks are.</p>
+<p>Okay, I was playing around with writing the dataset abstraction in pytorch. In addition, we need to add the tokenization on top so we can feed the data directly to the model. This requires a collation function, which should also handle padding, which we will talk about next time. While doing so I started running into all sorts of parsing bugs (as one is bound to when working with data and code). I don't want to get bogged down by this, so I will have some AI look at the reference repo and reimplement something minimal and similar. Gotta choose your battles, I want tomorrow to already be training and evaluating. Anyway, signing off for now, good night folks.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

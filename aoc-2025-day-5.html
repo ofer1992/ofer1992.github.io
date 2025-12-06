@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>AoC 2025 - Day 5</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="import fs from 'node:fs'; const input = fs.readFileSync('input.txt', 'utf-8'); const sample = `\ 3-5 10-14 16-20 12-18 1 5 8 11 17 32`; Part 1 The..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/aoc-2025-day-5.html" rel="bookmark"
+           title="Permalink to AoC 2025 - Day 5">AoC 2025 - Day 5</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-05T11:18:00+02:00">
+                Published: Fri 05 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->      <div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;node:fs&#39;</span><span class="p">;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s1">&#39;input.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;utf-8&#39;</span><span class="p">);</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`\</span>
+<span class="sb">3-5</span>
+<span class="sb">10-14</span>
+<span class="sb">16-20</span>
+<span class="sb">12-18</span>
+
+<span class="sb">1</span>
+<span class="sb">5</span>
+<span class="sb">8</span>
+<span class="sb">11</span>
+<span class="sb">17</span>
+<span class="sb">32`</span><span class="p">;</span>
+</code></pre></div>
+
+<h2>Part 1</h2>
+<p>The first part of the input has a list of inclusive intervals, eg 3-5 for 3, 4, 5 etc. The second part has a list of numbers. We need to check how many of those are contained in the intervals. Approaches:</p>
+<ul>
+<li>naive: for each pair of interval and number check if number contained in interval.<ul>
+<li>O(r*n)</li>
+</ul>
+</li>
+<li>sort the numbers, then for each interval check where the borders fall in the numbers array<ul>
+<li>O(n) for the sort</li>
+<li>For each range we have O(log(n)) to find indexes of borders, so O(r*log(n)) in total.</li>
+<li>Add slice to set of seen numbers (are there repetitions). Now this in the worst case would be O(n) (imagine all the ranges contain all the numbers). We could solve it by removing the slice from the number array but then that incurs its own cost which I can't of the top of my head figure out.</li>
+</ul>
+</li>
+<li>merge the ranges and then sort the borders and numbers together, keeping track of what is what. Then you just iterate on the combined array, noting when you are inside a range.<ul>
+<li>Merge is O(r), sort is O(r+n), iteration is O(r+n). Probably the optimal solution.</li>
+</ul>
+</li>
+</ul>
+<p>Let's start with the naive just because it's the quickest, the input might be small enough, at least for part 1.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">interval_s</span><span class="p">,</span><span class="w"> </span><span class="nx">num_s</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sample</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n\n&quot;</span><span class="p">);</span>
+<span class="p">[</span><span class="nx">interval_s</span><span class="p">,</span><span class="w"> </span><span class="nx">num_s</span><span class="p">];</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-green-fg">&#34;3-5\n10-14\n16-20\n12-18&#34;</span>, <span class="ansi-green-fg">&#34;1\n5\n8\n11\n17\n32&#34;</span> ]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">intervals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">interval_s</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">rs</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">rs</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">b</span><span class="p">)));</span>
+<span class="nx">intervals</span><span class="p">;</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ [ <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">5</span> ], [ <span class="ansi-yellow-fg">10</span>, <span class="ansi-yellow-fg">14</span> ], [ <span class="ansi-yellow-fg">16</span>, <span class="ansi-yellow-fg">20</span> ], [ <span class="ansi-yellow-fg">12</span>, <span class="ansi-yellow-fg">18</span> ] ]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">nums</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">num_s</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">));</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">interval_s</span><span class="p">,</span><span class="w"> </span><span class="nx">num_s</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n\n&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">[</span><span class="nx">interval_s</span><span class="p">,</span><span class="w"> </span><span class="nx">num_s</span><span class="p">];</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">intervals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">interval_s</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">rs</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">rs</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">b</span><span class="p">)));</span>
+<span class="w">  </span><span class="nx">intervals</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">nums</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">num_s</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">))</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">[</span><span class="nx">intervals</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">intervals</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">sample</span><span class="p">);</span>
+<span class="p">[</span><span class="nx">intervals</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">];</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  [ [ <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">5</span> ], [ <span class="ansi-yellow-fg">10</span>, <span class="ansi-yellow-fg">14</span> ], [ <span class="ansi-yellow-fg">16</span>, <span class="ansi-yellow-fg">20</span> ], [ <span class="ansi-yellow-fg">12</span>, <span class="ansi-yellow-fg">18</span> ] ],
+  [ <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">5</span>, <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">11</span>, <span class="ansi-yellow-fg">17</span>, <span class="ansi-yellow-fg">32</span> ]
+]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5</span><span class="p">;</span>
+<span class="nx">intervals</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">i</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">i</span><span class="p">[</span><span class="mf">1</span><span class="p">]);</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">true</span>
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">nums</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">intervals</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">i</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">i</span><span class="p">[</span><span class="mf">1</span><span class="p">]));</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-yellow-fg">5</span>, <span class="ansi-yellow-fg">11</span>, <span class="ansi-yellow-fg">17</span> ]
+</pre>
+
+<p>Let's put it all in a function</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">part1</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">intervals</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">intervals</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">i</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">i</span><span class="p">[</span><span class="mf">1</span><span class="p">])).</span><span class="nx">length</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nx">part1</span><span class="p">(</span><span class="nx">sample</span><span class="p">);</span><span class="w"> </span><span class="c1">// should be 3</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">3</span>
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">part1</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">513</span>
+</pre>
+
+<p>Okay, success. Let's move on</p>
+<h2>Part 2</h2>
+<p>The next question is: how many numbers are covered by the ranges? so the numbers list is no longer relevant, but we need to handle the overlaps between the ranges. The naive way would be to just iterate over the ranges and add numbers to a set or something but that's wildly inefficient. The better way — let's sort and merge ranges.</p>
+<p>I don't know if I ever sorted in js before, let's see what peculiarities are in store</p>
+<div class="highlight"><pre><span></span><code><span class="nx">intervals</span><span class="p">.</span><span class="nx">sort</span><span class="p">();</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ [ <span class="ansi-yellow-fg">10</span>, <span class="ansi-yellow-fg">14</span> ], [ <span class="ansi-yellow-fg">12</span>, <span class="ansi-yellow-fg">18</span> ], [ <span class="ansi-yellow-fg">16</span>, <span class="ansi-yellow-fg">20</span> ], [ <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">5</span> ] ]
+</pre>
+
+<p>As expected. <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort">Looking at the docs</a> the default sort is something strange about converting to strings and sorting by the unicode code. Instead we need to supply a comparator function that returns (-1, 0, 1) for &lt; = &gt; cases.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
+<span class="nx">a</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">-</span><span class="nx">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="o">?</span><span class="w">  </span><span class="nx">0</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">1</span><span class="p">;</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">-1</span>
+</pre>
+
+<p>Wait, looking more closesly at the docs, I see the actual requirement is not to return -1 or 1 exactly but a negative or positive value. This simplifies then to returning <code>a-b</code></p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">intervals</span><span class="p">.</span><span class="nx">sort</span><span class="p">(([</span><span class="nx">l1</span><span class="p">,</span><span class="w"> </span><span class="nx">r1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="nx">l2</span><span class="p">,</span><span class="w"> </span><span class="nx">r2</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">l1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">l2</span><span class="p">);</span>
+<span class="nx">sorted</span><span class="p">;</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ [ <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">5</span> ], [ <span class="ansi-yellow-fg">10</span>, <span class="ansi-yellow-fg">14</span> ], [ <span class="ansi-yellow-fg">12</span>, <span class="ansi-yellow-fg">18</span> ], [ <span class="ansi-yellow-fg">16</span>, <span class="ansi-yellow-fg">20</span> ] ]
+</pre>
+
+<p>So how do we go about the merging? since we sorted, we know any overlap between an interval and the one on the right will be one of these forms:</p>
+<div class="highlight"><pre><span></span><code>l1   r1
+l2      r2
+
+l1      r1
+  l2  r2
+
+l1   r1
+  l2      r2
+</code></pre></div>
+
+<p>So we merge by taking the larger of the <code>r</code> values and finish merging ones there is no more overlap. Let's test this out on the 3rd and 4th intervals in the sorted list which are overlapping</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// [12, 18], [16,20]</span>
+<span class="kd">let</span><span class="w"> </span><span class="p">[</span><span class="nx">l</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sorted</span><span class="p">[</span><span class="mf">2</span><span class="p">];</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">sorted</span><span class="p">[</span><span class="mf">3</span><span class="p">][</span><span class="mf">0</span><span class="p">])</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`[</span><span class="si">${</span><span class="nx">l</span><span class="si">}</span><span class="sb">, </span><span class="si">${</span><span class="nx">r</span><span class="si">}</span><span class="sb">] can be &quot;commited&quot;`</span><span class="p">)</span>
+<span class="nx">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="nx">sorted</span><span class="p">[</span><span class="mf">3</span><span class="p">][</span><span class="mf">1</span><span class="p">]);</span>
+<span class="p">[</span><span class="nx">l</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">]</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-yellow-fg">12</span>, <span class="ansi-yellow-fg">20</span> ]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">let</span><span class="w"> </span><span class="p">[</span><span class="nx">cur_l</span><span class="p">,</span><span class="w"> </span><span class="nx">cur_r</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sorted</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<span class="nx">sorted</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(([</span><span class="nx">l</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">cur_l</span><span class="p">,</span><span class="w"> </span><span class="nx">cur_r</span><span class="p">,</span><span class="w"> </span><span class="nx">l</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">cur_r</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">l</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">s</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">cur_r</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">cur_l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="c1">// length of inclusive range</span>
+<span class="w">    </span><span class="p">[</span><span class="nx">cur_l</span><span class="p">,</span><span class="w"> </span><span class="nx">cur_r</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nx">l</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">];</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="nx">cur_r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">cur_r</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="nx">s</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">cur_r</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">cur_l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="c1">// the last merged interval isn&#39;t added, possible bug here</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">3</span> <span class="ansi-yellow-fg">5</span> <span class="ansi-yellow-fg">3</span> <span class="ansi-yellow-fg">5</span>
+<span class="ansi-yellow-fg">3</span> <span class="ansi-yellow-fg">5</span> <span class="ansi-yellow-fg">10</span> <span class="ansi-yellow-fg">14</span>
+<span class="ansi-yellow-fg">10</span> <span class="ansi-yellow-fg">14</span> <span class="ansi-yellow-fg">12</span> <span class="ansi-yellow-fg">18</span>
+<span class="ansi-yellow-fg">10</span> <span class="ansi-yellow-fg">18</span> <span class="ansi-yellow-fg">16</span> <span class="ansi-yellow-fg">20</span>
+
+</pre>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">14</span>
+</pre>
+
+<p>Basically we don't even merge them, we just keep track of the count. Let's wrap everything up</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">part2</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">intervals</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">intervals</span><span class="p">.</span><span class="nx">sort</span><span class="p">(([</span><span class="nx">l1</span><span class="p">,</span><span class="w"> </span><span class="nx">r1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="nx">l2</span><span class="p">,</span><span class="w"> </span><span class="nx">r2</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">l1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">l2</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="p">[</span><span class="nx">cur_l</span><span class="p">,</span><span class="w"> </span><span class="nx">cur_r</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sorted</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">sorted</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(([</span><span class="nx">l</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// console.log(cur_l, cur_r, l, r);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">cur_r</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">l</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">s</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">cur_r</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">cur_l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="c1">// length of inclusive range</span>
+<span class="w">      </span><span class="p">[</span><span class="nx">cur_l</span><span class="p">,</span><span class="w"> </span><span class="nx">cur_r</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nx">l</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">cur_r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">cur_r</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="w">  </span><span class="nx">s</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">cur_r</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">cur_l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="c1">// the last merged interval isn&#39;t added</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">s</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="nx">part2</span><span class="p">(</span><span class="nx">sample</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">14</span>
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">part2</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">339668510830757</span>
+</pre>
+
+<p>Success!</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

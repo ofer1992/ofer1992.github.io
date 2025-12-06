@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>At the door steps of Mordor</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="The goal A short recap of where we are (will probably refactor this to retroactive posts eventually): I'm trying to switch logseq's git dependency..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/at-the-door-steps-of-mordor.html" rel="bookmark"
+           title="Permalink to At the door steps of Mordor">At the door steps of Mordor</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-08T18:10:00+03:00">
+                Published: Wed 08 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->      <h2>The goal</h2>
+<p>A short recap of where we are (will probably refactor this to retroactive posts eventually): I'm trying to switch logseq's git dependency from <code>dugite</code> to <code>isomorphic-git</code>, so it can run on android, browser etc. The problem with dugite is that it depends on the presence of a git client. Since git in logseq is only expected to work on a pc or mac using electron, the implementation is tied to electron specific code like a separate config and state, and a different access to the file system. Also, dugite can run arbitrary git commands while iso-git has specific functions that implement most of the functionality of git, but obviously it is more restricted.</p>
+<h2>Day 1 - Warming up with ClojureScript, interop with isomorphic-git</h2>
+<p>Since logseq is written in ClojureScript, the first step was setting up the dev environment. It is luckily relatively well-documented. Of course, in my opinion clojure's general dev environment is quite clunky. Maybe I'm spoiled, having come from python which is interpreted language, and with which I have much experience, but I never quite manage to wrap my head around all the scaffolding required for clojure development. You need java, and clojure, initialize the project in a certain way, and then you compile and run it (or run it with one of the clojure CLI commands). This is the barebones setup, but of course you want a repl, so you need some more tools. I use VSCode+Calva. And you also have build tools like leiningen or shadow-cljs, and then there's all the interop with java/javascript. Now, a lot of effort has went to make things work out-of-the-box, but still, there's a lot of complexity going on which in the end is still leaky. Sorry for the rant, but I had to get it off my chest.</p>
+<p>After setting up and figuring out the program's endpoints and different execution modes (browser or electron, haven't touched mobile yet), I scanned the source code for usage of git. The first hurdle was to figure out the javascript interop. You can call javascript functions directly from clojurescript, which is super neat, but it takes some figuring out the right syntax. Here ChatGPT was a big help, basically helping me do it in minutes instead of an hour in the worst case. Another hurdle was promises. iso-git uses promises for all the operations, and for some reason things were not working as I expected. Prints weren't printing. Again, this is a classic example of the dillema of going deep on subjects or hacking along. I'm not very knowledgable of concurrent programming, and especially not in clojure, so it was very challenging for me to understand what's going on, or what sanity checks should I do. In the end I also figured out that the problem was really just printing: depending on the usage of <code>js/console.log</code> vs <code>println</code> or <code>prn</code> you get prints in either the browser console or the repl output or wherever. So that's was a lesson learned with sweat and tears. In fact, this whole process, as we will see, exemplifies the sweat and tears required to learn these lessons.</p>
+<h2>Day 2 - Actually writing some code</h2>
+<p>I then moved on to rewriting the basic git functions in the code with isomorphic-git. Again, with the help of Copilot and ChatGPT, this process went fairly smoothly, and thanks to the repl, it's very quick to check that the functions behave as expected. By this point I got the electron version to work with the new implementations of the git functionality. Clearly all that remained was to reenable the git tab in the settings modal. A quick look through the code led me to the test that checks if electron is running and only then displaying the git setting, which gladly commented out. Immediately the tab appeared in the browser version.</p>
+<p>I patted myself on the back for my success, but then quickly realized this was the easy part. Nothing was actually happening on the git side. You see, since using dugite already restricted the git integration to computers, the code naturally became tied to the electron build, so the git configuration and the callbacks that manage the git lifecycle didn't actually work. I had to refactor those dependencies out to the more general <code>frontend</code> build.</p>
+<h2>Day 3 - Moving state from electron to frontend</h2>
+<p>Where was logseq's state located? and how? my investigation began by trying to trace a simple toggle button present in the editor tab of the settings page. After searching for the toggle's label in the codebase I found the following</p>
+<div class="highlight"><pre><span></span><code><span class="p">(</span><span class="kd">defn </span><span class="nv">outdenting-row</span><span class="w"> </span><span class="p">[</span><span class="nv">t</span><span class="w"> </span><span class="nv">logical-outdenting?</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">toggle</span><span class="w"> </span><span class="s">&quot;preferred_outdenting&quot;</span>
+<span class="w">          </span><span class="p">[(</span><span class="nf">t</span><span class="w"> </span><span class="ss">:settings-page/preferred-outdenting</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">ui/tippy</span><span class="w"> </span><span class="p">{</span><span class="ss">:html</span><span class="w">        </span><span class="p">(</span><span class="nf">outdenting-hint</span><span class="p">)</span>
+<span class="w">                      </span><span class="ss">:class</span><span class="w">       </span><span class="s">&quot;tippy-hover ml-2&quot;</span>
+<span class="w">                      </span><span class="ss">:interactive</span><span class="w"> </span><span class="nv">true</span>
+<span class="w">                      </span><span class="ss">:disabled</span><span class="w">    </span><span class="nv">false</span><span class="p">}</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">svg/info</span><span class="p">))]</span>
+<span class="w">          </span><span class="nv">logical-outdenting?</span>
+<span class="w">          </span><span class="nv">config-handler/toggle-logical-outdenting!</span><span class="p">))</span>
+</code></pre></div>
+
+<p>There was a getter called <code>logical-outdenting?</code> and a setter called <code>toggle-logical-outdenting!</code>. They were both under the <code>frontend</code> namespace, but in different files, <code>state.cljs</code> and <code>config.cljs</code>. The getter referred to an atom called state, but it must have been loaded from somewhere on disk, since the info was persisted. The setter changed the values on a file called <code>config.edn</code>. This is actually just the config file which is even accessible from logseq itself.</p>
+<p>I was a bit puzzled about how the config file and the state atom are maintained in sync, but I decided to just hope it works. Initially after adding new getters and setters for the git configuration, I thought it wasn't working, but playing around a bit I noticed that the config.edn file was indeed updated.</p>
+<p>From there on it was fairly straightforward work of replacing all the references to the usage of electron state to the new properties I defined. I even did some ui coding refactoring with the help of ChatGPT. It definitely seems like the git integration was written in an earlier part of development, since it's somewhat inconsistent in style from the rest of the code.</p>
+<h2>Day 4 - How do I even access the file system</h2>
+<p>Today was mostly spent puzzling over the file system access and how it works in the browser. Again, an example of implementation details, the understanding of which is earned through sweat and tears. Or asking around on Discord, which is something I'm not good at and should probably do more often. </p>
+<p>Since logseq runs on several platform, there is an abstraction implemented in <code>fs.cljs</code> that create a unified interface. It is implemented through the use of protocols, which is a clojure construct that implements polymorphism, and one I have not used before. The combination of protocol, browser filesystem access, promises and maybe more really slowed me down today. I would say it was around 3 hours just to figure out how access to the fs works, what I can expect to be able to do, why did some files not appear initialliy (they were filtered), why were some calls not working (promises are so obtuse, but I probably could have used <code>.catch</code>). I think I understand enough to try and use iso-git with this abstraction, but there are still some question marks remaining.</p>
+<p>There is also one weird thing I need to make a decision about: the old git implementation maintains the gitdir (<code>.git</code>) not in the actual repo but on logseq's appdata folder. Can I handle that? what about access permissions? all will be seen tomorrow.</p>
+<h2>Looking ahead</h2>
+<p>I estimate I've put in about 15 hours so far. Today was the first day I felt a little fatigued. I guess it's a little frustrating, as this is a mostly technical task. Still, this is the skill: getting into an unfamiliar project, figuring out the ups and down, and executing a set of changes that accomplishes what you are after. For me it's important to get it done, even just for the completionist side.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

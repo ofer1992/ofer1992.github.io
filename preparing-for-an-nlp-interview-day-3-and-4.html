@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Preparing for an NLP interview - Day 3 and 4</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="Another day has come. This one will be somewhat disjointed, I have an ~1.5 hrs in the morning and maybe some later in the evening. Yesterday I..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/preparing-for-an-nlp-interview-day-3-and-4.html" rel="bookmark"
+           title="Permalink to Preparing for an NLP interview - Day 3 and 4">Preparing for an NLP interview - Day 3 and 4</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-31T11:14:00+02:00">
+                Published: Fri 31 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->      <p>Another day has come. This one will be somewhat disjointed, I have an ~1.5 hrs in the morning and maybe some later in the evening.</p>
+<p>Yesterday I remembered I watched <a href="https://www.youtube.com/watch?v=FkHAYG8vASQ">this</a> youtube interview with a NLP data scientist and he listed the important stuff you kinda gotta know. I saved that list, had ChatGPT kind of expand on that. I think I'll try to spend the afternoon where I'm not by my computer having it tutor me on the different subjects.</p>
+<p>Otherwise we have stuff to pick up from yesterday. But before that I thought maybe its a good opportunity to delve a bit deeper to tokenization. I've watched (and possibly implemented myself) the BPE tokenizer following Karpathy's lecture about a year ago, but it is known forgotten. Let's give a shot to the WordPiece tokenizer instead.</p>
+<hr>
+<p>So yesterday I didn't have the opportunity to continue, so this is already day 4. I did get to do learn some more thru conversations with Claude and Gemini. We talked about perplexity, word2vec, and Sentence-BERT.</p>
+<p><strong>Perplexity</strong>: (per token) a measure of the uncertainty of the language model in predicting the next token. One interpretation for the value that it is as if the model has <span class="math">\(PP\)</span> options to choose from which are equally likely. Ie the perplexity for a uniformly random LM would be equal to <span class="math">\(|V|\)</span> There are two definitions:</p>
+<ul>
+<li>Vanilla: <span class="math">\(PP=\sqrt[n]{1/P(w_1\dots w_n)}=\sqrt[n]{\prod_i 1/P(w_i|w_1\dots w_{i-1})}\)</span></li>
+<li>Information Theoretic: <span class="math">\(PP=2^{H(p_{real},p)}\)</span>
+Since cross-entropy is used as loss on the dataset we can derive the perplexity from the loss. I wish I could say more but I've done Information Theory so long again I don't want to hand wave stuff.</li>
+</ul>
+<p><strong>word2vec</strong>: These are data-driven ways to generate decent embeddings for words. Not sure how much it is used today when there's embeddings from BERT etc, but the general notion is to train a simple linear embedding model that tries to predict a words context (surrounding words) from it or vice-versa.</p>
+<p>Another method is GLoVe which factors the co-occurence matrix (<span class="math">\(W_{ij} - how many times the word $i\)</span> occurs in the context of <span class="math">\(j\)</span>) to a multiplication of two lower rank matrices.</p>
+<p>I'll get to sentence-bert perhaps tomorrow, maybe we'll try and implement it. For the rest of the day today, I'm gonna try to do <a href="https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1234/project/default-final-project-bert-handout.pdf">CS 224N Final Project</a> which is to implement and train a kind of minBERT.</p>
+<h2>Implementing minBERT</h2>
+<p>The first step is implementing the attention layer. The input is as follows:</p>
+<ul>
+<li>key - a tensor of all the keys along the batch, dim is (bs, num_attention_heads, seq_len, attention_head_size)</li>
+<li>same except for queries</li>
+<li>value - same except for values</li>
+<li>attention_mask - to exclude the padding tokens from the attention normalization</li>
+</ul>
+<p>The first step is to calculate the score matrix
+</p>
+<div class="math">$$S=\frac{QK^T}{\sqrt{d_k}}$$</div>
+<p>
+This is for the regular attention head, but now we have multihead attention with a batch, so this is a bit trickier. Let's figure it out mathematically</p>
+<div class="math">$$S_{b, i, j, k} = \sum_{h}\frac{Q_{bijh}K_{bikh}}{\sqrt{d_k}}$$</div>
+<p>The easiest way for me is to just use einsum which exactly captures that
+<code>S = torch.einsum("b i j h, b i k h -&gt; b i j k", key, query)</code></p>
+<p>Now we need to mask the padded tokens. Basically if in batch <code>b</code> token <code>p</code> is padded then
+<code>S[b,i,j,p]=S[b,i,p,j]=-inf</code></p>
+<p>We receive an attention mask of shape (bs, 1, 1, seq_len). Now, we  do 
+<code>mask = mask &amp; mask.transpose(2, 3)</code>
+so we get a shape of (bs, 1, seq_len, seq_len) and now the mask is false if any of the last two indices belongs to a padded token. We then negate the mask and fill <code>-inf</code> where it's true and run softmax on the last dim. Finally to compute the weighted sum of values, we reuse einsum for clarity and get
+<code>torch.einsum("b i j k, b i j h -&gt; b i j h", P, v)</code></p>
+<p>Now for the BertLayer implementation. They ask us to implement to methods, <code>add_norm</code> and <code>forward</code>. Now there are some kind of silly subtleties about what is applied in what order, the dropout, the layer norm, the residual connection. The way they implemented it in the code is a little strange, but let's see if I got it right.</p>
+<p>Fine. So we got to implement self-attention ourselves, fumbled around with the encoder block, now I'm finetuning on Stanford Sentiment Treebank dataset by taking the [CLS] token embedding and training a classifier on its embedding. What's next?</p>
+<h2>What now?</h2>
+<p>I'm trying to decide where to go from here. Obviously there's an infinite amount of things to learn, but I'm trying to decide where to put my time. I found <a href="https://trite-song-d6a.notion.site/Ace-your-NLP-Interview-1630af77bef380849679f1345339066d">this</a> question list and some stuff I should probably read on are</p>
+<ul>
+<li>BLEU/ROUGE metrics</li>
+<li>TF-IDF? dunno if its worth the time though</li>
+<li>Positional embeddings: learned, Sinusoidal, Relative, <a href="https://www.youtube.com/watch?v=Mn_9W1nCFLo">RoPE</a>?</li>
+<li>Tokenizers - review, start with BPE</li>
+<li><a href="https://towardsdatascience.com/light-on-math-machine-learning-intuitive-guide-to-latent-dirichlet-allocation-437c81220158/">LDA</a></li>
+</ul>
+<p>In general it feels like most things are familiar but a bit hazy.</p>
+<p>Okay, I have two more days. I think tomorrow I will speed run the NLP with transformers book, try to implement a couple of tasks. And also I'll review some of these things.</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

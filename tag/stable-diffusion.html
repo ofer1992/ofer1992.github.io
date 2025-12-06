@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry - stable-diffusion</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/recreating-stable-diffusions-pipeline.html">Recreating Stable Diffusion's Pipeline</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2024-07-18T15:56:00+03:00">
+                Published: Thu 18 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/diffusion.html">diffusion</a> <a href="/tag/stable-diffusion.html">stable-diffusion</a> </p>
+</footer><!-- /.post-info --><p>Today I'm going to recreate the pipeline shown in <a href="https://course.fast.ai/Lessons/lesson10.html">lesson 10 of the fast.ai course</a>. We'll go through what's needed on the high-level, using pretrained models for everything. The pipeline is fed in a text prompt and it produces an image. A prompt means we need a tokenizer to convert the text into indexes from a vocabulary, and we need an encoder to create a text embedding.</p>
+<h2>Text embedding</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">transfomers</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLIPTextModel</span><span class="p">,</span> <span class="n">CLIPTokenizer</span>
+
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">CLIPTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;openai/clip-vit-large-patch14&quot;</span><span class="p">,</span> <span class="n">torch_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>
+<span class="n">text_encoder</span> <span class="o">=</span> <span class="n">CLIPTextModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;openai/clip-vit-large-patch14&quot;</span><span class="p">,</span> <span class="n">torch_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+</code></pre></div>
+
+<p>Pretty straightforward, loading models from hugging face. We use half-precision to save GPU memory.</p>
+<p>Now the processing</p>
+<div class="highlight"><pre><span></span><code><span class="n">prompt</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;An image of a big truck&quot;</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span>
+<span class="n">tokenized</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;max_length&quot;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">model_max_length</span><span class="p">,</span> <span class="n">truncation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">&quot;pt&quot;</span><span class="p">)</span>
+<span class="n">tokenized</span><span class="p">[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">]</span>
+</code></pre></div>
+
+<p>Which returns</p>
+<div class="highlight"><pre><span></span><code>tensor([[49406, 550, ..., 49407], ...])
+</code></pre></div>
+
+<p>Because we are padding the tensor, an <code>&lt;end-sentence&gt;</code> is used as the padding value.</p>
+<div class="highlight"><pre><span></span><code><span class="n">t_enc</span> <span class="o">=</span> <span class="n">text_encoder</span><span class="p">(</span><span class="n">tokenized</span><span class="p">[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cuda</span><span class="p">())</span>
+<span class="n">t_enc</span><span class="o">.</span><span class="n">last_hidden_state</span>
+</code></pre></div>
+
+<p>The encoder turns each token to a size 768 vector.
+Q: the model returns a last_hidden_state and a pooler_output. What's the difference?</p>
+<h3>The Autoencoder</h3>
+<p>As mentioned in the lecture, the diffusion process takes place not in the image space but in a latent space which is 64 times smaller, so we can run it at home. To get the latents, we use a variational auto-encoder. Let's set it up</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">diffusers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoencoderKL</span>
+
+<span class="n">vae</span> <span class="o">=</span> <span class="n">AutoencoderKL</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;stabilityai/sd-vae-ft-ema&quot;</span><span class="p">,</span> <span class="n">torch_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+</code></pre></div>
+
+<p>Again we use half-precision, and we use a fine-tuned vae from stability ai. In general we need to use the same components of the pipeline since they were trained together. Let's look at the flow</p>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">enc_im</span> <span class="o">=</span> <span class="n">vae</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">im_t</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">())</span>
+    <span class="n">dec_im</span> <span class="o">=</span> <span class="n">vae</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">enc_im</span><span class="o">.</span><span class="n">latent_dist</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+</code></pre></div>
+
+<p>We feed the encoder an image tensor and get back a latent. It's actually a distribution or something, I don't really know, but what we care about is the mean. We pass it on to the decoder and we get back</p>
+<p style="width:50%; margin:auto">
+  <img src="/images/compare_lizards.png" />
+  <figcaption>By order of appearance: original, decoded, diff</figcaption>
+</p>
+
+<!--![[compare_lizards.png]]-->
+
+<p>Seems like the compression losses some of the high-frequency information, but otherwise it's a pretty good job.</p>
+<h2>The diffusion process and the scheduler</h2>
+<p>The diffusion process starts from gaussian noise. In our case, the noise exists in the latent space, so we initialize the latents which are in the shape of <code>(4, 32, 32)</code>. </p>
+<div class="highlight"><pre><span></span><code><span class="n">gen</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">latents</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">gen</span><span class="p">)</span>
+</code></pre></div>
+
+<p>What is this scheduler? sadly this is a bit confusing, so let's try to break it down. Theoretically, what the diffusion model learns is to "reverse" a diffusion process defined as
+</p>
+<div class="math">$$
+x^{(t)}=\sqrt{1-\beta_t}x^{(t-1)}+\beta_{t}\varepsilon
+$$</div>
+<p>
+where <span class="math">\(x^{(0)}\)</span> is a clean normal image, <span class="math">\(\varepsilon\)</span> is standard gaussian noise, and <span class="math">\(\beta_t\)</span> is a coefficient that determines the strength of the "noising" at time step <span class="math">\(t\)</span>. Mathematically, if the betas are small enough and the amount of steps taken <span class="math">\(T\)</span> is large enough then <span class="math">\(x^{(T)}\sim\mathcal{N}(0, 1)\)</span>. This process is also known as the "forward process". If we knew the noise added, we could "reverse" the process by calculating
+</p>
+<div class="math">$$
+x^{(t-1)}=\left(x^{(t)}-\beta_t\varepsilon\right)/\sqrt{1-\beta_t}
+$$</div>
+<p>
+And that's the task of the network: given <span class="math">\(x^{(t)}/\sqrt{1-\beta_t}\)</span>, it predicts the noise sample added <span class="math">\(\varepsilon\)</span>.</p>
+<p><strong>Comment</strong>: looking into the scheduler a bit more, I see this goes much deeper than I thought (ode derivatives and stuff), so this explanation is probably wrong. I hope to catch up on this eventually, but for now let's get back to the practicalities.</p>
+<p>First we initialize the U-Net which is the model that actually predicts the noise.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">diffusers</span><span class="w"> </span><span class="kn">import</span> <span class="n">UNet2DConditionModel</span>
+<span class="n">unet</span> <span class="o">=</span> <span class="n">UNet2DConditionModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;CompVis/stable-diffusion-v1-4&quot;</span><span class="p">,</span> <span class="n">subfolder</span><span class="o">=</span><span class="s2">&quot;unet&quot;</span><span class="p">,</span> <span class="n">torch_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Before we move on to the inference loop, there's one last detail: in order to steer the model to generate the image according to our prompt, it's not enough to feed in the prompt. We actually feed in two prompts, our own and an empty prompt. We then combine the noise prediction for the empty prompt and the desired prompt in a way that guides the model. We'll see how it's done now</p>
+<div class="highlight"><pre><span></span><code><span class="n">height</span> <span class="o">=</span> <span class="mi">512</span>
+<span class="n">width</span> <span class="o">=</span> <span class="mi">512</span>
+<span class="n">num_inference_steps</span> <span class="o">=</span> <span class="mi">70</span>
+<span class="n">guidance_scale</span> <span class="o">=</span> <span class="mf">7.5</span>
+
+<span class="n">scheduler</span> <span class="o">=</span> <span class="n">LMSDiscreteScheduler</span><span class="p">(</span><span class="n">beta_start</span><span class="o">=</span><span class="mf">0.00085</span><span class="p">,</span> <span class="n">beta_end</span><span class="o">=</span><span class="mf">0.012</span><span class="p">,</span> <span class="n">beta_schedule</span><span class="o">=</span><span class="s2">&quot;scaled_linear&quot;</span><span class="p">,</span> <span class="n">num_train_timesteps</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">scheduler</span><span class="o">.</span><span class="n">set_timesteps</span><span class="p">(</span><span class="n">num_inference_steps</span><span class="p">)</span>
+
+<span class="c1"># initialize the latents as standard normal distribution</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>
+<span class="n">latents</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">height</span> <span class="o">//</span> <span class="mi">8</span><span class="p">,</span> <span class="n">width</span> <span class="o">//</span> <span class="mi">8</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">gen</span><span class="p">)</span><span class="o">.</span><span class="n">half</span><span class="p">()</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+<span class="n">latents</span> <span class="o">=</span> <span class="n">latents</span> <span class="o">*</span> <span class="n">scheduler</span><span class="o">.</span><span class="n">init_noise_sigma</span> <span class="c1"># scale the latents to the initial noise value</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">scheduler</span><span class="o">.</span><span class="n">timesteps</span><span class="p">)):</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">latents</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">scheduler</span><span class="o">.</span><span class="n">scale_model_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+
+    <span class="c1"># predict the noise residual</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span> 
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">unet</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">encoder_hidden_states</span><span class="o">=</span><span class="n">text_embeddings</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span>
+
+    <span class="c1"># perform guidance</span>
+    <span class="n">pred_uncond</span><span class="p">,</span> <span class="n">pred_text</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">pred_uncond</span> <span class="o">+</span> <span class="n">guidance_scale</span> <span class="o">*</span> <span class="p">(</span><span class="n">pred_text</span> <span class="o">-</span> <span class="n">pred_uncond</span><span class="p">)</span>
+
+    <span class="c1"># compute the &quot;previous&quot; noisy sample</span>
+    <span class="n">latents</span> <span class="o">=</span> <span class="n">scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">latents</span><span class="p">)</span><span class="o">.</span><span class="n">prev_sample</span>
+</code></pre></div>
+
+<p>Running this for a prompt like "A wild pokemon appears!" generates</p>
+<p style="width:50%; margin:auto">
+  <img src="/images/wild_pokemon.png" />
+</p>
+<!--![[wild_pokemon.png]]-->
+
+<p>Wrapping up, if you ended up reading this, I recommend to look at the lecture or at least the notebooks, where you can find an actual working implementation and not just snippets.</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

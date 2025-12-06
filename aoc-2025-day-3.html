@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>AoC 2025 - Day 3</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="Day 3 of AoC 2025. Following up on , today I'm gonna try to solve the question using typescript, but in a Jupyter notebook, writing along while..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/aoc-2025-day-3.html" rel="bookmark"
+           title="Permalink to AoC 2025 - Day 3">AoC 2025 - Day 3</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-03T12:54:00+02:00">
+                Published: Wed 03 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->      <p>Day 3 of AoC 2025. Following up on <img alt="yesterday" src="/advent-of-code-2025.html">, today I'm gonna try to solve the question using typescript, but in a Jupyter notebook, writing along while programming. Today's input looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;node:fs&quot;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s2">&quot;input.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">).</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="mf">3</span><span class="p">))</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  <span class="ansi-green-fg">&#34;2215452689925244273244333436189317446384838478525478824435233342352236255624326767355438753493222423&#34;</span>,
+  <span class="ansi-green-fg">&#34;1222232323222232132222323221226222225212221213232122232311152232223212123622111212223162322221323211&#34;</span>,
+  <span class="ansi-green-fg">&#34;3786645737446363554463656544667372864465545434545435744345766553343446943531537627746253556233634463&#34;</span>
+]
+
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="c1">// sample input</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`\</span>
+<span class="sb">987654321111111</span>
+<span class="sb">811111111111119</span>
+<span class="sb">234234234234278</span>
+<span class="sb">818181911112111\</span>
+<span class="sb">`</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">sample</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+987654321111111
+811111111111119
+234234234234278
+818181911112111
+
+</pre>
+
+<p>The first part asks as to choose in each row two digits that taken together form the largest number in that row. The two digits must maintain their left-to-right order. For example:
+- in row 1: <strong>98</strong>7654321111111 forms 98
+- in row 2: <strong>8</strong>1111111111111<strong>9</strong> forms 89
+- in row 3: 2342342342342<strong>78</strong> forms 78
+- in row 4: 818181<strong>9</strong>1111<strong>2</strong>111 forms 92</p>
+<p>Then we sum them all and get</p>
+<div class="highlight"><pre><span></span><code><span class="mf">98</span><span class="o">+</span><span class="mf">89</span><span class="o">+</span><span class="mf">78</span><span class="o">+</span><span class="mf">92</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">357</span>
+</pre>
+
+<p>which is the final answer. Some insights:
+- the left digit dominates the size comparison
+- the left digit will never be the last one, because there won't be room for the right digit
+- if the same digit appears twice, it's always better to pick the left most one (only increase the right digit candidates this way)</p>
+<p>Okay, so the algorithm will be as follows:
+- <code>left_digit = max(row[:-1])</code>
+- <code>right_digit = max(row[ind_left_digit:])</code></p>
+<div class="highlight"><pre><span></span><code><span class="c1">// the name jolt is a ref to the AoC lore in the question</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">maxJolt</span><span class="p">(</span><span class="nx">nums</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">lcand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">)</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">ldigit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">lcand</span><span class="p">)</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">lind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lcand</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">ldigit</span><span class="p">)</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">rdigit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">nums</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">lind</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">length</span><span class="p">))</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">ldigit</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">10</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">rdigit</span>
+<span class="p">}</span>
+
+<span class="kd">function</span><span class="w"> </span><span class="nx">part1</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">debug</span><span class="o">=</span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">maxJolt</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">)))</span>
+<span class="w">    </span><span class="nx">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">res</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">debug</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">sum</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">sum</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">part1</span><span class="p">(</span><span class="nx">sample</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">))</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+987654321111111
+<span class="ansi-yellow-fg">98</span>
+<span class="ansi-yellow-fg">98</span>
+811111111111119
+<span class="ansi-yellow-fg">89</span>
+<span class="ansi-yellow-fg">187</span>
+234234234234278
+<span class="ansi-yellow-fg">78</span>
+<span class="ansi-yellow-fg">265</span>
+818181911112111
+<span class="ansi-yellow-fg">92</span>
+<span class="ansi-yellow-fg">357</span>
+<span class="ansi-yellow-fg">357</span>
+
+</pre>
+
+<p>Looks good, let's try the full input</p>
+<div class="highlight"><pre><span></span><code><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">part1</span><span class="p">(</span><span class="nx">input</span><span class="p">))</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">17346</span>
+
+</pre>
+
+<p>And we were right! let's move on to part 2. This time I leave more intermediate cells so you can see sum of the incremental process. </p>
+<p>Now the twist is that instead of 2 digits we need to choose 12 digits the form the largest number! I think the same idea as before can be extended to the general case: <code>(i+1)_digit = max(row[i_digit: -(12-i)])</code>. Might be easier to just build the algorithm to be generic to the number of digits, then we can verify if we reproduce the same results.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;987654321111111&quot;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">nums</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">))</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">n_digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">last_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">n_digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span>
+<span class="nx">nums</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  <span class="ansi-yellow-fg">9</span>, <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">7</span>, <span class="ansi-yellow-fg">6</span>, <span class="ansi-yellow-fg">5</span>, <span class="ansi-yellow-fg">4</span>,
+  <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">2</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>,
+  <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>
+]
+</pre>
+
+<p>We'll add to digits one by one</p>
+<div class="highlight"><pre><span></span><code><span class="kd">let</span><span class="w"> </span><span class="nx">slice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">last_ind</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="nx">i</span><span class="p">)</span>
+<span class="nx">slice</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  <span class="ansi-yellow-fg">9</span>, <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">7</span>, <span class="ansi-yellow-fg">6</span>, <span class="ansi-yellow-fg">5</span>, <span class="ansi-yellow-fg">4</span>,
+  <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">2</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>,
+  <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>
+]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">let</span><span class="w"> </span><span class="nx">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">slice</span><span class="p">)</span>
+<span class="nx">digits</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">digit</span><span class="p">)</span>
+<span class="nx">digit</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">9</span>
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">last_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">last_ind</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">length</span><span class="p">).</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">digit</span><span class="p">)</span>
+<span class="nx">last_ind</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">0</span>
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span>
+<span class="nx">slice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">last_ind</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="nx">i</span><span class="p">)</span>
+<span class="nx">slice</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">7</span>, <span class="ansi-yellow-fg">6</span>, <span class="ansi-yellow-fg">5</span>, <span class="ansi-yellow-fg">4</span>, <span class="ansi-yellow-fg">3</span>,
+  <span class="ansi-yellow-fg">2</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>,
+  <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>
+]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">slice</span><span class="p">)</span>
+<span class="nx">digits</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">digit</span><span class="p">)</span>
+<span class="nx">digit</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">8</span>
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">digits</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-yellow-fg">9</span>, <span class="ansi-yellow-fg">8</span> ]
+</pre>
+
+<p>Okay, so we kinda get how to body should work, let's merge it all, and try the 12 digits. Should get 987654321111</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;987654321111111&quot;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">nums</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">))</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">n_digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">12</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">last_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span>
+<span class="c1">// let i = n_digits - 1</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">n_digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">slice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">last_ind</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="nx">i</span><span class="p">)</span><span class="w">  </span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">slice</span><span class="p">)</span>
+<span class="w">  </span><span class="nx">last_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">last_ind</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">slice</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">digit</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">  </span><span class="nx">digits</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">digit</span><span class="p">)</span><span class="w">  </span>
+<span class="p">}</span>
+<span class="nx">digits</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  <span class="ansi-yellow-fg">9</span>, <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">7</span>, <span class="ansi-yellow-fg">6</span>, <span class="ansi-yellow-fg">5</span>,
+  <span class="ansi-yellow-fg">4</span>, <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">2</span>, <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>,
+  <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">1</span>
+]
+</pre>
+
+<p>To turn it into a number we can use reduce</p>
+<div class="highlight"><pre><span></span><code><span class="nx">digits</span><span class="p">.</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">s</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">s</span><span class="o">*</span><span class="mf">10</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">x</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">987654321111</span>
+</pre>
+
+<p>Looks good, let's put it in a function and try the rest of the sample</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">maxJolt2</span><span class="p">(</span><span class="nx">nums</span><span class="p">,</span><span class="w"> </span><span class="nx">n_digits</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">last_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">n_digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">slice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">last_ind</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="nx">i</span><span class="p">)</span><span class="w">  </span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">slice</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">last_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">last_ind</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">slice</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">digit</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">    </span><span class="nx">digits</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">digit</span><span class="p">)</span><span class="w">  </span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">digits</span><span class="p">.</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">s</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">s</span><span class="o">*</span><span class="mf">10</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">x</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">let</span><span class="w"> </span><span class="nx">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span>
+<span class="nx">sample</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">nums</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">))</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">maxJolt2</span><span class="p">(</span><span class="nx">nums</span><span class="p">,</span><span class="w"> </span><span class="mf">12</span><span class="p">)</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span>
+<span class="w">  </span><span class="nx">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">res</span>
+<span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">sum</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">987654321111</span>
+<span class="ansi-yellow-fg">811111111119</span>
+<span class="ansi-yellow-fg">434234234278</span>
+<span class="ansi-yellow-fg">888911112111</span>
+<span class="ansi-yellow-fg">3121910778619</span>
+
+</pre>
+
+<p>Looks correct. Finally, let's put that in a function and finish</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">part2</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">  </span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">nums</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">))</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">maxJolt2</span><span class="p">(</span><span class="nx">nums</span><span class="p">,</span><span class="w"> </span><span class="mf">12</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">// console.log(res)</span>
+<span class="w">    </span><span class="nx">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">res</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">sum</span>
+<span class="p">}</span>
+
+<span class="nx">part2</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">172981362045136</span>
+</pre>
+
+<p>Success!</p>
+<p>As a bonus, I want to see if we can rewrite maxJolt2 in a functional way. I'm thinking recursion</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">rMaxJolt2</span><span class="p">(</span><span class="nx">nums</span><span class="p">,</span><span class="w"> </span><span class="nx">n_digits</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">n_digits</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">nums</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">nums</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="nx">n_digits</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">))</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">digit</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">10</span><span class="o">**</span><span class="p">(</span><span class="nx">n_digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">rMaxJolt2</span><span class="p">(</span><span class="nx">nums</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">nums</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">digit</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">length</span><span class="p">),</span><span class="w"> </span><span class="nx">n_digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nx">rMaxJolt2</span><span class="p">(</span><span class="s2">&quot;818181911112111&quot;</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">)),</span><span class="w"> </span><span class="mf">12</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">888911112111</span>
+</pre>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

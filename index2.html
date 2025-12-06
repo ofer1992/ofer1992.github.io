@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+                <section id="content" class="body">
+                    <ol id="posts-list" class="hfeed" start="9">
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/miniai-learner.html" rel="bookmark"
+                           title="Permalink to MiniAI learner">MiniAI learner</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-08-04T13:50:00+03:00">
+                Published: Sun 04 August 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/pytorch.html">pytorch</a> <a href="/tag/fastai.html">fastai</a> </p>
+</footer><!-- /.post-info -->                <p>Today I'm recreating the <em>learner</em> framework from the FastAI course. It's a flexible and quite powerful abstraction around the optimization of the DNN model, which streamlines the user experience. For example, it will be very easy to add different logging capabilities, learning rate finder etc. It is built during the …</p>
+                <a class="readmore" href="/miniai-learner.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/a-naive-autoencoder-on-fashionmnist.html" rel="bookmark"
+                           title="Permalink to A naive autoencoder on FashionMNIST">A naive autoencoder on FashionMNIST</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-31T14:53:00+03:00">
+                Published: Wed 31 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/pytorch.html">pytorch</a> <a href="/tag/autoencoders.html">autoencoders</a> </p>
+</footer><!-- /.post-info -->                <p>Today we'll recreate the fastai <a href="https://github.com/fastai/course22p2/blob/master/nbs/08_autoencoder.ipynb">notebook on autoencoders</a>, where we train a vanilla autoencoder in FashionMNIST. Even though the autoencoder was actually doing a pretty bad job, it will be good practice for working with HuggingFace databases, CNNs and autoencoders.</p>
+<h2>Getting the data</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import …</span></code></pre></div>
+                <a class="readmore" href="/a-naive-autoencoder-on-fashionmnist.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/building-up-pytorch-abstractions-part-1.html" rel="bookmark"
+                           title="Permalink to Building up PyTorch abstractions: Part 1">Building up PyTorch abstractions: Part 1</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-28T18:01:00+03:00">
+                Published: Sun 28 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/pytorch.html">pytorch</a> </p>
+</footer><!-- /.post-info -->                <p>Today we will retrace lesson <a href="https://www.youtube.com/watch?v=vGdB4eI4KBs">13</a>-<a href="https://www.youtube.com/watch?v=veqj0DsZSXU">14</a>'s notebook that "builds up" pytorch abstractions from scratch. As a first step we'll rederive everything in hardcore numpy (maybe hardcore should be reserved for C). Then we'll start building the abstractions.</p>
+<p>First up we load <code>mnist</code> data:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from …</span></code></pre></div>
+                <a class="readmore" href="/building-up-pytorch-abstractions-part-1.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/musings-on-the-reparametrization-trick.html" rel="bookmark"
+                           title="Permalink to Musings on the reparametrization trick">Musings on the reparametrization trick</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-27T15:45:00+03:00">
+                Published: Sat 27 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/math.html">Math</a>.</p>
+<p>tags: <a href="/tag/math.html">math</a> <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/variational-inference.html">variational-inference</a> </p>
+</footer><!-- /.post-info -->                <p>Reading the <em>variational autoencoder</em> chapter from the <a href="https://udlbook.github.io/udlbook/">"Understanding Deep Learning"</a> book (which is available for free!). Not trivial, which is why I never got around to learning it, I guess. There are a lot of moving math parts to figure out. One of them is called "the reparametrization trick". So …</p>
+                <a class="readmore" href="/musings-on-the-reparametrization-trick.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/debugging-session-logseq-omnivore-plugin.html" rel="bookmark"
+                           title="Permalink to Debugging session: Logseq Omnivore plugin">Debugging session: Logseq Omnivore plugin</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-22T14:24:00+03:00">
+                Published: Mon 22 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+
+</footer><!-- /.post-info -->                <p>I'm trying to debug a weird issue with the Logseq omnivore plugin where it takes forever to sync and it seemingly creates and deletes pages needlessly.</p>
+<p>My first step was to properly setting up a dev env (<code>pnpm dev</code>) which didn't work out of the box, instead of just building …</p>
+                <a class="readmore" href="/debugging-session-logseq-omnivore-plugin.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/rnn-generations.html" rel="bookmark"
+                           title="Permalink to RNN generations">RNN generations</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-20T17:51:00+03:00">
+                Published: Sat 20 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/rnn.html">rnn</a> <a href="/tag/nlp.html">nlp</a> </p>
+</footer><!-- /.post-info -->                <p>On advice from my uncle I'm continuing to fallback on task difficulty with RNNs.</p>
+<p>Unc's tips:
+- Swirch to generation task
+- Try residuals
+- Go deeper
+- Add projections 
+- No dropout?</p>
+<p>Let's recreate Karpathy's classic post and train a language model on tiny-shakespeare. We can get the entire dataset which is a text …</p>
+                <a class="readmore" href="/rnn-generations.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/recreating-stable-diffusions-pipeline.html" rel="bookmark"
+                           title="Permalink to Recreating Stable Diffusion's Pipeline">Recreating Stable Diffusion's Pipeline</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-18T15:56:00+03:00">
+                Published: Thu 18 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/diffusion.html">diffusion</a> <a href="/tag/stable-diffusion.html">stable-diffusion</a> </p>
+</footer><!-- /.post-info -->                <p>Today I'm going to recreate the pipeline shown in <a href="https://course.fast.ai/Lessons/lesson10.html">lesson 10 of the fast.ai course</a>. We'll go through what's needed on the high-level, using pretrained models for everything. The pipeline is fed in a text prompt and it produces an image. A prompt means we need a tokenizer to …</p>
+                <a class="readmore" href="/recreating-stable-diffusions-pipeline.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/shifting-to-translation-with-rnns.html" rel="bookmark"
+                           title="Permalink to Shifting to translation with RNNs">Shifting to translation with RNNs</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-15T16:53:00+03:00">
+                Published: Mon 15 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/rnn.html">rnn</a> <a href="/tag/nlp.html">nlp</a> </p>
+</footer><!-- /.post-info -->                <p>I'm pivoting the RNN summarization code to an easier example - Machine translation. Easier in the sense of the <a href="https://huggingface.co/datasets/yhavinga/ccmatrix">dataset</a>, which consists of much shorter en-de sentence pairs compared to the summarization task. I have some suspicion that the there is a bug or something in my code, so today, after …</p>
+                <a class="readmore" href="/shifting-to-translation-with-rnns.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/cnn-summarization-task.html" rel="bookmark"
+                           title="Permalink to CNN summarization task">CNN summarization task</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-12T21:43:00+03:00">
+                Published: Fri 12 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/nlp.html">nlp</a> <a href="/tag/rnn.html">rnn</a> </p>
+</footer><!-- /.post-info -->                <p>Today we're gonna dip our fingers into the first generative NLP task - text summarization. We're gonna use the <a href="https://github.com/abisee/cnn-dailymail">CNN/Daily Mail dataset</a> as done in <a href="https://arxiv.org/pdf/1704.04368">this paper</a>. Let's get to it.</p>
+<h2>Data prep</h2>
+<p>I started by doing all the preprocessing of the files myself, but then found a the dataset …</p>
+                <a class="readmore" href="/cnn-summarization-task.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/imdb-reviews-sentiment-analysis.html" rel="bookmark"
+                           title="Permalink to IMDB Reviews sentiment analysis">IMDB Reviews sentiment analysis</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-02T14:17:00+03:00">
+                Published: Tue 02 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/nlp.html">nlp</a> <a href="/tag/sentiment-analysis.html">sentiment-analysis</a> </p>
+</footer><!-- /.post-info -->                <blockquote>
+<p>"It’s better to do something simple which is real. It’s something you can build on because you know what you’re doing. Whereas, if you try to approximate something very advanced and you don’t know what you’re doing, you can’t build on it." - Bill Evans …</p></blockquote>
+                <a class="readmore" href="/imdb-reviews-sentiment-analysis.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+<p class="paginator">
+        <a href="/index.html">&#8647;</a>
+        <a href="/index.html">&laquo;</a>
+    Page 2 / 4
+        <a href="/index3.html">&raquo;</a>
+        <a href="/index4.html">&#8649;</a>
+</p>
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>CNN summarization task</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="Today we're gonna dip our fingers into the first generative NLP task - text summarization. We're gonna use the CNN/Daily Mail dataset as done in..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li class="active"><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/cnn-summarization-task.html" rel="bookmark"
+           title="Permalink to CNN summarization task">CNN summarization task</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-12T21:43:00+03:00">
+                Published: Fri 12 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/nlp.html">nlp</a> <a href="/tag/rnn.html">rnn</a> </p>
+</footer><!-- /.post-info -->      <p>Today we're gonna dip our fingers into the first generative NLP task - text summarization. We're gonna use the <a href="https://github.com/abisee/cnn-dailymail">CNN/Daily Mail dataset</a> as done in <a href="https://arxiv.org/pdf/1704.04368">this paper</a>. Let's get to it.</p>
+<h2>Data prep</h2>
+<p>I started by doing all the preprocessing of the files myself, but then found a the dataset on <a href="https://huggingface.co/datasets/abisee/cnn_dailymail">hugging face</a>. Even though preprocessing is a very important step, we'll make our life easier and focus on the models. After installing the <code>datasets</code> package, getting the dataset is as easy as calling</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dataset</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;abisee/cnn_dailymail&quot;</span><span class="p">,</span> <span class="s2">&quot;3.0.0&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The structure of the samples is</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w"> </span><span class="err">&#39;ar</span><span class="kc">t</span><span class="err">icle&#39;</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;LONDON</span><span class="p">,</span><span class="w"> </span><span class="err">E</span><span class="kc">n</span><span class="err">gla</span><span class="kc">n</span><span class="err">d</span><span class="w"> </span><span class="err">(Reu</span><span class="kc">ters</span><span class="err">)</span><span class="w"> </span><span class="mi">--</span><span class="w"> </span><span class="err">Harry</span><span class="w"> </span><span class="err">Po</span><span class="kc">tter</span><span class="w"> </span><span class="err">s</span><span class="kc">tar</span><span class="w"> </span><span class="err">Da</span><span class="kc">n</span><span class="err">iel</span><span class="w"> </span><span class="err">Radcli</span><span class="kc">ffe</span><span class="w"> </span><span class="err">gai</span><span class="kc">ns</span><span class="w"> </span><span class="err">access</span><span class="w"> </span><span class="kc">t</span><span class="err">o</span><span class="w"> </span><span class="err">a</span><span class="w"> </span><span class="err">repor</span><span class="kc">te</span><span class="err">d</span><span class="w"> </span><span class="err">£</span><span class="mi">20</span><span class="w"> </span><span class="err">millio</span><span class="kc">n</span><span class="w"> </span><span class="err">($</span><span class="mf">41.1</span><span class="w"> </span><span class="err">millio</span><span class="kc">n</span><span class="err">)...&#39;</span><span class="p">,</span>
+<span class="w"> </span><span class="err">&#39;highligh</span><span class="kc">ts</span><span class="err">&#39;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Harry Potter star Daniel Radcliffe gets £20M fortune as he turns 18 Monday .\nYoung actor says he has no plans to fritter his cash away .\nRadcliffe&#39;s earnings from first five Potter films have been held in trust fund .&quot;</span><span class="p">,</span>
+<span class="w"> </span><span class="err">&#39;id&#39;</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="mi">42</span><span class="err">c</span><span class="mf">027e4</span><span class="kc">ff</span><span class="mi">9730</span><span class="kc">f</span><span class="err">bb</span><span class="mi">3</span><span class="err">de</span><span class="mi">84</span><span class="err">c</span><span class="mi">1</span><span class="err">a</span><span class="kc">f</span><span class="mi">0</span><span class="err">d</span><span class="mi">2</span><span class="err">c</span><span class="mf">506e41</span><span class="err">c</span><span class="mf">3e4</span><span class="err">&#39;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The <code>article</code> will be fed to the model which will produce <code>highlights</code> in turn.</p>
+<p>Next we need to tokenize the text. Again, making use of the comforts of modern deep learning</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoTokenizer</span>
+
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;gpt2&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>And we simply tokenize with</p>
+<div class="highlight"><pre><span></span><code><span class="n">tokenizer</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;article&#39;</span><span class="p">])</span>
+</code></pre></div>
+
+<h2>Building a model</h2>
+<p>As a baseline we'll train a seq2seq RNN taken from <a href="https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html">the hugging face NLP translation tutorial</a>. I haven't worked with RNNs before, and I know they are notorious for being hard to train, which is why transformers basically replaced them. Nevertheless, we're gonna start with it for lols and also out of curiosity, and move on to transformers eventually. The architecture we use is quite simple but also profound? </p>
+<h3>Quick Aside: Solving the variable length problem</h3>
+<h3>Back to the architecture</h3>
+<p>Here's the code for the encoder:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+
+<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+<span class="n">SOS_token</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">special_tokens_map</span><span class="p">[</span><span class="s1">&#39;bos_token&#39;</span><span class="p">]</span>
+<span class="n">SOS_token</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">vocab</span><span class="p">[</span><span class="n">SOS_token</span><span class="p">]</span>
+<span class="n">EOS_token</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">special_tokens_map</span><span class="p">[</span><span class="s1">&#39;eos_token&#39;</span><span class="p">]</span>
+<span class="n">EOS_token</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">vocab</span><span class="p">[</span><span class="n">EOS_token</span><span class="p">]</span>
+<span class="n">MAX_LENGTH</span> <span class="o">=</span> <span class="mi">800</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">EncoderRNN</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">dropout_p</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">EncoderRNN</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_size</span> <span class="o">=</span> <span class="n">hidden_size</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gru</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">GRU</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout_p</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="n">embedded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="nb">input</span><span class="p">))</span>
+        <span class="n">output</span><span class="p">,</span> <span class="n">hidden</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gru</span><span class="p">(</span><span class="n">embedded</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">hidden</span>
+</code></pre></div>
+
+<p>The encoder gets the token indexes, replaces each one with an trainable embedding vector. During training the embeddings undergo dropout for regularization etc. The embeddings are then fed to the GRU block, which is a thing I should totally read more about, but for our purposes it produces the required output and hidden vectors. The syntax actually hides the sequential nature of the recurrence: each token is fed to the GRU, which produces an an output and a hidden state vector. </p>
+<p><img src="/images/rnn_diagram.png" alt="rnn diagram" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>This hidden vector is then passed as input to the GRU activation on the next token, ie, if we wrote it by hand it would look something like</p>
+<div class="highlight"><pre><span></span><code><span class="n">hidden</span> <span class="o">=</span> <span class="err">?</span> <span class="c1"># TODO how do we initialize the hidden layer?</span>
+<span class="n">outputs</span><span class="p">,</span> <span class="n">hiddens</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">input</span><span class="p">:</span>
+    <span class="n">embedded</span> <span class="o">=</span> <span class="n">embedding</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">,</span> <span class="n">hidden</span> <span class="o">=</span> <span class="n">gru</span><span class="p">(</span><span class="n">embedded</span><span class="p">,</span> <span class="n">hidden</span><span class="p">)</span>
+    <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">);</span> <span class="n">hiddens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hidden</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Anyway, the final product of the encoder is a fixed vector which encodes all the information about the text. The decoder then receives it as the hidden input and a special "start-of-sentence" token and sequentially outputs a probability distribution over the vocabulary for the next token. In order to terminate, it can output the "end-of-sentence" token (does it matter that it's the same?). Otherwise the decoder is similar to the decoder.</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DecoderRNN</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">output_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DecoderRNN</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">output_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gru</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">GRU</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">output_size</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoder_outputs</span><span class="p">,</span> <span class="n">encoder_hidden</span><span class="p">,</span> <span class="n">target_tensor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">encoder_outputs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">decoder_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="n">SOS_token</span><span class="p">)</span>
+        <span class="n">decoder_hidden</span> <span class="o">=</span> <span class="n">encoder_hidden</span>
+        <span class="n">decoder_outputs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MAX_LENGTH</span><span class="p">):</span>
+            <span class="n">decoder_output</span><span class="p">,</span> <span class="n">decoder_hidden</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_step</span><span class="p">(</span><span class="n">decoder_input</span><span class="p">,</span> <span class="n">decoder_hidden</span><span class="p">)</span>
+            <span class="n">decoder_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decoder_output</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">target_tensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Teacher forcing: Feed the target as the next input</span>
+                <span class="n">decoder_input</span> <span class="o">=</span> <span class="n">target_tensor</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># Teacher forcing</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Without teacher forcing: use its own predictions as the next input</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">topi</span> <span class="o">=</span> <span class="n">decoder_output</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">decoder_input</span> <span class="o">=</span> <span class="n">topi</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>  <span class="c1"># detach from history as input</span>
+
+        <span class="n">decoder_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">decoder_outputs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">decoder_outputs</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">decoder_outputs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">decoder_outputs</span><span class="p">,</span> <span class="n">decoder_hidden</span><span class="p">,</span> <span class="kc">None</span> <span class="c1"># We return `None` for consistency in the training loop</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">hidden</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">output</span><span class="p">,</span> <span class="n">hidden</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gru</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">hidden</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">hidden</span>
+</code></pre></div>
+
+<p>You might wonder why it appears more complicated if it's similar to the encoder. To answer that we need to consider the difference between training and inference, and the loss criterion we are using. I hope to get to that in a future post, so for now I'll just mention that we will use the cross-entropy loss, which tries to maximize the likelihood of the dataset. </p>
+<h3>Training loop</h3>
+<p>Steps:
+- Select hyperparams (hidden size, lr) and initialize model.
+- Probably need to add SOS and EOS tokens to summaries
+- batches, How to handle different length sequences?
+- monitoring the process</p>
+<div class="highlight"><pre><span></span><code><span class="n">hidden_size</span> <span class="o">=</span> <span class="mi">1024</span>
+<span class="n">enc</span> <span class="o">=</span> <span class="n">EncoderRNN</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">),</span> <span class="n">hidden_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">dec</span> <span class="o">=</span> <span class="n">DecoderRNN</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">optim</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">0.001</span>
+<span class="n">enc_optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">enc</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="p">)</span>
+<span class="n">dec_optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">dec</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="p">)</span>
+<span class="n">loss_f</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">NLLLoss</span><span class="p">()</span>
+
+<span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">epochs</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+  <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">train_dataloader</span><span class="p">)):</span>
+    <span class="n">enc_optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">dec_optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">art</span><span class="p">,</span> <span class="n">summ</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;article&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;highlights&#39;</span><span class="p">]</span>
+    <span class="n">art</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">(</span><span class="n">art</span><span class="p">)[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="nb">sum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">(</span><span class="n">summ</span><span class="p">)[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+
+    <span class="n">enc_out</span><span class="p">,</span> <span class="n">enc_hid</span> <span class="o">=</span> <span class="n">enc</span><span class="p">(</span><span class="n">art</span><span class="p">)</span>
+    <span class="n">dec_out</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">enc_out</span><span class="p">,</span> <span class="n">enc_hid</span><span class="p">,</span> <span class="nb">sum</span><span class="p">)</span>
+    <span class="c1"># loss</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_f</span><span class="p">(</span>
+            <span class="n">dec_out</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dec_out</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)),</span>
+            <span class="nb">sum</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+      <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">enc_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="n">dec_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</code></pre></div>
+
+<h3>Tensors and variable length sequence</h3>
+<p>We used above a batch size of one. This isn't practical, since we aren't parallelizing anything, and training would take forever, but we have to overcome a technical problem: how do we put variable-length arrays of tokens into a tensor? </p>
+<p>The first option is to extend the sequences in the batch to a maximum length, otherwise known as padding. This enables us to put all the sequences in one tensor, which let's PyTorch do things in parallel. We would just need to remember to extract the relevant output and hidden vectors from the step where the sequence actually ended (otherwise it would be garbage). We do the same thing for both encoder and decoder. As a padding value we can use a special <code>endofsentence</code> token.</p>
+<p>There is a drawback with that though, as we're wasting "compute" on sequences which are already irrelevant. An improvement to that is to keep track which sequences haven't ended yet and only parallelize over them. PyTorch can take care of that using an abstraction called PackedSequence (<a href="https://pytorch.org/docs/stable/generated/torch.nn.utils.rnn.pack_sequence.html#torch.nn.utils.rnn.pack_sequence">packed sequence util</a>). This interleaves all the different tensor into one 1-d array of data, together with information over how many sequences are in the next batch. For example,</p>
+<div class="highlight"><pre><span></span><code><span class="n">pack_sequence</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">])])</span>
+</code></pre></div>
+
+<p>produces</p>
+<div class="highlight"><pre><span></span><code><span class="n">PackedSequence</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">tensor</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span> <span class="n">batch_sizes</span><span class="o">=</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">sorted_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unsorted_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Sadly, while some layers like nn.GRU handle the PackedSequence data structure, others don't.  Mainly, nn.embeddings require some attention, but a small modification suffices</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">simple_elementwise_apply</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">packed_sequence</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;applies a pointwise function fn to each element in packed_sequence&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">PackedSequence</span><span class="p">(</span><span class="n">fn</span><span class="p">(</span><span class="n">packed_sequence</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">packed_sequence</span><span class="o">.</span><span class="n">batch_sizes</span><span class="p">)</span>
+
+<span class="c1"># encoder</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="o">...</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">PackedSequence</span><span class="p">):</span>
+          <span class="n">embedded</span> <span class="o">=</span> <span class="n">simple_elementwise_apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="nb">input</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">embedded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="nb">input</span><span class="p">))</span>
+</code></pre></div>
+
+<p>Modifying the decoder is a bit trickier, but doable</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">def</span><span class="w"> </span><span class="nf">forward_teacher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decoder_input</span><span class="p">,</span> <span class="n">decoder_hidden</span><span class="p">,</span> <span class="n">target_packed</span><span class="p">):</span>
+      <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">decoder_outputs</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">batch_size</span> <span class="ow">in</span> <span class="n">target_packed</span><span class="o">.</span><span class="n">batch_sizes</span><span class="p">:</span>
+        <span class="n">decoder_output</span><span class="p">,</span> <span class="n">decoder_hidden</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_step</span><span class="p">(</span><span class="n">decoder_input</span><span class="p">,</span> <span class="n">decoder_hidden</span><span class="p">)</span>
+        <span class="n">decoder_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decoder_output</span><span class="p">[:</span><span class="n">batch_size</span><span class="p">])</span>
+        <span class="n">decoder_input</span> <span class="o">=</span> <span class="n">target_packed</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">decoder_hidden</span> <span class="o">=</span> <span class="n">decoder_hidden</span><span class="p">[:,</span> <span class="p">:</span><span class="n">batch_size</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="n">batch_size</span>
+      <span class="n">decoder_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">PackedSequence</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">decoder_outputs</span><span class="p">),</span> <span class="n">target_packed</span><span class="o">.</span><span class="n">batch_sizes</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">decoder_outputs</span>
+</code></pre></div>
+
+<p>Finally, the training loop. Took me a long time to figure out a nice bug I introduced. Since packing requires sorting the different sequences in descending length, the articles and summaries get sorted differently. This means the batch output of the encoder needs to be sorted back to the original order and then sorted again to match the summaries order. Here's the current loop</p>
+<div class="highlight"><pre><span></span><code><span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+  <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">train_dataloader</span><span class="p">)):</span>
+    <span class="n">enc_optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">dec_optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">art</span><span class="p">,</span> <span class="n">summ</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;article&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;highlights&#39;</span><span class="p">]</span>
+    <span class="n">art</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">art</span><span class="p">)[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">]</span>
+    <span class="n">summ</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">summ</span><span class="p">)[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">summ</span><span class="p">:</span>
+      <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">EOS_token</span><span class="p">)</span>
+    <span class="n">art_lens_desc_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">art</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">reverse_art_sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">art_lens_desc_idx</span><span class="p">)</span> 
+    <span class="n">summ_lens_desc_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">summ</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">art_to_summ_indexes</span> <span class="o">=</span> <span class="n">reverse_art_sort</span><span class="p">[</span><span class="n">summ_lens_desc_idx</span><span class="p">]</span>
+    <span class="n">art_packed</span> <span class="o">=</span> <span class="n">pack_sequence</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">art</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">art_lens_desc_idx</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">target_packed</span> <span class="o">=</span> <span class="n">pack_sequence</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">summ</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">summ_lens_desc_idx</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="n">enc_out</span><span class="p">,</span> <span class="n">enc_hid</span> <span class="o">=</span> <span class="n">enc</span><span class="p">(</span><span class="n">art_packed</span><span class="p">)</span>
+    <span class="n">enc_out</span> <span class="o">=</span> <span class="n">unpack_sequence</span><span class="p">(</span><span class="n">enc_out</span><span class="p">)</span>
+    <span class="n">enc_out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">o</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">enc_out</span><span class="p">])</span>
+    <span class="n">enc_out</span> <span class="o">=</span> <span class="n">enc_out</span><span class="p">[</span><span class="n">art_to_summ_indexes</span><span class="p">]</span>
+    <span class="n">enc_hid</span> <span class="o">=</span> <span class="n">enc_hid</span><span class="p">[:,</span> <span class="n">art_to_summ_indexes</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="n">dec_out</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">enc_out</span><span class="p">,</span> <span class="n">enc_hid</span><span class="p">,</span> <span class="n">target_packed</span><span class="p">)</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_f</span><span class="p">(</span>
+            <span class="n">dec_out</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dec_out</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)),</span>
+            <span class="n">target_packed</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">enc_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="n">dec_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</code></pre></div>
+
+<p>The first sanity test we can do is try to overfit the network on a small subset of the data.</p>
+<div class="highlight"><pre><span></span><code><span class="n">bs</span> <span class="o">=</span> <span class="mi">8</span>
+
+<span class="n">tmp_ds</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)))</span>
+<span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">tmp_ds</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">bs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Here the net basically memorizes the few examples. That's how I eventually figured out the order was wrong, since it managed to memorize the samples but the predicted summaries didn't match the targets.</p>
+<h2>Before you go</h2>
+<p>Once again I end this post in the middle. I guess I prefer to publish something than to have another half-baked draft floating around. But before you go, I did let the model train for a couple of hours on my gaming laptop. It has a 3070 GTX but it has a limited power supply. It squeezes out an iteration every second or so, which is pretty bad, and I suspect a transformer will train much faster and better. Still, after a couple of hours I got outputs the like of</p>
+<div class="highlight"><pre><span></span><code>Target:
+Cressida Bonas went to Wembley Arena for the WE Day UK youth event.
+The 24-year-old dance student dressed down in jeans and silver Converse.
+Harry was key speaker, while others included Ellie Goulding, Dizzee Rascal and former footballer, Gary Neville.
+Harry apologised for not being Harry Styles and said he wouldn&#39;t sing.
+29-year-old prince said: &#39;Helping others is the coolest thing in the world&#39;
+After his 10-minute speech he joined girlfriend Cressida in the VIP seats.
+12,000 students attended the London event listen to motivational speakers.
+They earned their tickets to it by doing charitable acts at home and abroad.&lt;|endoftext|&gt;
+
+Predicted:
+Theoupleley,,, to the in for the first.....
+She couple-year-old has the&#39;s in the the after has to..
+She Red born to of but he to the of.. andorset and.och. her club. who..
+She, for the to&#39;by&#39;s&#39;he would&#39;t be the&lt;|endoftext|&gt;But-year-old has to she &#39;I is&#39;&#39; a best&#39;&#39; the world&#39;&lt;|endoftext|&gt;The the wifethyear-, was the,isse,, the UK of.&lt;|endoftext|&gt;She-000 followers with the show, in to be..&lt;|endoftext|&gt;The are the first to be out the a and. the. the.&lt;|endoftext|&gt;
+</code></pre></div>
+
+<p>Which is pretty bad. At first I thought there was a bug, but there was an improvement trend. I suspect the model which is RNN without attention has a hard time learning this task, before we even talk about optimizing hyperparameters and all the other possible things. </p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

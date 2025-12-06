@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Shifting to translation with RNNs</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="I'm pivoting the RNN summarization code to an easier example - Machine translation. Easier in the sense of the dataset, which consists of much..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li class="active"><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/shifting-to-translation-with-rnns.html" rel="bookmark"
+           title="Permalink to Shifting to translation with RNNs">Shifting to translation with RNNs</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-15T16:53:00+03:00">
+                Published: Mon 15 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/rnn.html">rnn</a> <a href="/tag/nlp.html">nlp</a> </p>
+</footer><!-- /.post-info -->      <p>I'm pivoting the RNN summarization code to an easier example - Machine translation. Easier in the sense of the <a href="https://huggingface.co/datasets/yhavinga/ccmatrix">dataset</a>, which consists of much shorter en-de sentence pairs compared to the summarization task. I have some suspicion that the there is a bug or something in my code, so today, after repurposing to the new dataset, we're gonna work on monitoring, babysitting the learning process and debugging.</p>
+<h1>Dataset</h1>
+<p>It's a pretty! big dataset. Streaming hangs me up for 30 seconds. Couldn't find a way to extract a subset nicely, so for now just saved first 1000 batches of the data loader.</p>
+<h1>Monitoring</h1>
+<p>The first and most obvious thing to track is the training loss. Here we can track the loss during the first 500 iterations. We can see that there's a clear downward trend.</p>
+<p><img src="/images/loss_graph.png" alt="loss graph" width="50%" class="obsidian-embed" style="display:block; margin:1.5rem auto; height:auto;" /></p>
+<p>There's suppose to be a nice check one can do to verify the NN is initalized correctly. If it gives all the tokens a uniform probability then the loss should be 
+</p>
+<div class="math">$$
+\text{CE-loss} \approx \frac{1}{T}\sum_{t}\log(|\text{vocab}|)=\log(|\text{vocab}|)
+$$</div>
+<p>
+And indeed if we look at the output of the following snippet</p>
+<div class="highlight"><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;translation&#39;</span><span class="p">][</span><span class="s1">&#39;en&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;translation&#39;</span><span class="p">][</span><span class="s1">&#39;de&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">x_t</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">])</span>
+<span class="n">y_t</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">(</span><span class="n">y</span><span class="p">)[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">])</span>
+<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">eo</span><span class="p">,</span> <span class="n">eh</span> <span class="o">=</span> <span class="n">enc</span><span class="p">(</span><span class="n">x_t</span><span class="o">.</span><span class="n">cuda</span><span class="p">())</span>
+    <span class="n">do</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">eo</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">eh</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">loss_f</span><span class="p">(</span><span class="n">do</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)[:</span><span class="n">y_t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">y_t</span><span class="o">.</span><span class="n">cuda</span><span class="p">())</span> 
+<span class="n">do</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">l</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">))</span>
+</code></pre></div>
+
+<p>we get</p>
+<div class="highlight"><pre><span></span><code>(tensor([[-4.2354, -4.2840, -4.1850,  ..., -4.2360, -3.9861, -4.5393],
+         [-4.1389, -4.1148, -4.2819,  ..., -4.1094, -4.0500, -4.4847],
+         [-4.1877, -4.1414, -4.3016,  ..., -4.2484, -3.9683, -4.3612],
+         ...,
+         [-4.0528, -3.9330, -4.4955,  ..., -3.9906, -4.0624, -4.5389],
+         [-4.0528, -3.9330, -4.4955,  ..., -3.9906, -4.0624, -4.5389],
+         [-4.0528, -3.9330, -4.4955,  ..., -3.9906, -4.0624, -4.5389]],
+        device=&#39;cuda:0&#39;),
+ tensor(4.1989, device=&#39;cuda:0&#39;),
+ 4.189654742026425)
+</code></pre></div>
+
+<p>The first item is the log-distribution for an output token which is pretty much uniform, next is the CE loss and third is the log of the size of the vocabulary, and indeed things match.</p>
+<p>Also, regarding tokenization: I switched to character level tokenization to make things simpler. Well, it's almost simpler. Now we have a bit of a different behavior, where characters not in the vocabulary are replaced with the unknown token.</p>
+<p>Now I'm playing around with the training. I'm logging the loss, I also added the gradient norm for the encoder and decoder. I read a bit of Karpathy's <a href="https://karpathy.github.io/2015/05/21/rnn-effectiveness/">blog post about RNNs</a>, looking for some training tips. I settled for 2 GRU layers with a hidden size of 512, batch size of 128, adam with learning rate of 2e-3 and exponential decay of 0.95 every 500 steps. Here's a graph. It's not from the start as can be see since the beginning lose isn't ~4. The orange line is a smoothed graph, the edges have some boundary artifacts though.</p>
+<p><img src="/images/loss2.png" alt="loss2" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>The thing bothering me now is that in the blog post, Andrej says that within 300 iterations it was already quite coherent, and I'm still getting stuff like</p>
+<div class="highlight"><pre><span></span><code>English:
+[CLS]Despite the different cultural and geographical conditions within Asia, the conference revealed once more that Asian nations often face the same or similar challenges.[SEP]
+
+Target:
+[CLS]Trotz der unterschiedlichen kulturellen und geografischen Gegebenheiten innerhalb Asiens verdeutlichte die Konferenz einmal mehr, dass sich die asiatischen Nationen oft gleichen oder ähnlichen Herausforderungen gegenübersehen.[SEP]
+
+Predicted:
+[CLS]Drotz der Sngerschiedlichen Sorturellen und drsgrafischen Seseneneeit n dn erhalb drien  dorwinteich endie Momterenz dineal dihr  diss dieh die Mniatische  Samionen ddf deaichzr ader ahnlich r Rärausforderungen uesen ber tten [SEP]
+</code></pre></div>
+
+<p>Now, it could be because I'm using a seq2seq model and he uses just a decoder, but there could also be a bug in the code... or some bad configuration, or maybe that task is harder? who knows. I don't have a lot of intuition for how to debug this.</p>
+<p>After 10000 iterations, loss is down to 0.9 but translations are still weird</p>
+<div class="highlight"><pre><span></span><code>Target:
+[CLS]Übrigens hat Jen das Herz dieses Schriftstellers bereits gewonnen, indem sie im nationalen Fernsehen enthüllt hat, dass sie, Ben und die Kinder alle hatten Kopfläuse vor ein paar Jahren.[SEP]
+
+Predicted:
+[CLS]Ibeigens JattJasnJis Jarz geeser Jphöittsteller  geseits gesonnen, dn em sie dn Bäcionalen Barnsehen grtwallt uabt uass die  uer und dee Binder aulesaabten eanf.infeneer.dineJaar Jahre..[SEP]
+</code></pre></div>
+
+<p>The question is how much to push the vanilla rnn without adding attention. Well, next time I'm going to go back to school and go over some fast.ai lectures.</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

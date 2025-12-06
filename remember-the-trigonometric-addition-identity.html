@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Remember the trigonometric addition identity</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="If you're like me, you don't remember trig identities. If you're like me, you prefer rederiving stuff yourself. It's a perk of math that we..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li class="active"><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/remember-the-trigonometric-addition-identity.html" rel="bookmark"
+           title="Permalink to Remember the trigonometric addition identity">Remember the trigonometric addition identity</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-28T10:14:00+03:00">
+                Published: Tue 28 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/math.html">Math</a>.</p>
+
+</footer><!-- /.post-info -->      <p>If you're like me, you don't remember trig identities. If you're like me, you prefer rederiving stuff yourself. It's a perk of math that we replace memorization with derivation. Still, it takes time, and distracts you from what you're actually doing. Also, deriving trig identities isn't so easy without some extra knowledge.</p>
+<p>I once read this text about the use of proofs in mathematics. There was a quote from a math professor which went along the lines "it's a mnemonic device", and thats the point of this post. For a long time my inability to recall trig facts has been bugging me, until a day ago I skimmed "Trigonometry" by Gelfand and downloaded some knowledge into my brain. Turns out many identities can be derived just from the addition identity, so today we'll see two proofs, and hopefully you will be able to recall them in times of need.</p>
+<h2>Proof 1: Euler's identity</h2>
+<p>This one I think is the easiest to recall and deduce the identity from. The downside is it requires knowledge of complex numbers and Euler's identity
+</p>
+<div class="math">$$e^{i\theta}=\cos \theta +i\sin \theta$$</div>
+<p>
+If you suffer an aneurism when seeing this move on to the next section. Otherwise, with this identity we can simply use exponent rules and multiplication to figure out the addition identities. First
+</p>
+<div class="math">$$e^{i(\alpha + \beta)}=e^{i\alpha}e^{i \beta}=(\cos \alpha +i\sin \alpha)(\cos \beta+i\sin \beta)$$</div>
+<p>
+of course, the important part is to remember this quickly, so here's a nice visual aid  </p>
+<p style="width:80%; margin:auto">
+  <img src="/images/sin_addition/addition2.jpg" />
+</p>
+
+<p>in a pinch, visualize this array and the colored lines.</p>
+<h2>Proof 2: Ptolemy</h2>
+<p>If you don't know Euler's identity, or you prefer something geometric, the next one may be for you. There are a couple of geometric proofs but I think this one might be cleaner for recall purposes. We will use the following characterization of sine: Let <span class="math">\(\alpha\)</span> be an angle in a circle of diameter <span class="math">\(d\)</span> as in the drawing. Then
+</p>
+<div class="math">$$\sin\alpha = \frac {PB}{d}$$</div>
+<p style="width:50%; margin:auto">
+  <img src="/images/sin_addition/sin_circle.jpg" />
+</p>
+
+<p>We use a construction as below in a circle of diameter 1.</p>
+<p style="width:70%; margin:auto">
+  <img src="/images/sin_addition/addition_geometric.jpg" />
+</p>
+<h2>Deriving other identities</h2>
+<p>Using the addition identity you can quickly derive many other identities. Below are some, I suggest you try it yourself before looking at the answer.</p>
+<h3>cosine and sine of difference</h3>
+<p>We can just use <span class="math">\(\cos -\alpha=\cos\alpha\)</span> and <span class="math">\(\sin-\alpha=-\sin\alpha\)</span>, so for example
+</p>
+<div class="math">$$
+\sin(\alpha-\beta)=\sin(\alpha+(-\beta))=\sin\alpha\cos-\beta+\sin-\beta\cos\alpha=\sin\alpha\cos\beta-\sin\beta\cos\alpha
+$$</div>
+<h3>tangent of addition</h3>
+<p>Again, just use definition and addition identities
+</p>
+<div class="math">$$\tan(\alpha+\beta)=\frac{\sin(\alpha+\beta)}{\cos(\alpha+\beta)}=\frac{\sin\alpha\cos\beta+\sin\beta\cos\alpha}{\cos\alpha\cos\beta-\sin\alpha\sin\beta}=\frac{\frac{\sin\alpha}{\cos\alpha}+\frac{\sin\beta}{\cos\beta}}{1-\frac{\sin\alpha\sin\beta}{\cos\alpha\cos\beta}} = \frac{\tan \alpha +\tan \beta}{1-\tan \alpha +\tan \beta}$$</div>
+<h3>double angle</h3>
+<div class="math">$$
+\sin2\alpha = \sin(\alpha+\alpha)=2\sin\alpha\cos\alpha
+$$</div>
+<h3>multiplication of cosines and sines</h3>
+<p>This requires a tad more thinking, but based on the fact that a negative angle change sign only for sine we can turn multiplication to addition, for example
+</p>
+<div class="math">$$
+\cos(\alpha+\beta)+\cos(\alpha-\beta)=2\cos\alpha\cos\beta-\sin\alpha\sin\beta+\sin\alpha\sin\beta=2\cos\alpha\cos\beta
+$$</div>
+<h2>Wrapping up</h2>
+<p>Once again, math proves its might. By remembering one piece of information we can deduce a whole lot more, and begone rote memorization!</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

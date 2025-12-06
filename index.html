@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/aoc-2025-day-6.html">AoC 2025 - Day 6</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2025-12-06T19:47:00+02:00">
+                Published: Sat 06 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info --><div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;node:fs&quot;</span><span class="p">;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s2">&quot;input.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;utf-8&quot;</span><span class="p">);</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`\</span>
+<span class="sb">123 328  51 64 </span>
+<span class="sb"> 45 64  387 23 </span>
+<span class="sb">  6 98  215 314</span>
+<span class="sb">*   +   *   +  `</span><span class="p">;</span>
+</code></pre></div>
+
+<h2>Part 1</h2>
+<p>In the first part of today, the input consists of 3 rows of space separated numbers and a row of space separated operators. We need to apply the operator on all the numbers in the column, so the challenge is to have everything aligned correctly. This begs for regexes.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sample</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">);</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">num_pat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/\d+/g</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">op_pat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/[*+]/g</span><span class="p">;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="nx">rows</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">match</span><span class="p">(</span><span class="nx">num_pat</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">))</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-yellow-fg">123</span>, <span class="ansi-yellow-fg">328</span>, <span class="ansi-yellow-fg">51</span>, <span class="ansi-yellow-fg">64</span> ]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">rows</span><span class="p">[</span><span class="mf">3</span><span class="p">].</span><span class="nx">match</span><span class="p">(</span><span class="nx">op_pat</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span> ]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">num_pat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/\d+/g</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">op_pat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/[*+]/g</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">[</span><span class="nx">rows</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">match</span><span class="p">(</span><span class="nx">num_pat</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">)),</span>
+<span class="w">          </span><span class="nx">rows</span><span class="p">[</span><span class="mf">1</span><span class="p">].</span><span class="nx">match</span><span class="p">(</span><span class="nx">num_pat</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">)),</span>
+<span class="w">          </span><span class="nx">rows</span><span class="p">[</span><span class="mf">2</span><span class="p">].</span><span class="nx">match</span><span class="p">(</span><span class="nx">num_pat</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">)),</span>
+<span class="w">          </span><span class="nx">rows</span><span class="p">[</span><span class="mf">3</span><span class="p">].</span><span class="nx">match</span><span class="p">(</span><span class="nx">op_pat</span><span class="p">)];</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">psample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">sample</span><span class="p">);</span>
+<span class="nx">psample</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  [ <span class="ansi-yellow-fg">123</span>, <span class="ansi-yellow-fg">328</span>, <span class="ansi-yellow-fg">51</span>, <span class="ansi-yellow-fg">64</span> ],
+  [ <span class="ansi-yellow-fg">45</span>, <span class="ansi-yellow-fg">64</span>, <span class="ansi-yellow-fg">387</span>, <span class="ansi-yellow-fg">23</span> ],
+  [ <span class="ansi-yellow-fg">6</span>, <span class="ansi-yellow-fg">98</span>, <span class="ansi-yellow-fg">215</span>, <span class="ansi-yellow-fg">314</span> ],
+  [ <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span> ]
+]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">mat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">psample</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">h</span><span class="p">,</span><span class="w"> </span><span class="nx">w</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nx">mat</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span><span class="w"> </span><span class="nx">mat</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">length</span><span class="p">];</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">tmat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">w</span><span class="p">;</span><span class="w"> </span><span class="nx">c</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">nrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">h</span><span class="p">;</span><span class="w"> </span><span class="nx">r</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">nrow</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">mat</span><span class="p">[</span><span class="nx">r</span><span class="p">][</span><span class="nx">c</span><span class="p">]);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="nx">tmat</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">nrow</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="nx">tmat</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  [ <span class="ansi-yellow-fg">123</span>, <span class="ansi-yellow-fg">45</span>, <span class="ansi-yellow-fg">6</span>, <span class="ansi-green-fg">&#34;*&#34;</span> ],
+  [ <span class="ansi-yellow-fg">328</span>, <span class="ansi-yellow-fg">64</span>, <span class="ansi-yellow-fg">98</span>, <span class="ansi-green-fg">&#34;+&#34;</span> ],
+  [ <span class="ansi-yellow-fg">51</span>, <span class="ansi-yellow-fg">387</span>, <span class="ansi-yellow-fg">215</span>, <span class="ansi-green-fg">&#34;*&#34;</span> ],
+  [ <span class="ansi-yellow-fg">64</span>, <span class="ansi-yellow-fg">23</span>, <span class="ansi-yellow-fg">314</span>, <span class="ansi-green-fg">&#34;+&#34;</span> ]
+]
+</pre>
+
+<p>Let's write a reusable transpose function</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">transpose</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">matrix</span><span class="o">:</span><span class="w"> </span><span class="kt">T</span><span class="p">[][])</span><span class="o">:</span><span class="w"> </span><span class="nx">T</span><span class="p">[][]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">rows</span><span class="p">,</span><span class="w"> </span><span class="nx">cols</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nx">matrix</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span><span class="w"> </span><span class="nx">matrix</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">length</span><span class="p">];</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">transposed</span><span class="o">:</span><span class="w"> </span><span class="kt">T</span><span class="p">[][]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">cols</span><span class="p">;</span><span class="w"> </span><span class="nx">c</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">column</span><span class="o">:</span><span class="w"> </span><span class="kt">T</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">rows</span><span class="p">;</span><span class="w"> </span><span class="nx">r</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">column</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">matrix</span><span class="p">[</span><span class="nx">r</span><span class="p">][</span><span class="nx">c</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">transposed</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">column</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">transposed</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">tsample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">transpose</span><span class="p">(</span><span class="nx">psample</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Let's create an obj that maps the operator string to lambdas. First, let me verify the reducer callback signature.</p>
+<div class="highlight"><pre><span></span><code><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">tsample</span><span class="p">[</span><span class="mf">0</span><span class="p">],</span><span class="w"> </span><span class="nx">tsample</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">).</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">x</span><span class="p">))</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-yellow-fg">123</span>, <span class="ansi-yellow-fg">45</span>, <span class="ansi-yellow-fg">6</span>, <span class="ansi-green-fg">&#34;*&#34;</span> ] <span class="ansi-yellow-fg">33210</span>
+
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">ops</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">acc</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">,</span><span class="w"> </span><span class="nx">val</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="kt">number</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;*&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">acc</span><span class="p">,</span><span class="w"> </span><span class="nx">val</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">acc</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">val</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;+&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">acc</span><span class="p">,</span><span class="w"> </span><span class="nx">val</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">acc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">val</span>
+<span class="p">}</span>
+<span class="nx">ops</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="nx">tsample</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">).</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">ops</span><span class="p">[</span><span class="nx">tsample</span><span class="p">[</span><span class="mf">0</span><span class="p">][</span><span class="nx">tsample</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">length</span><span class="o">-</span><span class="mf">1</span><span class="p">]])</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">33210</span>
+</pre>
+
+<p>Okay, this works now, let's make it clearer</p>
+<div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">row</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">tsample</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">nums</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">row</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">row</span><span class="p">[</span><span class="nx">row</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">];</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">row</span><span class="p">,</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">ops</span><span class="p">[</span><span class="nx">op</span><span class="p">]));</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>looks good. Let's wrap it up</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">part1</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">processed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">transposed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">transpose</span><span class="p">(</span><span class="nx">processed</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">row</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">transposed</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">nums</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">row</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">row</span><span class="p">[</span><span class="nx">row</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">];</span>
+<span class="w">    </span><span class="nx">result</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">ops</span><span class="p">[</span><span class="nx">op</span><span class="p">]);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">result</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nx">part1</span><span class="p">(</span><span class="nx">sample</span><span class="p">);</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  [
+    <span class="ansi-yellow-fg">527</span>, <span class="ansi-yellow-fg">781</span>, <span class="ansi-yellow-fg">232</span>,  <span class="ansi-yellow-fg">95</span>,   <span class="ansi-yellow-fg">3</span>,   <span class="ansi-yellow-fg">75</span>,   <span class="ansi-yellow-fg">59</span>,  <span class="ansi-yellow-fg">66</span>,   <span class="ansi-yellow-fg">43</span>,  <span class="ansi-yellow-fg">5</span>,   <span class="ansi-yellow-fg">68</span>,  <span class="ansi-yellow-fg">877</span>,
+     <span class="ansi-yellow-fg">31</span>,   <span class="ansi-yellow-fg">4</span>,  <span class="ansi-yellow-fg">54</span>, <span class="ansi-yellow-fg">914</span>,  <span class="ansi-yellow-fg">15</span>,   <span class="ansi-yellow-fg">22</span>,    <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">29</span>,    <span class="ansi-yellow-fg">4</span>, <span class="ansi-yellow-fg">17</span>,    <span class="ansi-yellow-fg">5</span>, <span class="ansi-yellow-fg">9176</span>,
+      <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">885</span>,  <span class="ansi-yellow-fg">97</span>,  <span class="ansi-yellow-fg">88</span>,  <span class="ansi-yellow-fg">42</span>,    <span class="ansi-yellow-fg">6</span>,   <span class="ansi-yellow-fg">64</span>, <span class="ansi-yellow-fg">161</span>, <span class="ansi-yellow-fg">1675</span>, <span class="ansi-yellow-fg">36</span>,  <span class="ansi-yellow-fg">363</span>,  <span class="ansi-yellow-fg">738</span>,
+     <span class="ansi-yellow-fg">71</span>, <span class="ansi-yellow-fg">224</span>, <span class="ansi-yellow-fg">453</span>,  <span class="ansi-yellow-fg">72</span>, <span class="ansi-yellow-fg">256</span>,  <span class="ansi-yellow-fg">594</span>,  <span class="ansi-yellow-fg">914</span>,  <span class="ansi-yellow-fg">97</span>,  <span class="ansi-yellow-fg">668</span>, <span class="ansi-yellow-fg">95</span>,  <span class="ansi-yellow-fg">723</span>,   <span class="ansi-yellow-fg">84</span>,
+    <span class="ansi-yellow-fg">738</span>, <span class="ansi-yellow-fg">437</span>,  <span class="ansi-yellow-fg">38</span>,   <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">893</span>,  <span class="ansi-yellow-fg">416</span>,    <span class="ansi-yellow-fg">5</span>,  <span class="ansi-yellow-fg">21</span>,  <span class="ansi-yellow-fg">745</span>, <span class="ansi-yellow-fg">18</span>, <span class="ansi-yellow-fg">4566</span>,   <span class="ansi-yellow-fg">32</span>,
+    <span class="ansi-yellow-fg">627</span>,  <span class="ansi-yellow-fg">16</span>,   <span class="ansi-yellow-fg">5</span>,  <span class="ansi-yellow-fg">45</span>,   <span class="ansi-yellow-fg">8</span>,   <span class="ansi-yellow-fg">88</span>, <span class="ansi-yellow-fg">4256</span>,  <span class="ansi-yellow-fg">52</span>,    <span class="ansi-yellow-fg">9</span>, <span class="ansi-yellow-fg">66</span>,  <span class="ansi-yellow-fg">317</span>,  <span class="ansi-yellow-fg">691</span>,
+    <span class="ansi-yellow-fg">224</span>, <span class="ansi-yellow-fg">375</span>,  <span class="ansi-yellow-fg">17</span>,  <span class="ansi-yellow-fg">25</span>,   <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">3529</span>,   <span class="ansi-yellow-fg">42</span>,  <span class="ansi-yellow-fg">77</span>,   <span class="ansi-yellow-fg">86</span>,  <span class="ansi-yellow-fg">9</span>,    <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">865</span>,
+    <span class="ansi-yellow-fg">793</span>,  <span class="ansi-yellow-fg">87</span>, <span class="ansi-yellow-fg">469</span>,  <span class="ansi-yellow-fg">86</span>, <span class="ansi-yellow-fg">452</span>,   <span class="ansi-yellow-fg">85</span>,   <span class="ansi-yellow-fg">51</span>,  <span class="ansi-yellow-fg">44</span>,   <span class="ansi-yellow-fg">11</span>, <span class="ansi-yellow-fg">43</span>,   <span class="ansi-yellow-fg">31</span>,   <span class="ansi-yellow-fg">22</span>,
+     <span class="ansi-yellow-fg">15</span>,   <span class="ansi-yellow-fg">7</span>,  <span class="ansi-yellow-fg">42</span>,   <span class="ansi-yellow-fg">5</span>,
+    ... 900 more items
+  ],
+  [
+    <span class="ansi-yellow-fg">471</span>, <span class="ansi-yellow-fg">289</span>, <span class="ansi-yellow-fg">691</span>,  <span class="ansi-yellow-fg">56</span>,   <span class="ansi-yellow-fg">2</span>,   <span class="ansi-yellow-fg">16</span>,    <span class="ansi-yellow-fg">6</span>,  <span class="ansi-yellow-fg">47</span>,   <span class="ansi-yellow-fg">35</span>,    <span class="ansi-yellow-fg">3</span>,   <span class="ansi-yellow-fg">53</span>,  <span class="ansi-yellow-fg">959</span>,
+     <span class="ansi-yellow-fg">91</span>,   <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">771</span>, <span class="ansi-yellow-fg">841</span>,  <span class="ansi-yellow-fg">49</span>,   <span class="ansi-yellow-fg">81</span>,  <span class="ansi-yellow-fg">644</span>, <span class="ansi-yellow-fg">459</span>,   <span class="ansi-yellow-fg">99</span>, <span class="ansi-yellow-fg">7874</span>,    <span class="ansi-yellow-fg">7</span>, <span class="ansi-yellow-fg">7994</span>,
+     <span class="ansi-yellow-fg">29</span>, <span class="ansi-yellow-fg">993</span>,  <span class="ansi-yellow-fg">41</span>, <span class="ansi-yellow-fg">234</span>,  <span class="ansi-yellow-fg">34</span>,   <span class="ansi-yellow-fg">78</span>,  <span class="ansi-yellow-fg">142</span>, <span class="ansi-yellow-fg">146</span>, <span class="ansi-yellow-fg">5353</span>,   <span class="ansi-yellow-fg">46</span>,  <span class="ansi-yellow-fg">746</span>,  <span class="ansi-yellow-fg">939</span>,
+     <span class="ansi-yellow-fg">54</span>, <span class="ansi-yellow-fg">596</span>,  <span class="ansi-yellow-fg">36</span>,  <span class="ansi-yellow-fg">11</span>, <span class="ansi-yellow-fg">551</span>,  <span class="ansi-yellow-fg">471</span>,   <span class="ansi-yellow-fg">29</span>,  <span class="ansi-yellow-fg">12</span>,  <span class="ansi-yellow-fg">477</span>,   <span class="ansi-yellow-fg">23</span>,  <span class="ansi-yellow-fg">415</span>,   <span class="ansi-yellow-fg">29</span>,
+    <span class="ansi-yellow-fg">573</span>, <span class="ansi-yellow-fg">545</span>,  <span class="ansi-yellow-fg">16</span>,   <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">286</span>,  <span class="ansi-yellow-fg">429</span>,    <span class="ansi-yellow-fg">3</span>,  <span class="ansi-yellow-fg">49</span>,  <span class="ansi-yellow-fg">792</span>,   <span class="ansi-yellow-fg">38</span>, <span class="ansi-yellow-fg">3581</span>,   <span class="ansi-yellow-fg">68</span>,
+    <span class="ansi-yellow-fg">557</span>, <span class="ansi-yellow-fg">694</span>,  <span class="ansi-yellow-fg">99</span>,  <span class="ansi-yellow-fg">23</span>,   <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">462</span>, <span class="ansi-yellow-fg">3287</span>,  <span class="ansi-yellow-fg">54</span>,   <span class="ansi-yellow-fg">82</span>,   <span class="ansi-yellow-fg">66</span>,  <span class="ansi-yellow-fg">585</span>,  <span class="ansi-yellow-fg">867</span>,
+    <span class="ansi-yellow-fg">992</span>, <span class="ansi-yellow-fg">168</span>,  <span class="ansi-yellow-fg">49</span>,   <span class="ansi-yellow-fg">9</span>,  <span class="ansi-yellow-fg">39</span>, <span class="ansi-yellow-fg">6394</span>,  <span class="ansi-yellow-fg">572</span>, <span class="ansi-yellow-fg">738</span>,   <span class="ansi-yellow-fg">47</span>,   <span class="ansi-yellow-fg">63</span>,   <span class="ansi-yellow-fg">79</span>,   <span class="ansi-yellow-fg">11</span>,
+    <span class="ansi-yellow-fg">994</span>, <span class="ansi-yellow-fg">787</span>, <span class="ansi-yellow-fg">928</span>,  <span class="ansi-yellow-fg">61</span>, <span class="ansi-yellow-fg">133</span>,   <span class="ansi-yellow-fg">17</span>,  <span class="ansi-yellow-fg">277</span>,  <span class="ansi-yellow-fg">64</span>,  <span class="ansi-yellow-fg">748</span>,   <span class="ansi-yellow-fg">75</span>,   <span class="ansi-yellow-fg">63</span>,   <span class="ansi-yellow-fg">63</span>,
+     <span class="ansi-yellow-fg">28</span>,   <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">44</span>,  <span class="ansi-yellow-fg">12</span>,
+    ... 900 more items
+  ],
+  [
+    <span class="ansi-yellow-fg">527</span>,  <span class="ansi-yellow-fg">84</span>, <span class="ansi-yellow-fg">5159</span>,   <span class="ansi-yellow-fg">46</span>,  <span class="ansi-yellow-fg">96</span>,  <span class="ansi-yellow-fg">74</span>,    <span class="ansi-yellow-fg">9</span>,   <span class="ansi-yellow-fg">31</span>,    <span class="ansi-yellow-fg">1</span>,   <span class="ansi-yellow-fg">54</span>,   <span class="ansi-yellow-fg">93</span>, <span class="ansi-yellow-fg">2525</span>,
+     <span class="ansi-yellow-fg">19</span>,  <span class="ansi-yellow-fg">87</span>,  <span class="ansi-yellow-fg">555</span>,  <span class="ansi-yellow-fg">328</span>,  <span class="ansi-yellow-fg">96</span>,  <span class="ansi-yellow-fg">13</span>,  <span class="ansi-yellow-fg">698</span>, <span class="ansi-yellow-fg">3168</span>,  <span class="ansi-yellow-fg">535</span>, <span class="ansi-yellow-fg">2246</span>,   <span class="ansi-yellow-fg">58</span>, <span class="ansi-yellow-fg">5345</span>,
+     <span class="ansi-yellow-fg">63</span>, <span class="ansi-yellow-fg">297</span>,   <span class="ansi-yellow-fg">23</span>,  <span class="ansi-yellow-fg">235</span>,  <span class="ansi-yellow-fg">54</span>, <span class="ansi-yellow-fg">239</span>,  <span class="ansi-yellow-fg">445</span>,  <span class="ansi-yellow-fg">262</span>, <span class="ansi-yellow-fg">3591</span>,   <span class="ansi-yellow-fg">98</span>, <span class="ansi-yellow-fg">7913</span>,  <span class="ansi-yellow-fg">674</span>,
+     <span class="ansi-yellow-fg">26</span>, <span class="ansi-yellow-fg">649</span>,    <span class="ansi-yellow-fg">9</span>,   <span class="ansi-yellow-fg">12</span>,  <span class="ansi-yellow-fg">82</span>, <span class="ansi-yellow-fg">329</span>,   <span class="ansi-yellow-fg">18</span>,   <span class="ansi-yellow-fg">45</span>,  <span class="ansi-yellow-fg">178</span>,    <span class="ansi-yellow-fg">3</span>,  <span class="ansi-yellow-fg">947</span>,   <span class="ansi-yellow-fg">65</span>,
+    <span class="ansi-yellow-fg">715</span>,  <span class="ansi-yellow-fg">68</span>,   <span class="ansi-yellow-fg">47</span>,   <span class="ansi-yellow-fg">57</span>, <span class="ansi-yellow-fg">547</span>, <span class="ansi-yellow-fg">938</span>,    <span class="ansi-yellow-fg">1</span>,   <span class="ansi-yellow-fg">84</span>,  <span class="ansi-yellow-fg">653</span>,   <span class="ansi-yellow-fg">97</span>, <span class="ansi-yellow-fg">9138</span>,   <span class="ansi-yellow-fg">37</span>,
+    <span class="ansi-yellow-fg">341</span>, <span class="ansi-yellow-fg">918</span>,   <span class="ansi-yellow-fg">14</span>, <span class="ansi-yellow-fg">4329</span>, <span class="ansi-yellow-fg">375</span>, <span class="ansi-yellow-fg">847</span>, <span class="ansi-yellow-fg">1118</span>,   <span class="ansi-yellow-fg">33</span>,   <span class="ansi-yellow-fg">99</span>,   <span class="ansi-yellow-fg">38</span>,  <span class="ansi-yellow-fg">773</span>,  <span class="ansi-yellow-fg">498</span>,
+      <span class="ansi-yellow-fg">7</span>,  <span class="ansi-yellow-fg">11</span>,   <span class="ansi-yellow-fg">48</span>,    <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">65</span>, <span class="ansi-yellow-fg">246</span>,  <span class="ansi-yellow-fg">117</span>,  <span class="ansi-yellow-fg">358</span>,   <span class="ansi-yellow-fg">36</span>,   <span class="ansi-yellow-fg">14</span>,   <span class="ansi-yellow-fg">49</span>,   <span class="ansi-yellow-fg">26</span>,
+     <span class="ansi-yellow-fg">46</span>, <span class="ansi-yellow-fg">638</span>,  <span class="ansi-yellow-fg">724</span>,   <span class="ansi-yellow-fg">67</span>, <span class="ansi-yellow-fg">382</span>,  <span class="ansi-yellow-fg">16</span>, <span class="ansi-yellow-fg">9749</span>,  <span class="ansi-yellow-fg">954</span>,  <span class="ansi-yellow-fg">725</span>,   <span class="ansi-yellow-fg">86</span>,   <span class="ansi-yellow-fg">17</span>,   <span class="ansi-yellow-fg">51</span>,
+     <span class="ansi-yellow-fg">47</span>,  <span class="ansi-yellow-fg">38</span>,   <span class="ansi-yellow-fg">18</span>,   <span class="ansi-yellow-fg">42</span>,
+    ... 900 more items
+  ],
+  <span class="ansi-bold">null</span>
+]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">part1</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+</code></pre></div>
+
+<pre style="background-color: rgba(244, 67, 54, 0.28)">
+Stack trace:
+TypeError: Cannot read properties of null (reading &#39;0&#39;)
+    at transpose (&lt;anonymous&gt;:10:23)
+    at part1 (&lt;anonymous&gt;:3:14)
+    at &lt;anonymous&gt;:1:22
+</pre>
+
+<p>Okay, looking at the input there's actually more than 3 rows of numbers, let's fix the processing function</p>
+<div class="highlight"><pre><span></span><code><span class="p">[...[</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">],</span><span class="mf">4</span><span class="p">]</span><span class="w"> </span><span class="c1">// checking if this works</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">2</span>, <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">4</span> ]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">num_pat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/\d+/g</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">op_pat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/[*+]/g</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">[...</span><span class="nx">rows</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">num_pat</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">n</span><span class="p">))),</span>
+<span class="w">          </span><span class="nx">rows</span><span class="p">[</span><span class="nx">rows</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">].</span><span class="nx">match</span><span class="p">(</span><span class="nx">op_pat</span><span class="p">)];</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  [
+    <span class="ansi-yellow-fg">527</span>, <span class="ansi-yellow-fg">781</span>, <span class="ansi-yellow-fg">232</span>,  <span class="ansi-yellow-fg">95</span>,   <span class="ansi-yellow-fg">3</span>,   <span class="ansi-yellow-fg">75</span>,   <span class="ansi-yellow-fg">59</span>,  <span class="ansi-yellow-fg">66</span>,   <span class="ansi-yellow-fg">43</span>,  <span class="ansi-yellow-fg">5</span>,   <span class="ansi-yellow-fg">68</span>,  <span class="ansi-yellow-fg">877</span>,
+     <span class="ansi-yellow-fg">31</span>,   <span class="ansi-yellow-fg">4</span>,  <span class="ansi-yellow-fg">54</span>, <span class="ansi-yellow-fg">914</span>,  <span class="ansi-yellow-fg">15</span>,   <span class="ansi-yellow-fg">22</span>,    <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">29</span>,    <span class="ansi-yellow-fg">4</span>, <span class="ansi-yellow-fg">17</span>,    <span class="ansi-yellow-fg">5</span>, <span class="ansi-yellow-fg">9176</span>,
+      <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">885</span>,  <span class="ansi-yellow-fg">97</span>,  <span class="ansi-yellow-fg">88</span>,  <span class="ansi-yellow-fg">42</span>,    <span class="ansi-yellow-fg">6</span>,   <span class="ansi-yellow-fg">64</span>, <span class="ansi-yellow-fg">161</span>, <span class="ansi-yellow-fg">1675</span>, <span class="ansi-yellow-fg">36</span>,  <span class="ansi-yellow-fg">363</span>,  <span class="ansi-yellow-fg">738</span>,
+     <span class="ansi-yellow-fg">71</span>, <span class="ansi-yellow-fg">224</span>, <span class="ansi-yellow-fg">453</span>,  <span class="ansi-yellow-fg">72</span>, <span class="ansi-yellow-fg">256</span>,  <span class="ansi-yellow-fg">594</span>,  <span class="ansi-yellow-fg">914</span>,  <span class="ansi-yellow-fg">97</span>,  <span class="ansi-yellow-fg">668</span>, <span class="ansi-yellow-fg">95</span>,  <span class="ansi-yellow-fg">723</span>,   <span class="ansi-yellow-fg">84</span>,
+    <span class="ansi-yellow-fg">738</span>, <span class="ansi-yellow-fg">437</span>,  <span class="ansi-yellow-fg">38</span>,   <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">893</span>,  <span class="ansi-yellow-fg">416</span>,    <span class="ansi-yellow-fg">5</span>,  <span class="ansi-yellow-fg">21</span>,  <span class="ansi-yellow-fg">745</span>, <span class="ansi-yellow-fg">18</span>, <span class="ansi-yellow-fg">4566</span>,   <span class="ansi-yellow-fg">32</span>,
+    <span class="ansi-yellow-fg">627</span>,  <span class="ansi-yellow-fg">16</span>,   <span class="ansi-yellow-fg">5</span>,  <span class="ansi-yellow-fg">45</span>,   <span class="ansi-yellow-fg">8</span>,   <span class="ansi-yellow-fg">88</span>, <span class="ansi-yellow-fg">4256</span>,  <span class="ansi-yellow-fg">52</span>,    <span class="ansi-yellow-fg">9</span>, <span class="ansi-yellow-fg">66</span>,  <span class="ansi-yellow-fg">317</span>,  <span class="ansi-yellow-fg">691</span>,
+    <span class="ansi-yellow-fg">224</span>, <span class="ansi-yellow-fg">375</span>,  <span class="ansi-yellow-fg">17</span>,  <span class="ansi-yellow-fg">25</span>,   <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">3529</span>,   <span class="ansi-yellow-fg">42</span>,  <span class="ansi-yellow-fg">77</span>,   <span class="ansi-yellow-fg">86</span>,  <span class="ansi-yellow-fg">9</span>,    <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">865</span>,
+    <span class="ansi-yellow-fg">793</span>,  <span class="ansi-yellow-fg">87</span>, <span class="ansi-yellow-fg">469</span>,  <span class="ansi-yellow-fg">86</span>, <span class="ansi-yellow-fg">452</span>,   <span class="ansi-yellow-fg">85</span>,   <span class="ansi-yellow-fg">51</span>,  <span class="ansi-yellow-fg">44</span>,   <span class="ansi-yellow-fg">11</span>, <span class="ansi-yellow-fg">43</span>,   <span class="ansi-yellow-fg">31</span>,   <span class="ansi-yellow-fg">22</span>,
+     <span class="ansi-yellow-fg">15</span>,   <span class="ansi-yellow-fg">7</span>,  <span class="ansi-yellow-fg">42</span>,   <span class="ansi-yellow-fg">5</span>,
+    ... 900 more items
+  ],
+  [
+    <span class="ansi-yellow-fg">471</span>, <span class="ansi-yellow-fg">289</span>, <span class="ansi-yellow-fg">691</span>,  <span class="ansi-yellow-fg">56</span>,   <span class="ansi-yellow-fg">2</span>,   <span class="ansi-yellow-fg">16</span>,    <span class="ansi-yellow-fg">6</span>,  <span class="ansi-yellow-fg">47</span>,   <span class="ansi-yellow-fg">35</span>,    <span class="ansi-yellow-fg">3</span>,   <span class="ansi-yellow-fg">53</span>,  <span class="ansi-yellow-fg">959</span>,
+     <span class="ansi-yellow-fg">91</span>,   <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">771</span>, <span class="ansi-yellow-fg">841</span>,  <span class="ansi-yellow-fg">49</span>,   <span class="ansi-yellow-fg">81</span>,  <span class="ansi-yellow-fg">644</span>, <span class="ansi-yellow-fg">459</span>,   <span class="ansi-yellow-fg">99</span>, <span class="ansi-yellow-fg">7874</span>,    <span class="ansi-yellow-fg">7</span>, <span class="ansi-yellow-fg">7994</span>,
+     <span class="ansi-yellow-fg">29</span>, <span class="ansi-yellow-fg">993</span>,  <span class="ansi-yellow-fg">41</span>, <span class="ansi-yellow-fg">234</span>,  <span class="ansi-yellow-fg">34</span>,   <span class="ansi-yellow-fg">78</span>,  <span class="ansi-yellow-fg">142</span>, <span class="ansi-yellow-fg">146</span>, <span class="ansi-yellow-fg">5353</span>,   <span class="ansi-yellow-fg">46</span>,  <span class="ansi-yellow-fg">746</span>,  <span class="ansi-yellow-fg">939</span>,
+     <span class="ansi-yellow-fg">54</span>, <span class="ansi-yellow-fg">596</span>,  <span class="ansi-yellow-fg">36</span>,  <span class="ansi-yellow-fg">11</span>, <span class="ansi-yellow-fg">551</span>,  <span class="ansi-yellow-fg">471</span>,   <span class="ansi-yellow-fg">29</span>,  <span class="ansi-yellow-fg">12</span>,  <span class="ansi-yellow-fg">477</span>,   <span class="ansi-yellow-fg">23</span>,  <span class="ansi-yellow-fg">415</span>,   <span class="ansi-yellow-fg">29</span>,
+    <span class="ansi-yellow-fg">573</span>, <span class="ansi-yellow-fg">545</span>,  <span class="ansi-yellow-fg">16</span>,   <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">286</span>,  <span class="ansi-yellow-fg">429</span>,    <span class="ansi-yellow-fg">3</span>,  <span class="ansi-yellow-fg">49</span>,  <span class="ansi-yellow-fg">792</span>,   <span class="ansi-yellow-fg">38</span>, <span class="ansi-yellow-fg">3581</span>,   <span class="ansi-yellow-fg">68</span>,
+    <span class="ansi-yellow-fg">557</span>, <span class="ansi-yellow-fg">694</span>,  <span class="ansi-yellow-fg">99</span>,  <span class="ansi-yellow-fg">23</span>,   <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">462</span>, <span class="ansi-yellow-fg">3287</span>,  <span class="ansi-yellow-fg">54</span>,   <span class="ansi-yellow-fg">82</span>,   <span class="ansi-yellow-fg">66</span>,  <span class="ansi-yellow-fg">585</span>,  <span class="ansi-yellow-fg">867</span>,
+    <span class="ansi-yellow-fg">992</span>, <span class="ansi-yellow-fg">168</span>,  <span class="ansi-yellow-fg">49</span>,   <span class="ansi-yellow-fg">9</span>,  <span class="ansi-yellow-fg">39</span>, <span class="ansi-yellow-fg">6394</span>,  <span class="ansi-yellow-fg">572</span>, <span class="ansi-yellow-fg">738</span>,   <span class="ansi-yellow-fg">47</span>,   <span class="ansi-yellow-fg">63</span>,   <span class="ansi-yellow-fg">79</span>,   <span class="ansi-yellow-fg">11</span>,
+    <span class="ansi-yellow-fg">994</span>, <span class="ansi-yellow-fg">787</span>, <span class="ansi-yellow-fg">928</span>,  <span class="ansi-yellow-fg">61</span>, <span class="ansi-yellow-fg">133</span>,   <span class="ansi-yellow-fg">17</span>,  <span class="ansi-yellow-fg">277</span>,  <span class="ansi-yellow-fg">64</span>,  <span class="ansi-yellow-fg">748</span>,   <span class="ansi-yellow-fg">75</span>,   <span class="ansi-yellow-fg">63</span>,   <span class="ansi-yellow-fg">63</span>,
+     <span class="ansi-yellow-fg">28</span>,   <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">44</span>,  <span class="ansi-yellow-fg">12</span>,
+    ... 900 more items
+  ],
+  [
+    <span class="ansi-yellow-fg">527</span>,  <span class="ansi-yellow-fg">84</span>, <span class="ansi-yellow-fg">5159</span>,   <span class="ansi-yellow-fg">46</span>,  <span class="ansi-yellow-fg">96</span>,  <span class="ansi-yellow-fg">74</span>,    <span class="ansi-yellow-fg">9</span>,   <span class="ansi-yellow-fg">31</span>,    <span class="ansi-yellow-fg">1</span>,   <span class="ansi-yellow-fg">54</span>,   <span class="ansi-yellow-fg">93</span>, <span class="ansi-yellow-fg">2525</span>,
+     <span class="ansi-yellow-fg">19</span>,  <span class="ansi-yellow-fg">87</span>,  <span class="ansi-yellow-fg">555</span>,  <span class="ansi-yellow-fg">328</span>,  <span class="ansi-yellow-fg">96</span>,  <span class="ansi-yellow-fg">13</span>,  <span class="ansi-yellow-fg">698</span>, <span class="ansi-yellow-fg">3168</span>,  <span class="ansi-yellow-fg">535</span>, <span class="ansi-yellow-fg">2246</span>,   <span class="ansi-yellow-fg">58</span>, <span class="ansi-yellow-fg">5345</span>,
+     <span class="ansi-yellow-fg">63</span>, <span class="ansi-yellow-fg">297</span>,   <span class="ansi-yellow-fg">23</span>,  <span class="ansi-yellow-fg">235</span>,  <span class="ansi-yellow-fg">54</span>, <span class="ansi-yellow-fg">239</span>,  <span class="ansi-yellow-fg">445</span>,  <span class="ansi-yellow-fg">262</span>, <span class="ansi-yellow-fg">3591</span>,   <span class="ansi-yellow-fg">98</span>, <span class="ansi-yellow-fg">7913</span>,  <span class="ansi-yellow-fg">674</span>,
+     <span class="ansi-yellow-fg">26</span>, <span class="ansi-yellow-fg">649</span>,    <span class="ansi-yellow-fg">9</span>,   <span class="ansi-yellow-fg">12</span>,  <span class="ansi-yellow-fg">82</span>, <span class="ansi-yellow-fg">329</span>,   <span class="ansi-yellow-fg">18</span>,   <span class="ansi-yellow-fg">45</span>,  <span class="ansi-yellow-fg">178</span>,    <span class="ansi-yellow-fg">3</span>,  <span class="ansi-yellow-fg">947</span>,   <span class="ansi-yellow-fg">65</span>,
+    <span class="ansi-yellow-fg">715</span>,  <span class="ansi-yellow-fg">68</span>,   <span class="ansi-yellow-fg">47</span>,   <span class="ansi-yellow-fg">57</span>, <span class="ansi-yellow-fg">547</span>, <span class="ansi-yellow-fg">938</span>,    <span class="ansi-yellow-fg">1</span>,   <span class="ansi-yellow-fg">84</span>,  <span class="ansi-yellow-fg">653</span>,   <span class="ansi-yellow-fg">97</span>, <span class="ansi-yellow-fg">9138</span>,   <span class="ansi-yellow-fg">37</span>,
+    <span class="ansi-yellow-fg">341</span>, <span class="ansi-yellow-fg">918</span>,   <span class="ansi-yellow-fg">14</span>, <span class="ansi-yellow-fg">4329</span>, <span class="ansi-yellow-fg">375</span>, <span class="ansi-yellow-fg">847</span>, <span class="ansi-yellow-fg">1118</span>,   <span class="ansi-yellow-fg">33</span>,   <span class="ansi-yellow-fg">99</span>,   <span class="ansi-yellow-fg">38</span>,  <span class="ansi-yellow-fg">773</span>,  <span class="ansi-yellow-fg">498</span>,
+      <span class="ansi-yellow-fg">7</span>,  <span class="ansi-yellow-fg">11</span>,   <span class="ansi-yellow-fg">48</span>,    <span class="ansi-yellow-fg">2</span>,  <span class="ansi-yellow-fg">65</span>, <span class="ansi-yellow-fg">246</span>,  <span class="ansi-yellow-fg">117</span>,  <span class="ansi-yellow-fg">358</span>,   <span class="ansi-yellow-fg">36</span>,   <span class="ansi-yellow-fg">14</span>,   <span class="ansi-yellow-fg">49</span>,   <span class="ansi-yellow-fg">26</span>,
+     <span class="ansi-yellow-fg">46</span>, <span class="ansi-yellow-fg">638</span>,  <span class="ansi-yellow-fg">724</span>,   <span class="ansi-yellow-fg">67</span>, <span class="ansi-yellow-fg">382</span>,  <span class="ansi-yellow-fg">16</span>, <span class="ansi-yellow-fg">9749</span>,  <span class="ansi-yellow-fg">954</span>,  <span class="ansi-yellow-fg">725</span>,   <span class="ansi-yellow-fg">86</span>,   <span class="ansi-yellow-fg">17</span>,   <span class="ansi-yellow-fg">51</span>,
+     <span class="ansi-yellow-fg">47</span>,  <span class="ansi-yellow-fg">38</span>,   <span class="ansi-yellow-fg">18</span>,   <span class="ansi-yellow-fg">42</span>,
+    ... 900 more items
+  ],
+  [
+     <span class="ansi-yellow-fg">96</span>,   <span class="ansi-yellow-fg">7</span>, <span class="ansi-yellow-fg">9932</span>,   <span class="ansi-yellow-fg">96</span>,  <span class="ansi-yellow-fg">25</span>,  <span class="ansi-yellow-fg">77</span>,    <span class="ansi-yellow-fg">3</span>,    <span class="ansi-yellow-fg">6</span>,   <span class="ansi-yellow-fg">1</span>,  <span class="ansi-yellow-fg">198</span>,   <span class="ansi-yellow-fg">33</span>, <span class="ansi-yellow-fg">1758</span>,
+     <span class="ansi-yellow-fg">64</span>,  <span class="ansi-yellow-fg">99</span>,  <span class="ansi-yellow-fg">928</span>, <span class="ansi-yellow-fg">1738</span>,   <span class="ansi-yellow-fg">8</span>,  <span class="ansi-yellow-fg">73</span>,  <span class="ansi-yellow-fg">373</span>, <span class="ansi-yellow-fg">4115</span>, <span class="ansi-yellow-fg">531</span>, <span class="ansi-yellow-fg">6283</span>,   <span class="ansi-yellow-fg">86</span>,   <span class="ansi-yellow-fg">71</span>,
+     <span class="ansi-yellow-fg">66</span>, <span class="ansi-yellow-fg">442</span>,   <span class="ansi-yellow-fg">58</span>,  <span class="ansi-yellow-fg">525</span>,   <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">328</span>, <span class="ansi-yellow-fg">8563</span>,  <span class="ansi-yellow-fg">461</span>, <span class="ansi-yellow-fg">662</span>,    <span class="ansi-yellow-fg">6</span>, <span class="ansi-yellow-fg">9546</span>,  <span class="ansi-yellow-fg">295</span>,
+     <span class="ansi-yellow-fg">33</span>, <span class="ansi-yellow-fg">662</span>,    <span class="ansi-yellow-fg">2</span>,   <span class="ansi-yellow-fg">32</span>,  <span class="ansi-yellow-fg">95</span>,   <span class="ansi-yellow-fg">5</span>,   <span class="ansi-yellow-fg">25</span>,   <span class="ansi-yellow-fg">96</span>,  <span class="ansi-yellow-fg">58</span>,    <span class="ansi-yellow-fg">3</span>,  <span class="ansi-yellow-fg">921</span>,   <span class="ansi-yellow-fg">72</span>,
+    <span class="ansi-yellow-fg">783</span>,  <span class="ansi-yellow-fg">92</span>,   <span class="ansi-yellow-fg">11</span>,   <span class="ansi-yellow-fg">71</span>,   <span class="ansi-yellow-fg">1</span>,  <span class="ansi-yellow-fg">81</span>,   <span class="ansi-yellow-fg">51</span>,   <span class="ansi-yellow-fg">41</span>,  <span class="ansi-yellow-fg">28</span>,    <span class="ansi-yellow-fg">8</span>, <span class="ansi-yellow-fg">9666</span>,    <span class="ansi-yellow-fg">5</span>,
+     <span class="ansi-yellow-fg">78</span>, <span class="ansi-yellow-fg">743</span>,   <span class="ansi-yellow-fg">11</span>, <span class="ansi-yellow-fg">2264</span>, <span class="ansi-yellow-fg">995</span>, <span class="ansi-yellow-fg">244</span>,   <span class="ansi-yellow-fg">74</span>,   <span class="ansi-yellow-fg">27</span>,  <span class="ansi-yellow-fg">32</span>,   <span class="ansi-yellow-fg">64</span>,   <span class="ansi-yellow-fg">62</span>,   <span class="ansi-yellow-fg">42</span>,
+      <span class="ansi-yellow-fg">3</span>,  <span class="ansi-yellow-fg">83</span>,   <span class="ansi-yellow-fg">52</span>,    <span class="ansi-yellow-fg">1</span>,  <span class="ansi-yellow-fg">86</span>, <span class="ansi-yellow-fg">119</span>,  <span class="ansi-yellow-fg">234</span>,  <span class="ansi-yellow-fg">981</span>,   <span class="ansi-yellow-fg">9</span>,   <span class="ansi-yellow-fg">85</span>,   <span class="ansi-yellow-fg">55</span>,    <span class="ansi-yellow-fg">8</span>,
+     <span class="ansi-yellow-fg">27</span>, <span class="ansi-yellow-fg">622</span>,  <span class="ansi-yellow-fg">225</span>,    <span class="ansi-yellow-fg">4</span>,  <span class="ansi-yellow-fg">98</span>,  <span class="ansi-yellow-fg">77</span>, <span class="ansi-yellow-fg">4974</span>, <span class="ansi-yellow-fg">7215</span>, <span class="ansi-yellow-fg">491</span>,   <span class="ansi-yellow-fg">37</span>,   <span class="ansi-yellow-fg">24</span>,   <span class="ansi-yellow-fg">75</span>,
+      <span class="ansi-yellow-fg">5</span>, <span class="ansi-yellow-fg">383</span>,    <span class="ansi-yellow-fg">5</span>,   <span class="ansi-yellow-fg">81</span>,
+    ... 900 more items
+  ],
+  [
+    <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>,
+    <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>,
+    <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>,
+    <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>,
+    <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>,
+    <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>,
+    <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>,
+    <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>,
+    <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span>,
+    ... 900 more items
+  ]
+]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">part1</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">5335495999141</span>
+</pre>
+
+<p>correct!</p>
+<h2>Part 2</h2>
+<p>Now we need to parse the input in a different way, instead of parsing row by row we need to parse column by column.</p>
+<div class="highlight"><pre><span></span><code><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-yellow-fg">3708</span>, <span class="ansi-yellow-fg">3708</span>, <span class="ansi-yellow-fg">3708</span>, <span class="ansi-yellow-fg">3708</span>, <span class="ansi-yellow-fg">3708</span> ]
+</pre>
+
+<p>So the input is rectangular/matrix. We can try to use the transpose function, since it will be easier to parse the numbers by rows like in the first part.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">processedSample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">transpose</span><span class="p">(</span><span class="nx">sample</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">));</span>
+<span class="nx">processedSample</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">8</span><span class="p">);</span>
+</code></pre></div>
+
+<p>Each row now has a number, the last column has the operator. A batdh of numbers is now seperated by a blank line. It would be nice if we could batch the lines by this separator then figure out from the last column the op and drop it and parse the numbers. Let's start with trying to "collect" the rows</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">psample</span><span class="p">[</span><span class="mf">3</span><span class="p">];</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">sep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;    &quot;</span><span class="p">;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">psample</span><span class="p">[</span><span class="mf">3</span><span class="p">],</span><span class="w"> </span><span class="nx">psample</span><span class="p">[</span><span class="mf">3</span><span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">sep</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">true</span>
+
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">psample</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">sep</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-green-fg">&#34;1&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34;2&#34;</span>, <span class="ansi-green-fg">&#34;4&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34;3&#34;</span>, <span class="ansi-green-fg">&#34;5&#34;</span>, <span class="ansi-green-fg">&#34;6&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">true</span>
+[ <span class="ansi-green-fg">&#34;3&#34;</span>, <span class="ansi-green-fg">&#34;6&#34;</span>, <span class="ansi-green-fg">&#34;9&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34;2&#34;</span>, <span class="ansi-green-fg">&#34;4&#34;</span>, <span class="ansi-green-fg">&#34;8&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34;8&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">true</span>
+[ <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34;3&#34;</span>, <span class="ansi-green-fg">&#34;2&#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34;5&#34;</span>, <span class="ansi-green-fg">&#34;8&#34;</span>, <span class="ansi-green-fg">&#34;1&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34;1&#34;</span>, <span class="ansi-green-fg">&#34;7&#34;</span>, <span class="ansi-green-fg">&#34;5&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">true</span>
+[ <span class="ansi-green-fg">&#34;6&#34;</span>, <span class="ansi-green-fg">&#34;2&#34;</span>, <span class="ansi-green-fg">&#34;3&#34;</span>, <span class="ansi-green-fg">&#34;+&#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34;4&#34;</span>, <span class="ansi-green-fg">&#34;3&#34;</span>, <span class="ansi-green-fg">&#34;1&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">false</span>
+[ <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34;4&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ] <span class="ansi-yellow-fg">false</span>
+
+</pre>
+
+<p>Seems to work. Now let's see how we can right the "chunker" function using reduce.</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">0</span><span class="p">,</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">4</span><span class="p">,</span><span class="mf">0</span><span class="p">,</span><span class="mf">5</span><span class="p">].</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">x</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">([])</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">r</span><span class="p">[</span><span class="nx">r</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">].</span><span class="nx">push</span><span class="p">(</span><span class="nx">x</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">r</span><span class="p">;</span>
+<span class="p">},</span><span class="w"> </span><span class="p">[[]])</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ [ <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">2</span>, <span class="ansi-yellow-fg">3</span> ], [ <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">2</span>, <span class="ansi-yellow-fg">3</span>, <span class="ansi-yellow-fg">4</span> ], [ <span class="ansi-yellow-fg">5</span> ] ]
+</pre>
+
+<p>Nice, js can be quite succinct with functional style. And now in our case</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">chunker</span><span class="p">(</span><span class="nx">rows</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[][])</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[][][]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">rows</span><span class="p">.</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">chunks</span><span class="p">,</span><span class="w"> </span><span class="nx">row</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">row</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">trim</span><span class="p">()</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">chunks</span><span class="p">.</span><span class="nx">push</span><span class="p">([])</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">chunks</span><span class="p">[</span><span class="nx">chunks</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">].</span><span class="nx">push</span><span class="p">(</span><span class="nx">row</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">chunks</span><span class="p">;</span>
+<span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="p">[[]]</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="kt">string</span><span class="p">[][][])</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">chunks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">chunker</span><span class="p">(</span><span class="nx">processedSample</span><span class="p">);</span>
+<span class="nx">chunks</span><span class="p">;</span>
+</code></pre></div>
+
+<p>Finally, let's see how we process a chunk</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">chunk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">chunks</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
+<span class="nx">chunk</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  [ <span class="ansi-green-fg">&#34;1&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34;*&#34;</span> ],
+  [ <span class="ansi-green-fg">&#34;2&#34;</span>, <span class="ansi-green-fg">&#34;4&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ],
+  [ <span class="ansi-green-fg">&#34;3&#34;</span>, <span class="ansi-green-fg">&#34;5&#34;</span>, <span class="ansi-green-fg">&#34;6&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ]
+]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">tchunk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">transpose</span><span class="p">(</span><span class="nx">chunk</span><span class="p">)</span>
+<span class="nx">tchunk</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[
+  [ <span class="ansi-green-fg">&#34;1&#34;</span>, <span class="ansi-green-fg">&#34;2&#34;</span>, <span class="ansi-green-fg">&#34;3&#34;</span> ],
+  [ <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34;4&#34;</span>, <span class="ansi-green-fg">&#34;5&#34;</span> ],
+  [ <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34;6&#34;</span> ],
+  [ <span class="ansi-green-fg">&#34;*&#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span>, <span class="ansi-green-fg">&#34; &#34;</span> ]
+]
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">tchunk</span><span class="p">[</span><span class="nx">tchunk</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">trim</span><span class="p">()</span>
+<span class="nx">op</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-green-fg">&#34;*&#34;</span>
+</pre>
+
+<p>cool, and the numbers</p>
+<div class="highlight"><pre><span></span><code><span class="nb">parseInt</span><span class="p">(</span><span class="nx">chunk</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">trim</span><span class="p">())</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">1</span>
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="nx">chunk</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">trim</span><span class="p">()))</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-yellow-fg">1</span>, <span class="ansi-yellow-fg">24</span>, <span class="ansi-yellow-fg">356</span> ]
+</pre>
+
+<p>Cool, the rest is like the last part, let's merge to one function</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">process_chunk</span><span class="p">(</span><span class="nx">chunk</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[][])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">transposedChunk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">transpose</span><span class="p">(</span><span class="nx">chunk</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">transposedChunk</span><span class="p">[</span><span class="nx">transposedChunk</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">trim</span><span class="p">();</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">nums</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">chunk</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">row</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">trim</span><span class="p">()));</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">nums</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">ops</span><span class="p">[</span><span class="nx">op</span><span class="p">]);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Let's verify on sample. According to the problem page, we should have 
+1058 + 3253600 + 625 + 8544 = 3263827.</p>
+<div class="highlight"><pre><span></span><code><span class="nx">chunks</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">process_chunk</span><span class="p">(</span><span class="nx">c</span><span class="p">))</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+[ <span class="ansi-yellow-fg">8544</span>, <span class="ansi-yellow-fg">625</span>, <span class="ansi-yellow-fg">3253600</span>, <span class="ansi-yellow-fg">1058</span> ]
+</pre>
+
+<p>Looks good. Let's finish this</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">].</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">acc</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">acc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">x</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">6</span>
+</pre>
+
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">part2</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">transposedInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">transpose</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">));</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">chunks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">chunker</span><span class="p">(</span><span class="nx">transposedInput</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">chunks</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">chunk</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">process_chunk</span><span class="p">(</span><span class="nx">chunk</span><span class="p">)).</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">acc</span><span class="p">,</span><span class="w"> </span><span class="nx">val</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">acc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">val</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">part2</span><span class="p">(</span><span class="nx">sample</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="nx">part2</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+</code></pre></div>
+
+<pre class="ansi-output">
+<span class="ansi-yellow-fg">10142723156431</span>
+</pre>
+
+<p>Correct!</p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/aoc-2025-day-5.html" rel="bookmark"
+                           title="Permalink to AoC 2025 - Day 5">AoC 2025 - Day 5</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-05T11:18:00+02:00">
+                Published: Fri 05 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->                <div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;node:fs&#39;</span><span class="p">;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s1">&#39;input.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;utf-8&#39;</span><span class="p">);</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`\</span>
+<span class="sb">3-5</span>
+<span class="sb">10-14</span>
+<span class="sb">16-20</span>
+<span class="sb">12-18</span>
+
+<span class="sb">1</span>
+<span class="sb">5</span>
+<span class="sb">8</span>
+<span class="sb">11</span>
+<span class="sb">17</span>
+<span class="sb">32`</span><span class="p">;</span>
+</code></pre></div>
+
+<h2>Part 1</h2>
+<p>The first part of the input has a list of inclusive intervals, eg 3-5 for 3, 4, 5 etc. The second part has a …</p>
+                <a class="readmore" href="/aoc-2025-day-5.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/aoc-2025-day-4.html" rel="bookmark"
+                           title="Permalink to AoC 2025 - Day 4">AoC 2025 - Day 4</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-04T11:13:00+02:00">
+                Published: Thu 04 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->                <p>This one was quite easy, I quickly saw it can be solved by convolution but since I was using javascript I suffered with all the array handling and the for loops. After I finished the problem, I wanted to my hands on the python implementation, behold</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np …</span></code></pre></div>
+                <a class="readmore" href="/aoc-2025-day-4.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/aoc-2025-day-3.html" rel="bookmark"
+                           title="Permalink to AoC 2025 - Day 3">AoC 2025 - Day 3</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-03T12:54:00+02:00">
+                Published: Wed 03 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->                <p>Day 3 of AoC 2025. Following up on <img alt="yesterday" src="/advent-of-code-2025.html">, today I'm gonna try to solve the question using typescript, but in a Jupyter notebook, writing along while programming. Today's input looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;node:fs&quot;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s2">&quot;input.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">).</span><span class="nx">slice …</span></code></pre></div>
+                <a class="readmore" href="/aoc-2025-day-3.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/advent-of-code-2025.html" rel="bookmark"
+                           title="Permalink to Advent of Code 2025">Advent of Code 2025</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-02T16:38:00+02:00">
+                Published: Tue 02 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->                <p>AoC is back for another year! This time it's a bit shorter, only 12 days. This might be a good change overall, since in 2023 I fizzled out around day 20.</p>
+<p>The first day has us simulating a dial ranging from 0 to 99 on a safe, where we needed …</p>
+                <a class="readmore" href="/advent-of-code-2025.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/preparing-for-an-nlp-interview-day-5-and-6.html" rel="bookmark"
+                           title="Permalink to Preparing for an NLP interview - Day 5 and 6">Preparing for an NLP interview - Day 5 and 6</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-11-02T15:12:00+02:00">
+                Published: Sun 02 November 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->                <h2>Day 5</h2>
+<p>Today we'll go thru two chapters in the NLP transformers book. The first is QA, which is a task I haven't tried before and it seems interesting. There are two approaches: extractive and generative. Generative might be more common today with LLMs, since its just having the model …</p>
+                <a class="readmore" href="/preparing-for-an-nlp-interview-day-5-and-6.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/preparing-for-an-nlp-interview-day-3-and-4.html" rel="bookmark"
+                           title="Permalink to Preparing for an NLP interview - Day 3 and 4">Preparing for an NLP interview - Day 3 and 4</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-31T11:14:00+02:00">
+                Published: Fri 31 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->                <p>Another day has come. This one will be somewhat disjointed, I have an ~1.5 hrs in the morning and maybe some later in the evening.</p>
+<p>Yesterday I remembered I watched <a href="https://www.youtube.com/watch?v=FkHAYG8vASQ">this</a> youtube interview with a NLP data scientist and he listed the important stuff you kinda gotta know. I …</p>
+                <a class="readmore" href="/preparing-for-an-nlp-interview-day-3-and-4.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/preparing-for-an-nlp-interview-day-2.html" rel="bookmark"
+                           title="Permalink to Preparing for an NLP interview - Day 2">Preparing for an NLP interview - Day 2</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-29T13:19:00+02:00">
+                Published: Wed 29 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->                <p>Okay, we're now in day 2. Yesterday I was kind of wrestling with whatever I could find on ABSA, trying to figure out what is the right approach to get some hands on experience. We settled for building an E2E ABSA model using BERT, which we based on a <a href="https://arxiv.org/pdf/1910.00883">paper …</a></p>
+                <a class="readmore" href="/preparing-for-an-nlp-interview-day-2.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/preparing-for-an-nlp-interview-day-1.html" rel="bookmark"
+                           title="Permalink to Preparing for an NLP interview - Day 1">Preparing for an NLP interview - Day 1</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-28T17:55:00+02:00">
+                Published: Tue 28 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->                <p>I'm interviewing for a NLP Data Science position in a couple of days. Figured it would be fun and focusing to journal about it as I go, could be useful to peeps. Technically I already started a few days ago but now it's for real, already got the technical interview …</p>
+                <a class="readmore" href="/preparing-for-an-nlp-interview-day-1.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/visualizing-lissajous-curves-with-p5js.html" rel="bookmark"
+                           title="Permalink to Visualizing Lissajous curves with p5.js">Visualizing Lissajous curves with p5.js</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-01-30T16:25:00+02:00">
+                Published: Thu 30 January 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->                <p>I've been continuing on my learning physics quests, currently alternating between electromagnetics and waves. I was reading chapter 2 of French's "Vibrations and Waves" and he talked there about Lissajous curves.</p>
+<p style="width:50%; margin:auto">
+<img src="/images/lissajous_curves.jpg" />
+</p>
+
+<p>These are 2d curves whose x-y coordinates are parametrized by cosines, ie
+</p>
+<div class="math">$$\begin{align} x&amp;=A_x\cos (\omega …</div>
+                <a class="readmore" href="/visualizing-lissajous-curves-with-p5js.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+<p class="paginator">
+    Page 1 / 4
+        <a href="/index2.html">&raquo;</a>
+        <a href="/index4.html">&#8649;</a>
+</p>
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

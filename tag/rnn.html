@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry - rnn</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/rnn-generations.html">RNN generations</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2024-07-20T17:51:00+03:00">
+                Published: Sat 20 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/rnn.html">rnn</a> <a href="/tag/nlp.html">nlp</a> </p>
+</footer><!-- /.post-info --><p>On advice from my uncle I'm continuing to fallback on task difficulty with RNNs.</p>
+<p>Unc's tips:
+- Swirch to generation task
+- Try residuals
+- Go deeper
+- Add projections 
+- No dropout?</p>
+<p>Let's recreate Karpathy's classic post and train a language model on tiny-shakespeare. We can get the entire dataset which is a text file</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">fastdownload</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastDownload</span>
+
+<span class="n">fp</span> <span class="o">=</span> <span class="n">FastDownload</span><span class="p">()</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="n">data</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span>
+<span class="c1"># &#39;First Citizen:\nBefore we proceed any further, hear me speak.\n\nAll:\nSpeak, speak.\n\nFirst Citizen:\nYou&#39;</span>
+</code></pre></div>
+
+<p>Using character-level tokenization, we simply index the set of characters in the text</p>
+<div class="highlight"><pre><span></span><code><span class="n">vocab</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+<span class="n">c2i</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">vocab</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="n">i2c</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">vocab</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<span class="n">ds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">c2i</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">i2c</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span>
+</code></pre></div>
+
+<p>The samples from the dataset will then be substrings of some fixed length. Here's a dataloader code</p>
+<div class="highlight"><pre><span></span><code><span class="n">sample_inds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span><span class="o">-</span><span class="n">MAX_LEN</span><span class="p">,</span> <span class="p">(</span><span class="n">bs</span><span class="p">,))</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ds</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">MAX_LEN</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sample_inds</span><span class="p">])</span>
+</code></pre></div>
+
+<p>Were starting with a straight-forward RNN model, using a GRU for the recurrence</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LM</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">num_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LM</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gru</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">GRU</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">num_layers</span><span class="o">=</span><span class="n">num_layers</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gru</span><span class="p">(</span><span class="n">emb</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+</code></pre></div>
+
+<p>Questions we have for now:
+- do we need a non-linearity after the embedding?
+- is the log_softmax necessary? </p>
+<p>On to the training loop</p>
+<div class="highlight"><pre><span></span><code><span class="n">hidden_size</span> <span class="o">=</span> <span class="mi">512</span>
+<span class="n">num_layers</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">2e-3</span>
+<span class="n">bs</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">MAX_LEN</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="n">epochs</span> <span class="o">=</span> <span class="mi">100000</span>
+
+<span class="n">lm</span> <span class="o">=</span> <span class="n">LM</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vocab</span><span class="p">),</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">num_layers</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+<span class="n">opt</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">lm</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="p">)</span>
+
+<span class="n">progress_bar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">))</span> 
+<span class="n">display_handle</span> <span class="o">=</span> <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s2">&quot;&lt;div id=&#39;progress_output&#39;&gt;&lt;/div&gt;&quot;</span><span class="p">),</span> <span class="n">display_id</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">progress_bar</span><span class="p">:</span>
+    <span class="n">sample_inds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span><span class="o">-</span><span class="n">MAX_LEN</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">bs</span><span class="p">,))</span>
+    <span class="n">sample</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ds</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">MAX_LEN</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sample_inds</span><span class="p">])</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[:,:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+
+    <span class="n">lm</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">y_hat</span> <span class="o">=</span> <span class="n">lm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">y_hat</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y_hat</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">y</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="o">%</span> <span class="mi">1000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_hat</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">indices</span>
+        <span class="n">progress_bar</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">loss</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">update_info</span><span class="p">(</span><span class="n">display_handle</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</code></pre></div>
+
+<p>It's pretty standard: we feed in a batch of samples from the text, and use the out vector of each RNN iteration as the logprobs for the next token. We use the cross entropy loss. Here's a peek to the training</p>
+<p><img src="/images/rnn_gen_loss.png" alt="rnn gen loss" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>Up until now, the standard stuff, I'm already pretty good at it, but one would say this is the trivials. And once again, things don't look like they're converging. So from this point on, it's going to turn to more of a blocks of thoughts.</p>
+<hr>
+
+<p>As a first step, let's try karpathy's hyperparameters. <a href="https://karpathy.github.io/2015/05/21/rnn-effectiveness/#:~:text=We%20can%20now%20afford%20to%20train%20a%20larger%20network%2C%20in%20this%20case%20lets%20try%20a%203%2Dlayer%20RNN%20with%20512%20hidden%20nodes%20on%20each%20layer.%20After%20we%20train%20the%20network%20for%20a%20few%20hours%20we%20obtain%20samples%20such%20as%3A">From the post</a></p>
+<blockquote>
+<p>We can now afford to train a larger network, in this case lets try a 3-layer RNN with 512 hidden nodes on each layer.</p>
+</blockquote>
+<p>Okay, so maybe I haven't been training for long enough?  Other things to consider: gradient clipping?</p>
+<hr>
+
+<p>First discovery: I noticed something interesting: if I reduce the hidden size to around 128 dims then I get 10x performance, and it seems to be a discontinuous jump.</p>
+<hr>
+
+<p>I played around with the dataset size: dividing the dataset size by 5 let's the network get very low loss. But generation looks awful. The model's parameter count was 0.4 million, while the entire dataset consists of a million letters, so decreasing the dataset size gives as more parameters than characters. That might be some kind of memorization.</p>
+<p>I played around with parameters for a while, got all kinds of different results, but nothing that looks like a clear win. Karpathy trained for a few hours. Maybe we should do the same? before that though, there was another suggestion from uncle: incorporate residual/skip connections. This is actually something that doesn't really appear in RNN tutorials, probably because ResNets and transformers appeared close to each other. </p>
+<p>I decided to add skip connections between the outputs of each GRU layer, which forced me to write a bit more manual code</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LM</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">num_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LM</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grus</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">GRU</span><span class="p">(</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">GRU</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_layers</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grus</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grus</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grus</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">emb</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gru</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">grus</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">out_hat</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">gru</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="o">+</span> <span class="n">out_hat</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+</code></pre></div>
+
+<p>Now I can increase the number of layers to 8 and get the loss down to 0.8, which still isn't great.</p>
+<p>Okay, spent Saturday on this, I think it's enough. I'm gonna let stuff train, and hope the loss isn't stuck at 0.78 like it appears below</p>
+<p><img src="/images/rnn_loss.png" alt="rnn loss" width="50%" class="obsidian-embed" style="display:block; margin:1.5rem auto; height:auto;" /></p>
+<hr>
+
+<p>So afterwards I trained an 8-layer RNN and managed to get the loss down to below 0.6 for a while (although the net deteriorated afterwards)</p>
+<p><img src="/images/rnn_loss2.png" alt="rnn loss2" width="50%" class="obsidian-embed" style="display:block; margin:1.5rem auto; height:auto;" /></p>
+<p>but I still got things like</p>
+<pre>
+<div style="display: flex;">
+    <div style="flex: 1; padding-right: 10px;">
+        <strong>Target:</strong>
+        <p>our, my lord.
+
+COMINIUS:
+'Tis not a mile; briefly we heard their drums:
+How couldst thou in a mile confound an hour,
+And bring thy news so late?
+
+Messenger:
+Spies of the Volsces
+Held me in chase, that</p>
+    </div>
+    <div style="flex: 1; padding-left: 10px;">
+        <strong>Predicted:</strong>
+        <p>au   my lord.
+
+CORINIUS:
+HTis not a pile- buiefly mi haard the r heym::
+Haw fauldst thou sn m mill aoafound an hour,
+Ynd bling thy news wo late?
+
+Messenger:
+Spies of the Volsces
+Hald me in chase, that</p>
+    </div>
+</div>
+</pre>
+<p>seemingly many misspellings etc. But then I realized, no, I'm being stupid, it's the visualization that's misleading. You can't compare the target vs predicted, because the model will always make mistakes! it can't 100% guess the first letter of a new word without memorization for example. What we really want to see is generation. So here I present to you my model's creation</p>
+<blockquote>
+<p>If he did not care whether he had their love or no, henge him:
+Though inducedly lord hath cloudy nothing cursed
+With lasting Richard see'st, is a noble</p>
+</blockquote>
+<p>And it's great! a better visualization is to color each wrongly predicted letter, like below</p>
+<pre><hr>
+<div style="display: flex; flex-direction: column;">
+    <div style="flex: 1; padding-right: 10px;">
+        <strong>Colored Target:</strong>
+        <p>e way<span style="background-color: rgba(255, 0, 0, 0.8080017603933811)">
+</span>To <span style="background-color: rgba(255, 0, 0, 0.7611069642007351)">c</span><span style="background-color: rgba(255, 0, 0, 0.44487322866916656)">a</span>ll h<span style="background-color: rgba(255, 0, 0, 0.2429172247648239)">e</span>r<span style="background-color: rgba(255, 0, 0, 0.12379290349781513)">s</span><span style="background-color: rgba(255, 0, 0, 0.40236301720142365)"> </span>e<span style="background-color: rgba(255, 0, 0, 0.48491030000150204)">x</span><span style="background-color: rgba(255, 0, 0, 0.5533246099948883)">q</span>uis<span style="background-color: rgba(255, 0, 0, 0.8359964936971664)">i</span><span style="background-color: rgba(255, 0, 0, 0.13271648064255714)">t</span>e, in question more:
+The<span style="background-color: rgba(255, 0, 0, 0.6615011841058731)">s</span>e happy masks that ki<span style="background-color: rgba(255, 0, 0, 0.311726450920105)">s</span>s fair ladies' brows
+B<span style="background-color: rgba(255, 0, 0, 0.7029342502355576)">e</span>ing <span style="background-color: rgba(255, 0, 0, 0.7771769464015961)">b</span><span style="background-color: rgba(255, 0, 0, 0.8608919084072113)">l</span>ack put us in mind<span style="background-color: rgba(255, 0, 0, 0.01918923668563366)"> </span>the<span style="background-color: rgba(255, 0, 0, 0.2754880413413048)">y</span> hide the <span style="background-color: rgba(255, 0, 0, 0.949237123131752)">f</span>a<span style="background-color: rgba(255, 0, 0, 0.7102702558040619)">i</span>r<span style="background-color: rgba(255, 0, 0, 0.6184905171394348)">;</span>
+He that is <span style="background-color: rgba(255, 0, 0, 0.769390907138586)">s</span>tr<span style="background-color: rgba(255, 0, 0, 0.7905977666378021)">u</span>cken <span style="background-color: rgba(255, 0, 0, 0.9159816205501556)">b</span>l<span style="background-color: rgba(255, 0, 0, 0.2735106647014618)">i</span>nd cannot <span style="background-color: rgba(255, 0, 0, 0.8729353547096252)">f</span>orget
+The <span style="background-color: rgba(255, 0, 0, 0.7710949033498764)">p</span>recious <span style="background-color: rgba(255, 0, 0, 0.8862327337265015)">t</span>reas</p>
+    </div>
+</div>
+</pre>
+
+<p>We can see that the biggest mistakes are when there is a lot of uncertainty on the next letter which is natural. In fact, I by the lack of mistakes here I suspect it might already be memorizing the dataset.</p>
+<p>What's the lesson here? making mistakes is part of the process, Show your work, and have fun! I do wonder though how many of my previous puzzled moments were caused by this confusion. Still, for now, we have a first victory.</p>
+<p><a href="https://github.com/ofer1992/notebooks/blob/main/rnn_generation.ipynb">Link to notebook</a></p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/shifting-to-translation-with-rnns.html" rel="bookmark"
+                           title="Permalink to Shifting to translation with RNNs">Shifting to translation with RNNs</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-15T16:53:00+03:00">
+                Published: Mon 15 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/rnn.html">rnn</a> <a href="/tag/nlp.html">nlp</a> </p>
+</footer><!-- /.post-info -->                <p>I'm pivoting the RNN summarization code to an easier example - Machine translation. Easier in the sense of the <a href="https://huggingface.co/datasets/yhavinga/ccmatrix">dataset</a>, which consists of much shorter en-de sentence pairs compared to the summarization task. I have some suspicion that the there is a bug or something in my code, so today, after …</p>
+                <a class="readmore" href="/shifting-to-translation-with-rnns.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/cnn-summarization-task.html" rel="bookmark"
+                           title="Permalink to CNN summarization task">CNN summarization task</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-12T21:43:00+03:00">
+                Published: Fri 12 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/nlp.html">nlp</a> <a href="/tag/rnn.html">rnn</a> </p>
+</footer><!-- /.post-info -->                <p>Today we're gonna dip our fingers into the first generative NLP task - text summarization. We're gonna use the <a href="https://github.com/abisee/cnn-dailymail">CNN/Daily Mail dataset</a> as done in <a href="https://arxiv.org/pdf/1704.04368">this paper</a>. Let's get to it.</p>
+<h2>Data prep</h2>
+<p>I started by doing all the preprocessing of the files myself, but then found a the dataset …</p>
+                <a class="readmore" href="/cnn-summarization-task.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

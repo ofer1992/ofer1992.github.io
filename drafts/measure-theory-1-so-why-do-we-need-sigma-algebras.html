@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Measure Theory 1 - So why do we need \(\sigma\)-algebras?</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="Introduction Lately I've been brushing up on my Measure Theory. I took the course in my senior year, excited to finally learn the proper..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li class="active"><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/drafts/measure-theory-1-so-why-do-we-need-sigma-algebras.html" rel="bookmark"
+           title="Permalink to Measure Theory 1 - So why do we need \(\sigma\)-algebras?">Measure Theory 1 - So why do we need \(\sigma\)-algebras?</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2010-12-03T10:20:00+02:00">
+                Published: Fri 03 December 2010
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/math.html">Math</a>.</p>
+
+</footer><!-- /.post-info -->      <h1>Introduction</h1>
+<p>Lately I've been brushing up on my <em>Measure Theory</em>. I took the course in my senior year, excited to finally learn the proper foundation for probability theory, but I was soon disappointed by what seemed to be as mostly an exercise in formality. Seeing as how I was also somewhat fatigued of studying at this point, I sufficed with passing the grade with a decent grade and promptly forgot everything I learned. After some time though, it started to irritate me that I went through all this trouble and yet I get nervous when I read about measures. Even from a course like topology whose majority of results I also forgot still contributed to me later. </p>
+<p>So, I finally set out on a refresher. I found a book, "Probability and Stochastics" by Erhan Çinlar, which purpoted to cover probabilty from a measure-theoretic perspective, along with a whole chapter devoted specifically to the those measure theory subjects relevant to probability. I read them quite dilligently, with some of the material still being familiar enough to be covered quickly, while later subjects required more deliberate effort. After a month or so, I felt I had good a solid grasp on the ideas, but still I felt a tinge of fear that soon it will all be forgotten again. That is why I have decided to write one or more posts about aspects that I find interesting to ponder, process and share with you. The first one happens to be about <span class="math">\(\sigma\)</span>-algebras.</p>
+<h1>What are <span class="math">\(\sigma\)</span>-algebras?</h1>
+<h1>Why we need <span class="math">\(\sigma\)</span>-algebras</h1>
+<p>Well, we don't actually need them all the time. When you work with discrete probability spaces/random variables, such as toin cosses, or even countable ones like the geometric distribution, you can evaluate the probability on every possible event. In fact, when teaching elementary probability the subject isn't even mentioned. It is only when we introduce continuous random variables that we need to start taking more care.</p>
+<p>Consider the uniform probability measure <span class="math">\(P\)</span> on the interval <span class="math">\([0,1]\)</span>. We can define it on an event <span class="math">\(A\)</span> as
+</p>
+<div class="math">$$P(A)=\int_{A}1\cdot dx$$</div>
+<p>
+We can infer from the definition some properties:
+- Normalization: <span class="math">\(P([0,1])=1\)</span>.
+- Invariance under rigid motion: moving an event doesn't change it's probability. (expand)
+- Finite additivity: If we have some disjoint collection of events <span class="math">\(A_1,\dots, A_n\)</span> then
+</p>
+<div class="math">$$P(\bigsqcup_{i=1}^n A_i)=\sum_{i=1}^n P(A_i)$$</div>
+<p>And actually (substantiate) a stronger property holds, Countable additivity.</p>
+<p>Now, we would like to build and use events such that a contradiction arises. From the properties of <span class="math">\(\sigma\)</span>-algebras, we can already infer that a rather strange construction is required. </p>
+<p>We start by defining an equivalence relation on <span class="math">\(\mathbb R\)</span>. We say that <span class="math">\(x,y\in\mathbb R\)</span> are equivalent, <span class="math">\(x\sim y\)</span>, if their difference is rational, <span class="math">\(x-y\in\mathbb Q\)</span>. So all the rational are equivalent. <span class="math">\(\sqrt2\)</span> is equivalent to <span class="math">\(\sqrt2-1\)</span>, but <span class="math">\(\pi\)</span> and <span class="math">\(\sqrt2\)</span> are not (trivial to see?). An equivalence relation gives us a partition of <span class="math">\(\mathbb R\)</span> to equivalence classes. We build a set <span class="math">\(N\subseteq [0,1)\)</span> that contains exactly one representative from each equivalence class. More specificialy, for each <span class="math">\(x\)</span> we will have some <span class="math">\(n\in N\)</span> such that <span class="math">\(x\sim n\)</span>. If you are not convinced that one exists, consider <span class="math">\(x-\lfloor x\rfloor\)</span>. </p>
+<!-- Still, to build such set, we need to "choose" a representative from each  -->
+<p>Next, we define for each rational number <span class="math">\(q\in (0,1)\cap\mathbb Q\)</span> the set
+</p>
+<div class="math">$$N_q=N+q\mod 1=\dots$$</div>
+<p>
+<strong>Lemma</strong>: <span class="math">\(N\cap N_q=\varnothing\)</span>.<br>
+<strong>Proof</strong>: Let <span class="math">\(n\in N\cap N_q\)</span>. Then <span class="math">\(n\sim x\)</span> for some <span class="math">\(x\)</span>. On the otherhand, <span class="math">\(n=n'+q\)</span> and <span class="math">\(n'\sim x'\)</span>. So
+</p>
+<div class="math">$$x=n+q_n=n'+q+q_n=x'+q_{n'}+q+q_n$$</div>
+<p>
+meaning <span class="math">\(x\sim x'\)</span>. From uniqueness of representative <span class="math">\(n=n'\Rightarrow q=0,1\)</span> which is a contradiction.</p>
+<p><strong>Lemma</strong>: <span class="math">\(P(N)=P(N_q)\)</span><br>
+<strong>Proof</strong>: The <span class="math">\(\mod 1\)</span> is basically splitting to two disjoint parts and moving each of them rigidly.</p>
+<p><strong>Lemma</strong>: <span class="math">\(\bigsqcup_{q\in[0,1)\cap\mathbb Q}N_q=[0,1)\)</span><br>
+<strong>Proof</strong>: From the last lemma the union is disjoint, and we get <span class="math">\(\bigsqcup_{q\in[0,1)\cap\mathbb Q}N_q\subseteq [0,1)\)</span> since each set is contained in the interval. For the other direction, let <span class="math">\(x\in[0,1)\)</span>. There is some representative <span class="math">\(n\in N\)</span> equivalent to <span class="math">\(x\)</span>, <span class="math">\(x=n+q\)</span>. Since both are in <span class="math">\([0,1)\)</span>, <span class="math">\(q\in(-1,1)\)</span>. If <span class="math">\(q\)</span> is positive, then <span class="math">\(x=n+q\in N_q\)</span>. If <span class="math">\(q\)</span> is negative then <span class="math">\(x=n+q=n+(q+1)-1\in N_{q+1}\)</span>. Either way, <span class="math">\(x\)</span> is in the union and hence we get equality.</p>
+<p>Now we are ready to show a contradiction. The probability of <span class="math">\([0,1)\)</span> should be 1. On the other hand
+</p>
+<div class="math">$$\begin{align*}
+P([0,1)) &amp;= P(\bigsqcup_{q\in[0,1)\cap\mathbb Q}N_q)\\
+&amp;=\sum_{q\in[0,1)\cap\mathbb Q}P(N_q)\\
+&amp;=\sum_{q\in[0,1)\cap\mathbb Q}P(N)\\
+\end{align*}$$</div>
+<p>
+So now we are in a pickle. If <span class="math">\(P(N)=0\)</span> then <span class="math">\(P([0,1))=0\)</span>. But if <span class="math">\(P(N)=c&gt;0\)</span> then <span class="math">\(P([0,1))=\infty\)</span>. Tada!</p>
+<h2>But maybe this is not relevant for probability measures?</h2>
+<h2>How rare are these sets, and the axiom of choice</h2>
+<h2>References</h2>
+<ul>
+<li><a href="http://www.ma.huji.ac.il/~razk/iWeb/My_Site/Teaching_files/Chapter1_1.pdf">Raz Kupferman's notes on Measure Theory</a></li>
+</ul>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

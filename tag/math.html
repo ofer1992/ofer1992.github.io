@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry - math</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/musings-on-the-reparametrization-trick.html">Musings on the reparametrization trick</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2024-07-27T15:45:00+03:00">
+                Published: Sat 27 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/math.html">Math</a>.</p>
+<p>tags: <a href="/tag/math.html">math</a> <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/variational-inference.html">variational-inference</a> </p>
+</footer><!-- /.post-info --><p>Reading the <em>variational autoencoder</em> chapter from the <a href="https://udlbook.github.io/udlbook/">"Understanding Deep Learning"</a> book (which is available for free!). Not trivial, which is why I never got around to learning it, I guess. There are a lot of moving math parts to figure out. One of them is called "the reparametrization trick". So what is it about?</p>
+<p>Let's say we have a distribution over a variable <span class="math">\(x\)</span> parametrized by <span class="math">\(\theta\)</span>, <span class="math">\(P(x;\theta)\)</span>, and we also have some differentiable function <span class="math">\(f(x)\)</span>. We want to find <span class="math">\(\theta^*\)</span> that maximizes the expectation of <span class="math">\(f\)</span> over this distribution:
+</p>
+<div class="math">$$
+\mathbb E_{P(x;\theta)}\left[f(x)\right]
+$$</div>
+<p>
+For simplicity, we assume everything is 1-d. Nowadays the solution is always gradient descent (or ascent in this case), so as a first step we'd like to calculate
+</p>
+<div class="math">$$
+\frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]
+$$</div>
+<p>
+Question: how do you differentiate a distribution? well, this is defined as
+</p>
+<div class="math">$$
+\frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]=
+\frac{\partial}{\partial \theta}\int{P(x;\theta)}f(x)dx
+$$</div>
+<p>
+Can we switch the derivative and the integral? I've never been able to answer this confidently. It depends on <a href="https://en.wikipedia.org/wiki/Leibniz_integral_rule">Leibniz's integral rule</a>. Let's assume we can, and we get
+</p>
+<div class="math">$$
+\int\frac{\partial}{\partial \theta}P(x;\theta)f(x)dx
+$$</div>
+<p>
+In practice this is almost never tractable, so we want to estimate it. We can use the following trick to convert it to an expectation and then use sampling to estimate it:
+</p>
+<div class="math">$$
+\begin{align}
+\int\frac{\partial}{\partial \theta}P(x;\theta)f(x)dx &amp;=
+\int\frac{{\partial P(x;\theta)}/{\partial \theta}}{P(x;\theta)}P(x;\theta)f(x)dx\\
+&amp;= \int\frac{\partial}{\partial \theta}\left[\log{P(x;\theta)}\right]P(x;\theta)f(x)dx\\
+&amp;= \mathbb E_{P(x;\theta)}\left[f(x)\frac{\partial}{\partial \theta}\log{P(x;\theta)} \right]
+\end{align}
+$$</div>
+<p>
+The expression <span class="math">\(\frac{\partial}{\partial \theta}\log{P(x;\theta)}\)</span> is called the <em>score function</em> and is often denoted <span class="math">\(s(x;\theta)\)</span>. To sum up what we did so far, we found the following relation
+</p>
+<div class="math">$$
+\frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]
+= \mathbb E_{P(x;\theta)}\left[f(x)s(x;\theta)\right]
+$$</div>
+<p>
+which we can go on to estimate with sampling.</p>
+<p>Well, the reparametrization trick takes another approach. Let's say we already estimated the expectation using sampling, ie we have <span class="math">\(N\)</span> samples <span class="math">\(x_i\sim P(x;\theta\)</span>) (abuse of notation but I mean sampled according to this distribution), then we can approximate the expectation with
+</p>
+<div class="math">$$\mathbb E_{P(x;\theta)}\left[f(x)\right]\approx \frac{1}{N}\sum_{i}f(x_i)$$</div>
+<p>
+What if we tried to differentiate that with respect to <span class="math">\(\theta\)</span>? let's try using the chain rule:
+</p>
+<div class="math">$$\frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]\approx
+\frac{1}{N}\sum_{i}\frac{\partial}{\partial \theta}f(x_i)=
+\frac{1}{N}\sum_{i}\frac{df}{dx}\frac{\partial x_{i}}{\partial \theta}(??)$$</div>
+<p>
+What is <span class="math">\(\frac{\partial x_i}{\partial \theta}\)</span>? <span class="math">\(x_i\)</span> depends on <span class="math">\(\theta\)</span> but in a stochastic manner. I don't know how to do this kind of derivative, though I know there's a thing called stochastic calculus. What else can we do? well, we can consider a special case: what if our random variable <span class="math">\(x\)</span> satisfied an identity
+</p>
+<div class="math">$$x=x_\theta(\varepsilon)$$</div>
+<p>
+where <span class="math">\(\varepsilon\)</span> has some distribution that doesn't depend on <span class="math">\(\theta\)</span>? for example, let's say <span class="math">\(x\sim \mathcal N(\mu, \sigma^2)\)</span> is normally distributed where <span class="math">\(\theta=(\mu,\sigma)\)</span>. Another way to write <span class="math">\(x\)</span> would be
+</p>
+<div class="math">$$
+x=\sigma\cdot\varepsilon + \mu
+$$</div>
+<p>
+Where <span class="math">\(\varepsilon\sim\mathcal N(0,1)\)</span>. In this case the stochasticity of <span class="math">\(x\)</span> doesn't depend on the parameters and
+</p>
+<div class="math">$$
+\frac{\partial x}{\partial \theta}=\frac{\partial\sigma}{\partial \theta}\varepsilon+\frac{\partial \mu}{\partial \theta}
+$$</div>
+<p>
+In general, we would have 
+</p>
+<div class="math">$$\frac{\partial x}{\partial \theta}=\frac{\partial x_\theta}{\partial\theta}(\varepsilon)$$</div>
+<p>
+Putting it all together, we can estimate the gradient by sampling <span class="math">\(N\)</span> times from the independent distribution <span class="math">\(\varepsilon_i\)</span> and calculating
+</p>
+<div class="math">$$
+\frac{\partial}{\partial \theta}\mathbb E_{P(x;\theta)}\left[f(x)\right]\approx
+\frac{1}{N}\sum_{i}\frac{df}{dx_\theta}\frac{\partial x_\theta}{\partial \theta}(\varepsilon_i)
+$$</div>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/adventures-in-differential-equations-ii.html" rel="bookmark"
+                           title="Permalink to Adventures In Differential Equations II">Adventures In Differential Equations II</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2022-11-12T20:30:00+02:00">
+                Published: Sat 12 November 2022
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/math.html">Math</a>.</p>
+<p>tags: <a href="/tag/math.html">math</a> <a href="/tag/differential-equations.html">differential-equations</a> </p>
+</footer><!-- /.post-info -->                <h1>Several outlooks on differential equations</h1>
+<p>In math as in life, the same object of study can be looked upon from multiple perspectives. Each perspective offers a different insight into a problem, and often the same problem can be very difficult from one perspective, yet clear from another. </p>
+<p>In this post …</p>
+                <a class="readmore" href="/adventures-in-differential-equations-ii.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/adventures-in-differential-equations-i.html" rel="bookmark"
+                           title="Permalink to Adventures In Differential Equations I">Adventures In Differential Equations I</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2022-10-24T13:10:00+03:00">
+                Published: Mon 24 October 2022
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/math.html">Math</a>.</p>
+<p>tags: <a href="/tag/math.html">math</a> <a href="/tag/differential-equations.html">differential-equations</a> </p>
+</footer><!-- /.post-info -->                <h1>On the insanity of Differential Equations books</h1>
+<p>When one wishes to study the topic of Differential Equations, there is no shortage (and perhaps an overabundance) of books. Thus I was immediately confronted with a first difficulty: which book to pick? <!-- add something about difference from calculus? -->
+After some googling and browsing through Reddit I settled on …</p>
+                <a class="readmore" href="/adventures-in-differential-equations-i.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry - autoencoders</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/a-naive-autoencoder-on-fashionmnist.html">A naive autoencoder on FashionMNIST</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2024-07-31T14:53:00+03:00">
+                Published: Wed 31 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/pytorch.html">pytorch</a> <a href="/tag/autoencoders.html">autoencoders</a> </p>
+</footer><!-- /.post-info --><p>Today we'll recreate the fastai <a href="https://github.com/fastai/course22p2/blob/master/nbs/08_autoencoder.ipynb">notebook on autoencoders</a>, where we train a vanilla autoencoder in FashionMNIST. Even though the autoencoder was actually doing a pretty bad job, it will be good practice for working with HuggingFace databases, CNNs and autoencoders.</p>
+<h2>Getting the data</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">DataLoader</span>
+
+<span class="n">ds_name</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;zalando-datasets/fashion_mnist&quot;</span><span class="p">)</span>
+<span class="n">ds</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="n">ds_name</span><span class="p">)</span>
+<span class="n">ds</span>
+</code></pre></div>
+
+<pre style='font-size:13px'>
+DatasetDict({
+    train: Dataset({
+        features: ['image', 'label'],
+        num_rows: 60000
+    })
+    test: Dataset({
+        features: ['image', 'label'],
+        num_rows: 10000
+    })
+})
+</pre>
+
+<p>Trying to instantiate a dataloader raises an exception</p>
+<div class="highlight"><pre><span></span><code><span class="n">dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">],</span> <span class="mi">4</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<pre style='font-size:13px'>
+<span style='color:rgb(255,0,0)'> TypeError</span>: default_collate: batch must contain tensors, numpy arrays, numbers, dicts or lists; found &lt;class 'PIL.PngImagePlugin.PngImageFile'&gt;
+</pre>
+
+<p>We need to convert the data which is currently a PIL image to tensors. We can do this with a collate function, which can be passed to <code>DataLoader</code> as the arg <code>collate_fn</code></p>
+<p>To figure out what I the collate function gets the hacky way (reading docs suckzzz), I wrote it as follows</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">collate_f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+  <span class="kn">import</span><span class="w"> </span><span class="nn">pdb</span><span class="p">;</span> <span class="n">pdb</span><span class="o">.</span><span class="n">set_trace</span><span class="p">()</span>
+</code></pre></div>
+
+<p>which opens pdb. We can then call args and see what we got, which is one argument:</p>
+<pre style='font-size: 13px'>
+[{'image': &lt;PIL.PngImagePlugin.PngImageFile image mode=L size=28x28 at 0x7F3233E4B320>, 'label': 6},
+ {'image': &lt;PIL.PngImagePlugin.PngImageFile image mode=L size=28x28 at 0x7F3233E49C40>, 'label': 3},
+ {'image': &lt;PIL.PngImagePlugin.PngImageFile image mode=L size=28x28 at 0x7F3233E4B470>, 'label': 3},
+ {'image': &lt;PIL.PngImagePlugin.PngImageFile image mode=L size=28x28 at 0x7F3233E4B3E0>, 'label': 0}]
+</pre>
+
+<p>We get back a list of dicts, each dict has an 'image' and 'label' keys, so what we'll do is collate the images to one tensor and the labels to another tensor. Of course, we also need to convert the PIL images to tensors.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">tensor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision.transforms.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">TF</span>
+
+<span class="n">ig</span> <span class="o">=</span> <span class="n">itemgetter</span><span class="p">(</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">collate_f</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+  <span class="n">imgs</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="n">ig</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+  <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">TF</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">(</span><span class="n">im</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">imgs</span><span class="p">]),</span> <span class="n">tensor</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Lots happening here, I invite you to copy the code to a jupyter notebook and check it out.</p>
+<h2>Model</h2>
+<p>We'll use a pure convolutional network. As a start we'll do classification, so we'll need to downsample to get to the right shape of 10 elements. </p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">conv</span><span class="p">(</span><span class="n">in_c</span><span class="p">,</span> <span class="n">out_c</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+  <span class="n">padding</span> <span class="o">=</span> <span class="n">k</span> <span class="o">//</span> <span class="mi">2</span>
+  <span class="n">ret</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_c</span><span class="p">,</span> <span class="n">out_c</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">act</span><span class="p">:</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">())</span>
+  <span class="k">return</span> <span class="n">ret</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="c1"># 14x14</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="c1"># 7x7</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="c1"># 4x4</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="c1"># 2x2</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="c1"># 1x1</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">dl</span><span class="p">))</span>
+<span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+</code></pre></div>
+
+<pre style='font-size: 13px'>
+torch.Size([4, 10])
+</pre>
+
+<p>The <code>stride=2</code> parameters basically downsamples the image. Also notice that we don't use relu in the last layer, as we allow the logits to be negative. Let's fit!</p>
+<div class="highlight"><pre><span></span><code><span class="n">epochs</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">bs</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">4e-1</span>
+<span class="n">dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">],</span> <span class="n">bs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_f</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">opt</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="p">)</span>
+
+
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+  <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+  <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dl</span><span class="p">):</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">cuda</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+  <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+  <span class="n">val_acc</span><span class="p">,</span> <span class="n">val_loss</span> <span class="o">=</span> <span class="n">metrics</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">])</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">: acc=</span><span class="si">{</span><span class="n">val_acc</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> loss=</span><span class="si">{</span><span class="n">val_loss</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Running this prints</p>
+<pre style='font-size: 13px'>
+0: acc=0.38 loss=1.76
+1: acc=0.73 loss=0.71
+2: acc=0.78 loss=0.62
+3: acc=0.82 loss=0.48
+4: acc=0.82 loss=0.57
+</pre>
+
+<hr>
+
+<p><strong>Note:</strong> I spent some time here. First I had negative loss and things didn't work, but I realized I used <code>F.nll_loss</code>  which expects normalized logits, unlike <code>F.cross_entropy</code> which jibes with unnormalized logits. Then I thought I was getting much worse results compared to the notebook, but I realized my comparison was to MNIST performance, which must be easier than FashionMNIST. Still, we get a bit worse results, in the notebook they get 0.87 accuracy.</p>
+<hr>
+
+<p>Classification works fine, let's move on to to auto-encoding. For that we need to use deconvolution, which upscales the activations. It is done by combining nearest neighbor upscale and a convolution which doesn't reduce dimensions.</p>
+<div class="highlight"><pre><span></span><code><span class="n">ae</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="c1"># 14x14</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="c1"># 7x7</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="c1"># 4x4</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">Upsample</span><span class="p">((</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">)),</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">Upsample</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">14</span><span class="p">)),</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">Upsample</span><span class="p">((</span><span class="mi">28</span><span class="p">,</span><span class="mi">28</span><span class="p">)),</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+<span class="n">ae</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+</code></pre></div>
+
+<pre style='font-size: 13px'>
+torch.Size([96, 1, 28, 28])
+</pre>
+
+<p>The training loop should be pretty similar, except now we don't care about the labels</p>
+<div class="highlight"><pre><span></span><code><span class="n">epochs</span> <span class="o">=</span> <span class="mi">500</span>
+<span class="n">bs</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">2e-3</span>
+<span class="n">dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">],</span> <span class="n">bs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_f</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">opt</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="p">)</span>
+
+
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+  <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dl</span><span class="p">):</span>
+      <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+      <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+      <span class="n">x_hat</span> <span class="o">=</span> <span class="n">ae</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+      <span class="n">loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+      <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+      <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+      <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">])</span> <span class="o">//</span> <span class="p">(</span><span class="n">bs</span> <span class="o">*</span><span class="mi">10</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;loss=</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Training doesn't seem to be going well. As an experiment I try to fit only on the first batch, but the loss is stuck as 0.30 (the image is between 0-1) so that pretty high. I recall now that the last layer was a sigmoid activation, let's add it and see what's up.</p>
+<p>We can look at the histogram of the pixel values of one image and it's reconstruction.</p>
+<p style="width:50%; margin:auto">
+  <img src="/images/ae_hist.png" />
+</p>
+<!-- ![[content/images/ae_hist.png]] -->
+<p>We see that the reconstruction is really bad, for some reason it's all centered at 0.5 which means pre-activations are close to 0.</p>
+<hr>
+
+<p>Well, turns out it was mostly a bug, as you can see above the optimizer was initialized to track the previous model's parameters... fixed it to</p>
+<div class="highlight"><pre><span></span><code><span class="n">opt</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">ae</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Still, there wasn't immediately an improvement. Comparing to the notebook, the model pads the input image to be a power of 2, and downsamples only down to 8x8. They also used <code>UpsamplingNearest2d</code> but I think it does the same thing as <code>Upsample</code></p>
+<div class="highlight"><pre><span></span><code><span class="n">ae</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">ZeroPad2d</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="c1"># 16x16</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="c1"># 8x8</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">UpsamplingNearest2d</span><span class="p">(</span><span class="n">scale_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">UpsamplingNearest2d</span><span class="p">(</span><span class="n">scale_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">ZeroPad2d</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">),</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">(),</span>
+<span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+</code></pre></div>
+
+<p>at first I still had the "model collapse" phenomena but now I can't reproduce it. Anyway, after a few epochs the loss stabilizes on 0.02 and we get this type of reconstruction:</p>
+<p style="width:50%; margin:auto">
+  <img src="/images/fmnist_examples 1.png" />
+</p>
+<!-- ![[fmnist_examples 1.png]] -->
+<p>It's very blurry, it seems like the model has a hard time reconstructing details. I wonder how we will solve this in the next lessons.</p>                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

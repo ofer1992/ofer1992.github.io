@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Finding a Palestinian Arabic TTS model</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="I've been learning Palestinian Arabic for the last half a year or so. One of the challenges in Arabic is the fact that it is really a collection..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/drafts/finding-a-palestinian-arabic-tts-model.html" rel="bookmark"
+           title="Permalink to Finding a Palestinian Arabic TTS model">Finding a Palestinian Arabic TTS model</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-23T16:26:00+03:00">
+                Published: Thu 23 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->      <p>I've been learning Palestinian Arabic for the last half a year or so. One of the challenges in Arabic is the fact that it is really a collection of dialects along with a literary language which serves as the respectable communication vehicle. This means less that a dialect like Palestinian Arabic has little learning material, written resources, few audiobooks compared to other languages like Spanish or German.</p>
+<p>In language learning, I'm somewhat of a proponent of the Comprehensible Input approach, which dictates that to learn a language you should be passively (as in not being quizzed on the material) exposed to as much input as possible (audio, text) which is comprehensible (around 70% understanding) and interesting. When I learned German, I listened to audiobooks of The Little Prince, Percy Jackson, Harry Potter, The Hobbit and Lord of the Rings, which opened my eyes to the effectiveness of this method. Especially the audio format I found effective for me. But for Palestinian Arabic these things didn't exist. Well, with today's AI revolution, could we create this for ourselves?</p>
+<p>In this post I'll will explore the TTS side of things for a couple of reasons:</p>
+<ul>
+<li>It is a bit easier to judge in terms of quality, even for a non-native speaker.</li>
+<li>Unlike text generation, the world of TTS model is a not as user-friendly and advanced. I could easily translate a chapter of Harry Potter using a model like Gemini 2.5 Pro for free, but to turn it into a good audio chapter is not as clear cut.</li>
+<li>TTS models are smaller, I can actually play around with them locally or on a cheap instance and finetune them myself.</li>
+</ul>
+<h2>Commercial APIs</h2>
+<p>Let's see what we can get with the commercial offerings. Here's the sample sentence</p>
+<p><strong>Arabic:</strong><br>
+"امبارح رحت على سوق القدس القديمة واشتريت كعك بسمسم."</p>
+<p><strong>Transliteration:</strong><br>
+"Imbareh ruht 'ala suq il-Quds il-qadimeh w-ishtarait ka'ak b-simsim."</p>
+<p><strong>English Translation:</strong><br>
+"Yesterday I went to the market in the Old City of Jerusalem and bought sesame bread."</p>
+<h3>ElevenLabs</h3>
+<p>ElevenLabs are pretty well known, not sure if because of marketing or actual quality. Anyway, they don't see to offer specific dialects within Arabic, but maybe the model is strong enough to recognize from the text that it's palestinian. They also have bracket syntax for narration instructions that might be used for instructing the dialect. Here's the sample I generated from their playground without much fiddling</p>
+<p><audio controls src="/audio/el_yesterday_sample.mp3.mp3" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:100%; max-width:720px;"></audio></p>
+<p>This seems quite good. The drawbacks of Elevenlabs though are:</p>
+<ul>
+<li>It costs money. This isn't a big deal, though.</li>
+<li>They have a weird tier system limiting the amount of audio you can generate until you spend enough money - anti consumer (maybe they're afraid of data mining?).</li>
+<li>We don't get to play around with local models.</li>
+</ul>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

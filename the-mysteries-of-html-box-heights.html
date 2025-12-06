@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>The mysteries of HTML box heights</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="Today's post is not "fully cooked", I still don't think I figured this topic out, but I did learn a few things. Today I needed to do some css..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li class="active"><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/the-mysteries-of-html-box-heights.html" rel="bookmark"
+           title="Permalink to The mysteries of HTML box heights">The mysteries of HTML box heights</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-04-02T18:30:00+03:00">
+                Published: Tue 02 April 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+
+</footer><!-- /.post-info -->      <p>Today's post is not "fully cooked", I still don't think I figured this topic out, but I did learn a few things.</p>
+<p>Today I needed to do some css hacking for a dashboard I'm building with <code>streamlit</code>. I was using a <code>grid</code> element from the streamlit-extras package, and I wanted to create a card component with a title and description by injection html into the app. I couldn't get the card to fill its square in the grid. Setting <code>height: 100%;</code> didn't help. From looking at the implementation it seemed that the grid elements were each a flex container, but even <code>flex-grow</code> didn't seem to work.</p>
+<p>First realization: height percentage only takes the parent's height if it is specified. The rules seem to be quite elaborate, but that's the basic fact.</p>
+<p>Second realization: streamlit likes to surround stuff with divs. So even though the grid square was a flex container, between my element there were a couple more divs, some flex containers and some display blocks. Why? beats me. That explained why <code>flex-grow</code> didn't work.</p>
+<p>The first solution I found was a hack that used <code>::before</code> pseudo-element, padding and absolute positioning. It worked, but it was an ugly truth. After some more digging I found a newer property (2021) called <code>aspect-ratio</code> which conveniently does exactly what I wanted: keep the block square. It's sad though that it wasn't the first result on google.</p>
+<p>So what did I learn? height is tricky? not sure, but it's interesting enough to note down. In the future, I need to up my web debugging game.</p>
+<p>Anyway, that ended this tale, but many other woes followed, from which I will spare you, dear reader.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

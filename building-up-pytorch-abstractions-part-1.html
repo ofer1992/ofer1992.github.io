@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Building up PyTorch abstractions: Part 1</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="Today we will retrace lesson 13-14's notebook that "builds up" pytorch abstractions from scratch. As a first step we'll rederive everything in..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li class="active"><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/building-up-pytorch-abstractions-part-1.html" rel="bookmark"
+           title="Permalink to Building up PyTorch abstractions: Part 1">Building up PyTorch abstractions: Part 1</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-28T18:01:00+03:00">
+                Published: Sun 28 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/pytorch.html">pytorch</a> </p>
+</footer><!-- /.post-info -->      <p>Today we will retrace lesson <a href="https://www.youtube.com/watch?v=vGdB4eI4KBs">13</a>-<a href="https://www.youtube.com/watch?v=veqj0DsZSXU">14</a>'s notebook that "builds up" pytorch abstractions from scratch. As a first step we'll rederive everything in hardcore numpy (maybe hardcore should be reserved for C). Then we'll start building the abstractions.</p>
+<p>First up we load <code>mnist</code> data:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastdownload</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastDownload</span> <span class="c1"># nice helper for caching downloads</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span><span class="o">,</span><span class="w"> </span><span class="nn">pickle</span>
+
+<span class="n">MNIST_URL</span><span class="o">=</span><span class="s1">&#39;https://github.com/mnielsen/neural-networks-and-deep-learning/blob/master/data/mnist.pkl.gz?raw=true&#39;</span>
+<span class="n">path_gz</span> <span class="o">=</span> <span class="n">FastDownload</span><span class="p">()</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">MNIST_URL</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path_gz</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="p">((</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">),</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;latin-1&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<h3>Forward pass</h3>
+<p>We'll build a simple MLP with one hidden layer:</p>
+<div class="highlight"><pre><span></span><code><span class="n">dim_in</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">dim_h</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">dim_out</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="n">W1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">dim_h</span><span class="p">,</span> <span class="n">dim_in</span><span class="p">)</span>
+<span class="n">b1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">dim_h</span><span class="p">)</span>
+<span class="n">W2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">dim_out</span><span class="p">,</span> <span class="n">dim_h</span><span class="p">)</span>
+<span class="n">b2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">dim_out</span><span class="p">)</span>
+
+<span class="c1"># Linear layer op</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">lin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+  <span class="k">return</span> <span class="n">x</span> <span class="o">@</span> <span class="n">W</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">b</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[:</span><span class="mi">50</span><span class="p">]</span>
+<span class="n">h</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">W1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">W2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
+<span class="n">y_pred</span> <span class="o">=</span>  <span class="n">out</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Weight initialization is something easy to forget about, as it is done by pytorch behind the scenes anytime you initialize a layer with parameters. Here we just use normal distribution. The net isn't deep so we won't have any trouble. <code>out</code> contains the unnormalized logits of the predictions, and <code>y_pred</code> the predicted labels.</p>
+<p>To calculate the loss we use the cross-entropy, or negative log-likelihood when using labels:</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">out</span> <span class="o">-</span> <span class="n">logsumexp</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="mi">1</span><span class="p">))[</span><span class="nb">range</span><span class="p">(</span><span class="n">bs</span><span class="p">),</span> <span class="n">y</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</code></pre></div>
+
+<h3>Backward pass</h3>
+<p>After the forward pass we have to backpropagate the gradient. Let's start with <code>dout</code>. To simplify our life we ignore the batches. Something about calculating gradients in neural networks can be really confusing. I think the way to do it is first to mark the right intermediate outputs as variables, and when calculating gradient of loss with respect to a var, use chain rule separately for each function/variable that depends on that var and add it all up.</p>
+<h4>Loss function</h4>
+<p>The loss is for a sample <span class="math">\((x,y)\)</span> is
+</p>
+<div class="math">$$
+l=-\log p_y
+$$</div>
+<p>
+where <span class="math">\(p\)</span> is the predicted probability for label <span class="math">\(y\)</span>. Then,
+</p>
+<div class="math">$$\frac{\partial l}{\partial \log p_i}=\begin{cases}
+-1 &amp;&amp; i=y
+\\
+0 &amp;&amp; i\neq y
+\end{cases}
+$$</div>
+<p>
+Some care is needed as <code>out</code> holds the unnormalized logits. From the code we see that
+</p>
+<div class="math">$$
+\log p_i = out_i - \log\sum_ke^{out_k}
+$$</div>
+<p>
+and so
+</p>
+<div class="math">$$
+\frac{\partial \log p_i}{\partial out_j}=
+\begin{cases}
+1-\frac{e^{out_i}}{\sum_ke^{out_k}} &amp;&amp; i=j
+\\
+- \frac{e^{out_j}}{\sum_ke^{out_k}}&amp;&amp; i \neq j
+\end{cases}
+$$</div>
+<p>
+combined with the chain rule for vector functions
+</p>
+<div class="math">$$
+\frac{\partial l}{\partial out_j}=\sum_k \frac{\partial l}{\partial \log p_k}\frac{\partial \log p_k}{\partial out_j}=\frac{\partial l}{\partial \log p_y}\frac{\partial \log p_y}{\partial out_j}=
+\begin{cases}
+\frac{e^{out_i}}{\sum_ke^{out_k}}-1 &amp;&amp; y=j
+\\
+ \frac{e^{out_j}}{\sum_ke^{out_k}} &amp;&amp; y \neq j
+\end{cases}
+$$</div>
+<p>
+which we can write in vector notation as
+</p>
+<div class="math">$$
+\frac{\partial l}{\partial out}=\exp(out)/\exp(out).\text{sum}() -\mathbb 1_{y}
+$$</div>
+<p>
+or just notice that the left side is just the logits so it's really <span class="math">\(\log p - \mathbb 1_y\)</span></p>
+<h4>Linear layer</h4>
+<p>The linear layer formula is <span class="math">\(out=in\cdot W^T+b\)</span> . Continuing with the chain rule we have
+</p>
+<div class="math">$$\frac{\partial l}{\partial W_{ij}}=\sum_{k}\frac{\partial l}{\partial out_{k}}\frac{\partial out_{k}}{\partial W_{ij}}$$</div>
+<p>
+The k'th element of <span class="math">\(out\)</span> is the scalar product of <span class="math">\(in\)</span> with the k'th column of <span class="math">\(W^T\)</span> or the k'th row of <span class="math">\(W\)</span>, ie
+</p>
+<div class="math">$$out_k=b_k+\sum_j in_j\cdot W_{kj}$$</div>
+<p>
+the derivative of one output element with respect to a weight matrix element is then
+</p>
+<div class="math">$$
+\frac{\partial out_{k}}{\partial W_{ij}}=
+\begin{cases}
+in_j &amp;&amp; i=k\\
+0 &amp;&amp; else
+\end{cases}
+$$</div>
+<p>
+and the derivative of the loss with respect to the matrix element is
+</p>
+<div class="math">$$\frac{\partial l}{\partial W_{ij}}=\frac{\partial l}{\partial out_{i}}\frac{\partial out_{i}}{\partial W_{ij}}=\frac{\partial l}{\partial out_{i}}in_j$$</div>
+<p>
+Which we can write as the outer product of the two vectors
+</p>
+<div class="math">$$
+\frac{\partial l}{\partial W}=\frac{\partial l}{\partial out}\otimes in
+$$</div>
+<p>
+the bias is simpler, we just have
+</p>
+<div class="math">$$\frac{\partial l}{\partial b_i}=\sum_{k}\frac{\partial l}{\partial out_{k}}\frac{\partial out_{k}}{\partial b_i}=\frac{\partial l}{\partial out_{i}}\frac{\partial out_{i}}{\partial b_i}=\frac{\partial l}{\partial out_{i}}\cdot 1$$</div>
+<p>
+so it's just <code>dout</code>. Finally, for <span class="math">\(in\)</span>,
+</p>
+<div class="math">$$
+\frac{\partial out_{k}}{\partial in_{i}}=
+W_{ki}
+$$</div>
+<div class="math">$$\frac{\partial l}{\partial in_i}=\sum_{k}\frac{\partial l}{\partial out_{k}}\frac{\partial out_{k}}{\partial in_i}=\sum_k\frac{\partial l}{\partial out_{i}}W_{ki}=\frac{\partial l}{\partial out_{i}}W$$</div>
+<h4>ReLU</h4>
+<p>ReLU is quite easy, and since it's an element wise op we can skip all the sums. Let's say <span class="math">\(\tilde{h}\)</span> is the hidden activation before ReLU, ie <span class="math">\(h_{i}=\max(\tilde h_i, 0)\)</span>. What's the derivative?
+</p>
+<div class="math">$$
+\frac{\partial h_i}{\partial \tilde h_i}=
+\begin{cases}
+1 &amp;&amp; \tilde h_i &gt; 0
+\\
+0 &amp;&amp; \tilde h_i &lt; 0
+\end{cases}
+$$</div>
+<p>
+the derivative doesn't exist at 0, but we don't care about that.
+</p>
+<div class="math">$$
+\frac{\partial l}{\partial \tilde h_i}=\frac{\partial l}{\partial  h_i}\frac{\partial h_i}{\partial \tilde h_i}=
+\begin{cases}
+\frac{\partial l}{\partial  h_i} &amp;&amp; \tilde h_i &gt; 0
+\\
+0 &amp;&amp; \tilde h_i &lt; 0
+\end{cases}
+$$</div>
+<h4>Batches</h4>
+<p>One last detail regarding batches. The loss for a batch is the mean of the separate losses, so to backpropagate over the batch we just take the mean of the gradients for the different samples. I have a feeling that this is wasteful though, and maybe we can do better?</p>
+<h4>In code</h4>
+<p>The whole process looks like</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">backward</span><span class="p">(</span><span class="n">W1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">W2</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">logits</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+  <span class="n">dout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span>
+  <span class="n">dout</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">y</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+
+  <span class="n">dh</span><span class="p">,</span> <span class="n">dW2</span><span class="p">,</span> <span class="n">db2</span> <span class="o">=</span> <span class="n">dlin</span><span class="p">(</span><span class="n">dout</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">W2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
+  <span class="n">dh_hat</span> <span class="o">=</span> <span class="n">dh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+  <span class="n">dh_hat</span><span class="p">[</span><span class="n">h</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="n">_</span><span class="p">,</span> <span class="n">dW1</span><span class="p">,</span> <span class="n">db1</span> <span class="o">=</span> <span class="n">dlin</span><span class="p">(</span><span class="n">dh_hat</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">W1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">dW1</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">db1</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dW2</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">db2</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+
+<h3>Optimizing</h3>
+<p>We can also write an optimization loop</p>
+<div class="highlight"><pre><span></span><code><span class="n">epochs</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">bs</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">1e-1</span>
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">),</span> <span class="n">bs</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">),</span> <span class="n">i</span><span class="o">+</span><span class="n">bs</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y_train</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">logits</span><span class="p">,</span> <span class="n">loss</span> <span class="o">=</span> <span class="n">forward</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">W1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">W2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
+    <span class="n">dW1</span><span class="p">,</span> <span class="n">db1</span><span class="p">,</span> <span class="n">dW2</span><span class="p">,</span> <span class="n">db2</span> <span class="o">=</span> <span class="n">backward</span><span class="p">(</span><span class="n">W1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">W2</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">logits</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">W1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">W2</span><span class="p">,</span> <span class="n">b2</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">lr</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[(</span><span class="n">W1</span><span class="p">,</span> <span class="n">dW1</span><span class="p">),</span> <span class="p">(</span><span class="n">b1</span><span class="p">,</span> <span class="n">db1</span><span class="p">),</span> <span class="p">(</span><span class="n">W2</span><span class="p">,</span> <span class="n">dW2</span><span class="p">),</span> <span class="p">(</span><span class="n">b2</span><span class="p">,</span> <span class="n">db2</span><span class="p">)])</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;acc=</span><span class="si">{</span><span class="n">acc</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>which gets us such and such results</p>
+<div class="highlight"><pre><span></span><code>loss=0.6875153176459544
+acc=0.76
+loss=0.5454049286257023
+acc=0.76
+loss=0.4964384126281533
+acc=0.78
+loss=0.45487948890913216
+acc=0.82
+</code></pre></div>
+
+<p>Tomorrow we'll work on the PyTorch abstractions.</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'none' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

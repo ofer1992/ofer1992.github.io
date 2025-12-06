@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>IMDB Reviews sentiment analysis</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content=""It’s better to do something simple which is real. It’s something you can build on because you know what you’re doing. Whereas, if you try to..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/imdb-reviews-sentiment-analysis.html" rel="bookmark"
+           title="Permalink to IMDB Reviews sentiment analysis">IMDB Reviews sentiment analysis</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-07-02T14:17:00+03:00">
+                Published: Tue 02 July 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/deep-learning.html">deep-learning</a> <a href="/tag/nlp.html">nlp</a> <a href="/tag/sentiment-analysis.html">sentiment-analysis</a> </p>
+</footer><!-- /.post-info -->      <blockquote>
+<p>"It’s better to do something simple which is real. It’s something you can build on because you know what you’re doing. Whereas, if you try to approximate something very advanced and you don’t know what you’re doing, you can’t build on it." - Bill Evans</p>
+</blockquote>
+<p>Recently I've been trying to brush up on my deep learning practitioner skills, which have atrophied over the last year or so of disuse. Well, not just brush up, but deepen, expand enrich, as what I did in my Masters was really just a part of the work required. I kept trying to approach exciting and ambitious projects only to end up feeling paralysed and overwhelmed, and giving up on them. Luckily I did some honest thinking and acknowledged that my grasp of the practical basics was not strong enough, which meant going back to the woodshed. Also, small projects can act as small wins and box ticks, creating momentum etc.</p>
+<p>Today were tackling the <em>IMDB movie sentiment classification</em> database. It contains 50k examples of a binary classification task, deciding whether a movie review is positive or negative. I got the idea from the Claude chatbot, and we will follow Claude's "six-steps plan", each step in its own section.</p>
+<h2>"Understand the problem and the dataset"</h2>
+<p>The first step is to download the data from <a href="https://ai.stanford.edu/~amaas/data/sentiment/">here</a>. Since we're cool, we're gonna use <code>curl</code> and <code>tar</code>. Looking at the extracted folder we see the following structure (reduced to the relevant files)</p>
+<div class="highlight"><pre><span></span><code>aclImdb
+├── README
+├── test
+│   ├── neg
+│   │   ├── {id}_{rating}.txt
+│   │   ├── ...
+│   ├── pos
+│   │   ├── {id}_{rating}.txt
+│   │   └── ...
+└── train
+    ├── labeledBow.feat
+    ├── neg
+    │   ├── {id}_{rating}.txt
+    │   ├── ...
+    └── pos
+        ├── {id}_{rating}.txt
+        ├── ...
+</code></pre></div>
+
+<p>Each text file is a review. The folder determines the label, and we already have a test-train split. Let's look at a review:</p>
+<div class="highlight"><pre><span></span><code>cat aclImdb/train/pos/2435_8.txt 
+
+I never thought an old cartoon would bring tears to my eyes! When I first purchased Casper &amp; Friends: Spooking About Africa, I so much wanted to see the very first Casper cartoon entitled The Friendly Ghost (1945), But when I saw the next cartoon, There&#39;s Good Boos To-Night (1948), It made me break down! I couldn&#39;t believe how sad and tragic it was after seeing Casper&#39;s fox get killed! I never saw anything like that in the other Casper cartoons! This is the saddest one of all! It was so depressing, I just couldn&#39;t watch it again. It&#39;s just like seeing Lassie die at the end of a movie. I know it&#39;s a classic,But it&#39;s too much for us old cartoon fans to handle like me! If I wanted to watch something old and classic, I rather watch something happy and funny! But when I think about this Casper cartoon, I think about my cats!
+</code></pre></div>
+
+<p>Wow, almost looks fake. Here's the same id but from the negative folder</p>
+<div class="highlight"><pre><span></span><code>cat aclImdb/train/neg/2435_1.txt 
+
+I will warn you here: I chose to believe those reviewers who said that this wasn&#39;t an action film in the usual sense, rather a psychological drama so you should appreciate it on that basis and you will be alright.&lt;br /&gt;&lt;br /&gt;I am here to tell you that they were wrong. Completely wrong.&lt;br /&gt;&lt;br /&gt;Well, no, not completely; it is very disappointing if you are looking for an action flick, they were right about that. But it is also very unsatisfying on all other levels as well.&lt;br /&gt;&lt;br /&gt;Tom Beringer wasn&#39;t too bad, I suppose, no worse than usual; but what possessed them to cast Billy Zane in this? Was it some sort of death wish on the part of the producers? A way to made their film a guaranteed flop? In that case, it worked.&lt;br /&gt;&lt;br /&gt;If they were actually aiming for success, then why not cast somebody who can act? Oh, and might as well go for a screenwriter who knows how to write. Ah, yes, and a director who knows how to direct.&lt;br /&gt;&lt;br /&gt;As someone who sat through this mess, actually believing it would shortly redeem itself, I can assure you it never did. Pity, it could&#39;ve been a good film.
+</code></pre></div>
+
+<p>Here we also see some html tags, which we will probably want to filter out. That's a classic example of why it's good to look at the data, since some unexpected thing can always mess with your model.</p>
+<h2>"Preprocess the data"</h2>
+<p>Since the dataset is relatively small (couple hundred mb), we can afford to load it in memory. </p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">]:</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">split</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pos&#39;</span><span class="p">,</span> <span class="s1">&#39;neg&#39;</span><span class="p">]:</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">split</span><span class="p">][</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;aclImdb/</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="nb">dir</span><span class="o">/</span><span class="n">name</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">split</span><span class="p">][</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</code></pre></div>
+
+<p>This snippet will load all the data into a dictionary mirroring the folder structure.</p>
+<p>Even though we're still in the preprocessing stage, we already need to start considering our model, because this determines the kind of preprocessing we do. We will take as a baseline a combination of bag-of-words and logistic regression. bag-of-words will produce a vector which we can feed into the logistic regression. Bag-of-words turns a sentence into a vector by counting the number of occurrences of each word, (like the <code>Counter</code> data structure in python's <code>collections</code>, but as a vector). Since we turn it to a vector, we must select some size for the vocabulary, the set of words the model recognizes. We'll consider words to be a space delimited string, and get rid of punctuation. The size of the vocabulary will be determined from the distribution of words in the corpus, or to put it differently, we're going to try to choose a number that's small while still not requiring us to throw away a lot of words.</p>
+<p>We also do some preprocessing by turning everything to lower-case and getting rid of punctuations.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+
+<span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">][</span><span class="s1">&#39;pos&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">][</span><span class="s1">&#39;neg&#39;</span><span class="p">]:</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[^a-z\s]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</code></pre></div>
+
+<p>The top 10 words in the corpus are then</p>
+<div class="highlight"><pre><span></span><code>Counter({&#39;the&#39;: 334760,
+         &#39;and&#39;: 162243,
+         &#39;a&#39;: 161962,
+         &#39;of&#39;: 145332,
+         &#39;to&#39;: 135047,
+         &#39;is&#39;: 106859,
+         &#39;in&#39;: 93038,
+         &#39;it&#39;: 77110,
+         &#39;i&#39;: 75738,
+         ...
+</code></pre></div>
+
+<p>Of course, all the most common words are quite generic. We can plot the this on a graph.</p>
+<p style="width:50%; margin:auto">
+  <img src="/images/plot_words.png" />
+</p>
+<!--     ![[plot_words.png]] -->
+<p>Some thoughts before we move on:
+- The most common words are actually not useful at all on their own.
+- We see from the graph that about half the words appear only once.
+- Since the number of words we take determines the dimensions of the feature vector, we should keep in mind the number of training samples we have (~50k). We want the number of features to be small enough to avoid overfitting.
+- We can surely reduce the number of words by using better tokenization. For example, in our current scheme a word like "valentine's" turns to "valentines", but the interesting word is really "valentine".</p>
+<p>For now, we start with an arbitrary vocab_size of 5000.</p>
+<div class="highlight"><pre><span></span><code><span class="n">vocab_size</span> <span class="o">=</span> <span class="mi">5000</span>
+<span class="n">vocab</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">vocab_size</span><span class="p">])}</span>
+</code></pre></div>
+
+<p>And we use it to build a feature vector by counting occurrences of words that are in the vocabulary.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">features</span><span class="p">(</span><span class="n">review</span><span class="p">,</span> <span class="n">vocab</span><span class="p">):</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">tokenize</span><span class="p">(</span><span class="n">review</span><span class="p">)</span>
+    <span class="n">vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vocab</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">vocab</span><span class="p">:</span>
+            <span class="n">vec</span><span class="p">[</span><span class="n">vocab</span><span class="p">[</span><span class="n">w</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">vec</span>
+
+<span class="n">features</span><span class="p">(</span><span class="s2">&quot;the bear was awesome&quot;</span><span class="p">,</span> <span class="n">vocab</span><span class="p">)</span>
+<span class="c1"># array([1., 0., 0., ..., 0., 0., 0.])</span>
+</code></pre></div>
+
+<p>The final thing before we move on is to extract out from the train dataset a validation set, which we can use to tune hyperparameters and compare models, while saving the test set for the final evaluation.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="s2">&quot;pos&quot;</span><span class="p">])</span>
+<span class="n">val_size</span> <span class="o">=</span> <span class="n">N</span> <span class="o">//</span> <span class="mi">10</span>
+<span class="n">rnd</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">val_idxs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rnd</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">),</span> <span class="n">val_size</span><span class="p">))</span>
+<span class="n">train_idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">val_idxs</span><span class="p">))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_subset</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">idxs</span><span class="p">,</span> <span class="n">vocab</span><span class="p">):</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">features</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s2">&quot;pos&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">],</span> <span class="n">vocab</span><span class="p">))</span>
+        <span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">features</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s2">&quot;neg&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">],</span> <span class="n">vocab</span><span class="p">))</span>
+        <span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+<span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">get_subset</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">],</span> <span class="n">train_idxs</span><span class="p">,</span> <span class="n">vocab</span><span class="p">)</span>
+<span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span> <span class="o">=</span> <span class="n">get_subset</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">],</span> <span class="n">val_idxs</span><span class="p">,</span> <span class="n">vocab</span><span class="p">)</span>
+</code></pre></div>
+
+<h2>"Build a simple baseline model"</h2>
+<p>The only thing left now is to train a logistic regression model. We'll use sklearn (perhaps in a future project I'll do a pure numpy approach). Using sklearn is quite straightforward</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="n">logreg</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">penalty</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">logreg</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;train acc=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">logreg</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">y_train</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;val acc=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">logreg</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_val</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">y_val</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># train acc=0.9420888888888889</span>
+<span class="c1"># val acc=0.8636</span>
+</code></pre></div>
+
+<p>Out of the box we get a 85% on the validation set. We also see we are overfitted. In fact, if we increase the max_iter parameter to 2000 we get up to</p>
+<div class="highlight"><pre><span></span><code>train acc=1.0
+val acc=0.8252
+</code></pre></div>
+
+<p>A perfect fit on the training set, while the validation set takes a hit. It's a good test to see if we can perfectly fit on the train set. It's not always possible, as it depends on the capacity of the model. In our case, since the model has 5k features to choose from, the training set has ~20k samples and regularization is disabled, it isn't surprising. In fact, the default value of max_iter=100 serves as early stopping which is a kind of regularization!</p>
+<p>A nice thing about logistic regressions is interpretability: we can deduce which words are informative to the label and which aren't. For example, here are the 10 words with the lowest weights: <em>attached</em>, <em>fooled</em>, <em>irish</em>, <em>reference</em>, <em>repeatedly</em>, <em>editor</em>, <em>between</em>, <em>literally</em>, <em>ive</em>, <em>according</em>. And here's the 10 words with most weights: <em>waste</em>, <em>poorly</em>, <em>disappointment</em>, <em>lacks</em>, <em>worst</em>, <em>mess</em>, <em>awful</em>, <em>pointless</em>, <em>worse</em>. Surprisingly, they're all negative.</p>
+<p>Another cool thing we can do is color an example by the weights of each word, for example</p>
+<blockquote>
+<p>'<span style="background-color: rgb(0,255,0, 0.04265246106422292)">i </span><span style="background-color: rgb(255,0,0, 0.47033456488848235)">am </span><span style="background-color: rgb(255,0,0, 0.4123712301321726)">writing </span><span style="background-color: rgb(0,255,0, 0.005917706458466877)">this </span><span style="background-color: rgb(0,255,0, 0.1711111210441242)">after </span><span style="background-color: rgb(255,0,0, 0.20433823707379858)">just </span><span style="background-color: rgb(0,255,0, 0.037058791671422064)">seeing </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(0,255,0, 1.0)">perfect </span><span style="background-color: rgb(0,255,0, 0.010033675210943335)">son </span><span style="background-color: rgb(255,0,0, 0.00889010358876386)">at </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(255,0,0, 0.23447409537885475)">gay </span><span style="background-color: rgb(0,255,0, 0.04049596375782109)">and </span><span style="background-color: rgb(255,0,0, 0.13748898030755594)">lesbian </span><span style="background-color: rgb(255,0,0, 0.0)">mardi </span><span style="background-color: rgb(255,0,0, 0.0)">gras </span><span style="background-color: rgb(0,255,0, 0.04199020472459187)">film </span><span style="background-color: rgb(255,0,0, 0.08689733441221965)">festival </span><span style="background-color: rgb(255,0,0, 0.023830296022082025)">in </span><span style="background-color: rgb(255,0,0, 0.0)">sydney </span><span style="background-color: rgb(255,0,0, 0.0)">australiabr </span><span style="background-color: rgb(255,0,0, 0.046000518108140584)">br </span><span style="background-color: rgb(0,255,0, 0.01726310627565952)">when </span><span style="background-color: rgb(0,255,0, 0.04531886820138982)">their </span><span style="background-color: rgb(0,255,0, 0.05007746999638212)">father </span><span style="background-color: rgb(0,255,0, 0.062016106149632086)">dies </span><span style="background-color: rgb(0,255,0, 0.07709865986070619)">two </span><span style="background-color: rgb(255,0,0, 0.0)">estranged </span><span style="background-color: rgb(0,255,0, 0.5727940740901919)">brothers </span><span style="background-color: rgb(0,255,0, 0.01985040840007181)">meet </span><span style="background-color: rgb(255,0,0, 0.00889010358876386)">at </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(255,0,0, 0.010560443738167133)">funeral </span><span style="background-color: rgb(0,255,0, 0.04049596375782109)">and </span><span style="background-color: rgb(0,255,0, 0.1711111210441242)">after </span><span style="background-color: rgb(255,0,0, 0.0)">discovering </span><span style="background-color: rgb(0,255,0, 0.02277322625694133)">that </span><span style="background-color: rgb(0,255,0, 0.005853600023155638)">one </span><span style="background-color: rgb(255,0,0, 0.0546631791445451)">of </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(0,255,0, 0.5727940740901919)">brothers </span><span style="background-color: rgb(0,255,0, 0.03975000481815559)">is </span><span style="background-color: rgb(255,0,0, 0.46594456982156596)">dying </span><span style="background-color: rgb(0,255,0, 0.03050817801804005)">from </span><span style="background-color: rgb(0,255,0, 0.5274303823274182)">aids </span><span style="background-color: rgb(0,255,0, 0.0006889932301914058)">they </span><span style="background-color: rgb(255,0,0, 0.2178510621956707)">enter </span><span style="background-color: rgb(255,0,0, 0.026551338327775703)">on </span><span style="background-color: rgb(0,255,0, 0.018766106797469113)">a </span><span style="background-color: rgb(0,255,0, 0.29575443223014675)">heart </span><span style="background-color: rgb(255,0,0, 0.0)">warming </span><span style="background-color: rgb(0,255,0, 0.2789858210725884)">journey </span><span style="background-color: rgb(255,0,0, 0.0546631791445451)">of </span><span style="background-color: rgb(255,0,0, 0.0)">reconciliation </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(0,255,0, 0.07709865986070619)">two </span><span style="background-color: rgb(255,0,0, 0.1752621503741513)">leads </span><span style="background-color: rgb(255,0,0, 0.057936981045791466)">do </span><span style="background-color: rgb(0,255,0, 0.018766106797469113)">a </span><span style="background-color: rgb(0,255,0, 0.31894725396446727)">magnificent </span><span style="background-color: rgb(0,255,0, 0.43603428597777316)">job </span><span style="background-color: rgb(255,0,0, 0.0546631791445451)">of </span><span style="background-color: rgb(0,255,0, 0.34370407142168613)">creating </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(255,0,0, 0.0)">gradual </span><span style="background-color: rgb(0,255,0, 0.13801630244060087)">warmth </span><span style="background-color: rgb(0,255,0, 0.04049596375782109)">and </span><span style="background-color: rgb(0,255,0, 0.08307937127739665)">respect </span><span style="background-color: rgb(0,255,0, 0.02277322625694133)">that </span><span style="background-color: rgb(0,255,0, 0.41264595325176184)">builds </span><span style="background-color: rgb(255,0,0, 0.0037656056507315884)">up </span><span style="background-color: rgb(255,0,0, 0.0005082240436384793)">between </span><span style="background-color: rgb(0,255,0, 0.02155107873516601)">them </span><span style="background-color: rgb(0,255,0, 0.03293032022576033)">as </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(255,0,0, 0.0010141747206862505)">movie </span><span style="background-color: rgb(255,0,0, 0.2515080627646316)">progresses </span><span style="background-color: rgb(0,255,0, 0.04265246106422292)">i </span><span style="background-color: rgb(255,0,0, 0.057936981045791466)">do </span><span style="background-color: rgb(255,0,0, 0.005389831551733009)">have </span><span style="background-color: rgb(0,255,0, 0.005853600023155638)">one </span><span style="background-color: rgb(255,0,0, 0.0)">qualm </span><span style="background-color: rgb(0,255,0, 0.005558015722499624)">about </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(255,0,0, 0.0010141747206862505)">movie </span><span style="background-color: rgb(0,255,0, 0.18200352019602964)">though </span><span style="background-color: rgb(0,255,0, 0.5091752338602896)">whilst </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(255,0,0, 0.14565127351756196)">brother </span><span style="background-color: rgb(0,255,0, 0.10452514896375287)">who </span><span style="background-color: rgb(0,255,0, 0.03975000481815559)">is </span><span style="background-color: rgb(255,0,0, 0.46594456982156596)">dying </span><span style="background-color: rgb(255,0,0, 0.35483749359155314)">acts </span><span style="background-color: rgb(0,255,0, 0.07185952950061382)">sick </span><span style="background-color: rgb(0,255,0, 0.008901308124265633)">he </span><span style="background-color: rgb(255,0,0, 0.12364899546684406)">doesnt </span><span style="background-color: rgb(255,0,0, 0.29274542256906116)">look </span><span style="background-color: rgb(0,255,0, 0.09865015779476502)">it </span><span style="background-color: rgb(0,255,0, 0.018766106797469113)">a </span><span style="background-color: rgb(255,0,0, 0.1668493690989387)">person </span><span style="background-color: rgb(255,0,0, 0.0546631791445451)">of </span><span style="background-color: rgb(255,0,0, 0.1340400358458006)">t </span><span style="background-color: rgb(255,0,0, 0.0)">cells </span><span style="background-color: rgb(255,0,0, 0.22614030218687553)">would </span><span style="background-color: rgb(255,0,0, 0.29274542256906116)">look </span><span style="background-color: rgb(0,255,0, 0.16607486475348793)">quite </span><span style="background-color: rgb(255,0,0, 0.1927342060191777)">ill </span><span style="background-color: rgb(255,0,0, 0.2135627740706253)">not </span><span style="background-color: rgb(255,0,0, 0.21862099168415838)">even </span><span style="background-color: rgb(0,255,0, 0.018766106797469113)">a </span><span style="background-color: rgb(255,0,0, 0.16287371743106116)">make </span><span style="background-color: rgb(255,0,0, 0.0037656056507315884)">up </span><span style="background-color: rgb(0,255,0, 0.43603428597777316)">job </span><span style="background-color: rgb(0,255,0, 0.004166560555322963)">to </span><span style="background-color: rgb(255,0,0, 0.16287371743106116)">make </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(255,0,0, 0.007313930534815736)">actor </span><span style="background-color: rgb(255,0,0, 0.29274542256906116)">look </span><span style="background-color: rgb(255,0,0, 0.1927342060191777)">ill </span><span style="background-color: rgb(255,0,0, 0.0145737819082238)">was </span><span style="background-color: rgb(255,0,0, 0.0)">employed </span><span style="background-color: rgb(0,255,0, 0.018766106797469113)">a </span><span style="background-color: rgb(0,255,0, 0.158058472476663)">small </span><span style="background-color: rgb(255,0,0, 0.0)">gripe </span><span style="background-color: rgb(255,0,0, 0.08469344942881546)">but </span><span style="background-color: rgb(0,255,0, 0.005853600023155638)">one </span><span style="background-color: rgb(0,255,0, 0.02277322625694133)">that </span><span style="background-color: rgb(0,255,0, 0.32187586838630966)">makes </span><span style="background-color: rgb(0,255,0, 0.09865015779476502)">it </span><span style="background-color: rgb(0,255,0, 0.018766106797469113)">a </span><span style="background-color: rgb(0,255,0, 0.5598511367945777)">bit </span><span style="background-color: rgb(255,0,0, 0.30057838928476655)">less </span><span style="background-color: rgb(0,255,0, 0.6973250944274204)">realistic </span><span style="background-color: rgb(255,0,0, 0.21561431687360214)">despite </span><span style="background-color: rgb(0,255,0, 0.02277322625694133)">that </span><span style="background-color: rgb(0,255,0, 0.005853600023155638)">one </span><span style="background-color: rgb(0,255,0, 0.158058472476663)">small </span><span style="background-color: rgb(255,0,0, 0.0)">gripe </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(0,255,0, 1.0)">perfect </span><span style="background-color: rgb(0,255,0, 0.010033675210943335)">son </span><span style="background-color: rgb(0,255,0, 0.03975000481815559)">is </span><span style="background-color: rgb(0,255,0, 0.018766106797469113)">a </span><span style="background-color: rgb(0,255,0, 0.8463934170414216)">wonderful </span><span style="background-color: rgb(255,0,0, 0.0010141747206862505)">movie </span><span style="background-color: rgb(0,255,0, 0.04049596375782109)">and </span><span style="background-color: rgb(255,0,0, 0.09809706471839275)">should </span><span style="background-color: rgb(0,255,0, 0.1726900761126281)">you </span><span style="background-color: rgb(255,0,0, 0.005389831551733009)">have </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(0,255,0, 0.267467502899476)">chance </span><span style="background-color: rgb(0,255,0, 0.004166560555322963)">to </span><span style="background-color: rgb(0,255,0, 0.1194936305501035)">see </span><span style="background-color: rgb(0,255,0, 0.09865015779476502)">it </span><span style="background-color: rgb(255,0,0, 0.057936981045791466)">do </span><span style="background-color: rgb(255,0,0, 0.15038044247997384)">im </span><span style="background-color: rgb(255,0,0, 0.9599913784742594)">hoping </span><span style="background-color: rgb(0,255,0, 0.018827632956966555)">for </span><span style="background-color: rgb(0,255,0, 0.018766106797469113)">a </span><span style="background-color: rgb(0,255,0, 0.006677882670571365)">dvd </span><span style="background-color: rgb(0,255,0, 0.7987768631803601)">release </span><span style="background-color: rgb(255,0,0, 0.023830296022082025)">in </span><span style="background-color: rgb(0,255,0, 0.041456744665536324)">the </span><span style="background-color: rgb(255,0,0, 0.14687484867974562)">near </span><span style="background-color: rgb(0,255,0, 0.3396042283541725)">future </span>'</p>
+</blockquote>
+<p>Since the final classification is the sum of <code>weight*n_occurences</code> it illustrates clearly what in the sentence affects the classification. It also illustrates the problem with classifying based on words, even in the simple example of negation "not wonderful" and "wonderful" will still have the same contribution from wonderful.</p>
+<p>Anyway, we have a baseline. In the next section we face the realm of infinite possibilities of tweaking.</p>
+<h2>Iterate and improve the model</h2>
+<p>We will continue the good work in the next post, but I'll just sketch the next things we can look at.</p>
+<h3>Figuring out where the model is wrong</h3>
+<p>If we want to improve the model, we have to figure out what it got wrong and why. This involves looking at misclassified examples, and coming up with ideas for improvements.</p>
+<h3>Improvements</h3>
+<p>There are many things we can try, and when we if we consider combinations, stuff become exponential. Let's list a few things we could consider:</p>
+<h4>Tokenization</h4>
+<p>This is one thing we could work on that would give us an improvement across the board, as our current scheme is amount to converting to lower case and removing anything that isn't a letter.  We could improve the clean-up and get rid of some <code>&lt;br&gt;</code> tags. We can try to apply more NLP pre-tokenization techniques that standardize the data even more. We can use a data-oriented tokenizer like BPE. We can experiment with different vocabulary sizes.</p>
+<h4>Feature vector</h4>
+<p>Right now we are using a simple word count. There are other available techniques, culminating in deep learning models that produce semantic embeddings as vectors. </p>
+<h4>Different models</h4>
+<p>Finally, we could try a different type of model, such as Naive Bayes, or a RNN/transformer.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

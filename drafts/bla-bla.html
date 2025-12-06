@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>bla bla</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="Jeremy posted a challenge in lesson 18 to reach the highest accuracy on the Fashion-MNIST test set within 5/20/50 epochs. The top results are..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li class="active"><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/drafts/bla-bla.html" rel="bookmark"
+           title="Permalink to bla bla">bla bla</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-08-08T13:10:00+03:00">
+                Published: Thu 08 August 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/dailies.html">Dailies</a>.</p>
+
+</footer><!-- /.post-info -->      <p>Jeremy posted <a href="https://forums.fast.ai/t/a-challenge-for-you-all/102656">a challenge</a> in <a href="https://course.fast.ai/Lessons/lesson18.html">lesson 18</a> to reach the highest accuracy on the Fashion-MNIST test set within 5/20/50 epochs. The top results are around 95%, and it was last updated a year ago. I doubt I'll reach that, but today we'll implement a model, train it on the dataset and start iterating. This time we'll use the abstractions built during the course so far, so we'll get to focus more on the iteration and experimentation part of development.</p>
+<p>We start by importing everything. I found out that miniai has <a href="https://github.com/fastai/course22p2/blob/master/miniai/imports.py">a module</a> that basically imports everything, sparing us from all the boilerplate, so we just do</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">miniai.imports</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+</code></pre></div>
+
+<p>The way the library is set up though, it's hard to know what we have imported from miniai. This nifty snippet will print all the imported names</p>
+<div class="highlight"><pre><span></span><code><span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+  <span class="n">mod</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;__module__&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+  <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">mod</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;miniai&#39;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+</code></pre></div>
+
+<p>which prints</p>
+<pre style='font-size: 13px'>
+miniai.datasets inplace
+miniai.datasets collate_dict
+miniai.datasets show_image
+miniai.datasets subplots
+miniai.datasets get_grid
+miniai.datasets show_images
+miniai.datasets DataLoaders
+miniai.init conv
+miniai.conv to_device
+miniai.conv collate_device
+miniai.learner CancelFitException
+miniai.learner CancelBatchException
+miniai.learner CancelEpochException
+miniai.learner Callback
+miniai.learner run_cbs
+...
+</pre>
+
+<p>Next, to load the dataset</p>
+<div class="highlight"><pre><span></span><code><span class="n">ds</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;zalando-datasets/fashion_mnist&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>and create the dataloaders with collation. Took me a bit to figure out, but we use the following</p>
+<div class="highlight"><pre><span></span><code><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">features</span>
+
+<span class="nd">@inplace</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">transformi</span><span class="p">(</span><span class="n">b</span><span class="p">):</span> <span class="n">b</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">TF</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">b</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span>
+
+<span class="n">dsd</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_transform</span><span class="p">(</span><span class="n">transformi</span><span class="p">)</span>
+<span class="n">dls</span> <span class="o">=</span> <span class="n">DataLoaders</span><span class="o">.</span><span class="n">from_dd</span><span class="p">(</span><span class="n">dsd</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+</code></pre></div>
+
+<p>We need the transform to convert from PIL to tensor, and then we have these utility methods from earlier lectures.</p>
+<p>Next up, let's build a model and train it. First we're gonna go with vanilla conv.</p>
+<div class="highlight"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="c1"># 14x14</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="c1"># 7x7</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">16</span><span class="p">),</span> <span class="c1"># 4x4</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">16</span><span class="p">),</span> <span class="c1"># 2x2</span>
+  <span class="c1"># conv(16,10, act=False)</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span>  <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">dls</span><span class="o">.</span><span class="n">train</span><span class="p">))</span>
+<span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+</code></pre></div>
+
+<p>This is similar to what I did in [[cnn_autoencoders]]. I did change the last layer, since we have a 2x2 grid, a 3x3 with stride 2 and padding has some useless parameters. Don't think it makes a difference, since they are just ignored in forward and backward passes, but who knows. </p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torcheval.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MulticlassAccuracy</span>
+
+<span class="n">bs</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">2e-1</span>
+<span class="n">dls</span> <span class="o">=</span> <span class="n">DataLoaders</span><span class="o">.</span><span class="n">from_dd</span><span class="p">(</span><span class="n">dsd</span><span class="p">,</span> <span class="n">bs</span><span class="p">)</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">MulticlassAccuracy</span><span class="p">()]</span>
+<span class="n">l</span> <span class="o">=</span> <span class="n">TrainLearner</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dls</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="p">[</span><span class="n">DeviceCB</span><span class="p">(),</span> <span class="n">ProgressCB</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">MetricsCB</span><span class="p">(</span><span class="o">*</span><span class="n">metrics</span><span class="p">)])</span>
+
+<span class="n">l</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div>
+
+<p>We use the learner class, and pass some callbacks for moving stuff to GPU, tracking progress and metrics. Fitting for 5 epochs yields</p>
+<div style="display: flex; justify-content: center; width: 100%; margin: auto;">
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>MulticlassAccuracy</th>
+      <th>loss</th>
+      <th>epoch</th>
+      <th>train</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.471</td>
+      <td>1.419</td>
+      <td>0</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.716</td>
+      <td>0.715</td>
+      <td>0</td>
+      <td>eval</td>
+    </tr>
+    <tr>
+      <td>0.771</td>
+      <td>0.605</td>
+      <td>1</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.747</td>
+      <td>0.665</td>
+      <td>1</td>
+      <td>eval</td>
+    </tr>
+    <tr>
+      <td>0.816</td>
+      <td>0.497</td>
+      <td>2</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.795</td>
+      <td>0.539</td>
+      <td>2</td>
+      <td>eval</td>
+    </tr>
+    <tr>
+      <td>0.837</td>
+      <td>0.443</td>
+      <td>3</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.836</td>
+      <td>0.450</td>
+      <td>3</td>
+      <td>eval</td>
+    </tr>
+    <tr>
+      <td>0.849</td>
+      <td>0.413</td>
+      <td>4</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.820</td>
+      <td>0.529</td>
+      <td>4</td>
+      <td>eval</td>
+    </tr>
+  </tbody>
+</table>
+  <img src="/images/fashion_loss.png" style="width: 50%; height: 50%; margin: 5px;" />
+</div>
+<!--![[fashion_loss.png]]-->
+<p>It looks like something's going on during the first epoch. Let's take another look:</p>
+<p><img src="/images/fashion_loss_1epoch.png" alt="fashion loss 1epoch" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>One batch is especially bad, around step 70, but otherwise it's going okay.</p>
+<p>Let's see how high we can get the LR. In fact, let's use the LRFinderCB.</p>
+<div class="highlight"><pre><span></span><code><span class="n">l</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">cbs</span><span class="o">=</span><span class="p">[</span><span class="n">LRFinderCB</span><span class="p">()])</span>
+</code></pre></div>
+
+<p>which displays</p>
+<p><img src="/images/fashion_lr_finder.png" alt="fashion lr finder" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>it's a graph of the loss of a batch over different learning rates. Usually there should be a small dip, and that where we take our LR from, but it seems like the jumps are too big. So let's change the parameters. The main one we have is <code>gamma</code> which is the multiplicative factor. Another way to think of it is the step size in log-space, so for example if <code>gamma=10</code> then each iteration moves on step in the graph above.</p>
+<hr>
+
+<p>I played around and couldn't really get that dip. I'm think maybe the initialization of the network is bad, so switch to investigating that first.</p>
+<p>We add the <code>ActivationStats</code> callback and get back</p>
+<p><img src="/images/act_stats0.png" alt="act stats0" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>And I just realized that I forgot to normalize the input. Okay, so what do we normalize? obviously the batch dimension has to "mean'd" over, and that leaves us with a tensor of shape <code>(C, H, W)</code>. The question is whether to go further and take the operation over <code>H</code> and <code>W</code>. I think so. I think we kinda assume by using convolutions that pixels have the same prior distribution, or that we're invariant to actual pixel location in image, so it wouldn't make sense to normalize them with different numbers. Another reason is that dividing by one number amounts to equalizing brightness, while if we do it on a per pixel basis it distorts the image. I don't know if that's a good reason though.</p>
+<p>We're gonna do that with a (surprise surprise) callback</p>
+<div class="highlight"><pre><span></span><code><span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">DataLoaders</span><span class="o">.</span><span class="n">from_dd</span><span class="p">(</span><span class="n">dsd</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span><span class="o">.</span><span class="n">train</span><span class="p">))</span>
+<span class="n">xmean</span><span class="p">,</span> <span class="n">xstd</span> <span class="o">=</span> <span class="n">xb</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">xb</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_norm</span><span class="p">(</span><span class="n">b</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">xmean</span><span class="p">)</span> <span class="o">/</span> <span class="n">xstd</span><span class="p">,</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">BatchTransformCB</span><span class="p">(</span><span class="n">_norm</span><span class="p">)</span>
+</code></pre></div>
+
+<p>We immediately see the effect in the loss over 1 epoch</p>
+<p><img src="/images/fashion_loss_1epoch_input_norm.png" alt="fashion loss 1epoch input norm" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>And the activation statistics</p>
+<p><img src="/images/act_stats1.png" alt="act stats1" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>though they still move over time.</p>
+<p>What's next:
+- norm layers
+- better layer init
+- optimizers
+- lr schedule</p>
+<hr>
+
+<p>Trying with BN</p>
+<div class="highlight"><pre><span></span><code><span class="n">get_model_bn</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">),</span> <span class="c1"># 14x14</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">),</span> <span class="c1"># 7x7</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">),</span> <span class="c1"># 4x4</span>
+  <span class="n">conv</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">),</span> <span class="c1"># 2x2</span>
+  <span class="c1"># conv(16,10, act=False),</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+  <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>we get </p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>MulticlassAccuracy</th>
+      <th>loss</th>
+      <th>epoch</th>
+      <th>train</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.795</td>
+      <td>0.579</td>
+      <td>0</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.784</td>
+      <td>0.577</td>
+      <td>0</td>
+      <td>eval</td>
+    </tr>
+    <tr>
+      <td>0.859</td>
+      <td>0.387</td>
+      <td>1</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.834</td>
+      <td>0.467</td>
+      <td>1</td>
+      <td>eval</td>
+    </tr>
+    <tr>
+      <td>0.869</td>
+      <td>0.355</td>
+      <td>2</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.844</td>
+      <td>0.425</td>
+      <td>2</td>
+      <td>eval</td>
+    </tr>
+    <tr>
+      <td>0.877</td>
+      <td>0.334</td>
+      <td>3</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.838</td>
+      <td>0.449</td>
+      <td>3</td>
+      <td>eval</td>
+    </tr>
+    <tr>
+      <td>0.882</td>
+      <td>0.319</td>
+      <td>4</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <td>0.849</td>
+      <td>0.416</td>
+      <td>4</td>
+      <td>eval</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>so we're up by 0.2% in validation, but the training is considerably slower now.</p>
+<hr>
+
+<p>One thing we can try with regards to initialization is to use the LSUV init.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

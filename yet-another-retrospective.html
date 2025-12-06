@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Yet another retrospective</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="I expect another couple of days before I can submit a pull request. Today after some horrendous debugging I finally got some tangible progress...." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/yet-another-retrospective.html" rel="bookmark"
+           title="Permalink to Yet another retrospective">Yet another retrospective</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-05-21T21:24:00+03:00">
+                Published: Tue 21 May 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->      <p>I expect another couple of days before I can submit a pull request. Today after some horrendous debugging I finally got some tangible progress. status, log, add-all and commit all seem to be working, perhaps even init (but still inconclusive). Still need to add push and pull. Then I need to connect it to config and add the necessary callbacks. In the end the minimal set of changes I converged to are just android git support, and keeping it in the same UX as the already existing implementation.</p>
+<h2>Reflection</h2>
+<p>So, where did I go wrong? why did it take so long?</p>
+<h3>Whittling down to the minimal set of changes</h3>
+<p>When I first set to work I thought I would completely replace the existinggit dependency and provide a unified implementation for electron, web and android, but what I personally needed was git in the android app. Instead of focusing straightaway on the android env (capacitor) I spent tons of time trying to understand and work with the other two envs, which both here their own set of quirks.</p>
+<p>Start with the minimal thing you need.</p>
+<h3>Tightning the debug loop, streamlining dev experience</h3>
+<p>Debugging was excruciating, working with async code, having to constantly move around from the clojure repl to chrome console, with an eye on the android IDE and the the services running in the background. There's just so much irreducible, unabstractable complexity. I felt like I constantly had to juggle 3-5 things in my mind. Some of it is inescapable: clojurescript to javascript to android, there are just too many things going on. Still, I'm sure I made my life unnecessarily hard by not taking enough time to learn best practices. Good dev hygiene and have saved me a third of the time spent debugging.</p>
+<h3>Specifying the adapter in advance</h3>
+<p>In retrospect the hardest part of the work was building the bloody file system adapter that you pass to the isogit functions. It has the same API like node's file system, but it only requires a few functions. I had some reference, and my approach was to build something quickly and just tinker with it until it works. That was a big mistake.</p>
+<p>First of all it meant I had to debug a lot, especially interop code, and debug through isogit's code. There was also a particularly nasty fact that this library likes to silence exceptions (which now makes me think that I should have set the break on caught exception" more often).</p>
+<p>What I should have done is carefully specify and write down the input output of the adapter by poking nodeFS. More work upfront but better down the line.</p>
+<h3>Producing more content</h3>
+<p>There was plenty of opportunity to do some tutorials and technical writing about what I learned. It does slow down the progress, but it's worth it in the long run, for others and for myself.</p>
+<p>Anyway, let's get to the PR milestone this week!</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

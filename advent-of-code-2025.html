@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Advent of Code 2025</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="AoC is back for another year! This time it's a bit shorter, only 12 days. This might be a good change overall, since in 2023 I fizzled out around..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/advent-of-code-2025.html" rel="bookmark"
+           title="Permalink to Advent of Code 2025">Advent of Code 2025</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-02T16:38:00+02:00">
+                Published: Tue 02 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->      <p>AoC is back for another year! This time it's a bit shorter, only 12 days. This might be a good change overall, since in 2023 I fizzled out around day 20.</p>
+<p>The first day has us simulating a dial ranging from 0 to 99 on a safe, where we needed to repeat a list of rotation instructions (left/right + number of clicks). Part 1 asked how many times the dial ended up on 0 after completing each instruction. Part 2 complicated this by also counting every time the dial <em>crossed</em> 0 during a rotation — so a single 200-click rotation clockwise would cross 0 twice. Both parts required fairly straightforward modular arithmetic, and I solved it in Python using a Jupyter notebook.</p>
+<p>For day 2, I decided to solve today's problem using typescript. I programmed a lot in it in the last year on the job and I actually kind of like the language, but because we were very AI development-driven I didn't get to actually write much code myself, instead mostly prompting and reading. This robbed me of the fingertips automaticity I have in python. I don't know what the future entails for programming, but for now, creating a ts file and not even remembering the for-loop syntax feels a little humbling.</p>
+<p>Here's what I did then: I opened Claude Code side-by-side and instructed it to be a tutor and not make any code changes. This allowed me to get relevant answers to tech questions (syntax etc) quickly while still writing stuff manually. I think I'll also add some flashcards for the syntax (though I'm still a little ambivalent about it, boring flashcards are a net negative).</p>
+<p>The problem was to parse a list of number ranges (11-22,33-100 etc) and sum all the 'doubled' numbers in those ranges — ie numbers of the form 123123, 3333, 11. Alright, bruteforce and stringifying solved it well enough. In fact, most of the time was spent on learning how to do ts dev with <code>nvim</code> (I love new toys), how to read the exceptions, and looking up silly syntax stuff (how to do floor division, <code>Math.floor(a / b)</code>).</p>
+<p>The second part generalized this: sum any <em>periodic</em> number, like 111, 123123123, 1414 etc. I had a tingling sensation, and then it came to me: I actually solved something similar at work! we had a problem where we had Gemini do OCR to pdfs, and it would sometimes go bonkers and generate really long repeating strings. We wanted to detect that. This was almost the same problem, except in our case, it was harder, because we were looking for a periodic <strong>substring</strong>. So how did I solve it? I couldn't recall... and why was that? because it was vibecoded!!!</p>
+<p>Yep, it came back to bite me. I even remember putting time to understand how it solved it, after all it was my responsibility, and I did understand it at the time. And still, a few months later, I couldn't recall how it worked. Maybe I shouldn't be too harsh with myself, after all, I did remember that I had this problem, and maybe it's a responsible decision not to spend a lot of time on a math/algo problem in my fullstack startup job which requires to move fast bla bla bla. Nevertheless, here we were.</p>
+<p>Anyway, after reading the code I figured it was probably not the right approach, and set out to solve it myself. The naive solution came to mind immediately:</p>
+<ul>
+<li>iterate on all the numbers in the ranges</li>
+<li>for each number, iterate on all possible periods (<code>p</code> can be a period if it divides the number of digits)</li>
+<li>for each period, check that <code>n[i] == n[i+p]</code> for all appropriate <code>i</code>.</li>
+</ul>
+<p>Depending on the size of the ranges this approach could be good enough. But was there something better? I always look for the math angle. I remembered some leetcode problem which sounded similar, where given two strings <code>s1</code> and <code>s2</code> you need to decide if they are both periodic with the same pattern. The solution is to concatenate them twice, <code>s1s2</code> and <code>s2s1</code> and check for equality, as this is equivalent. Still, in our case this didn't help.</p>
+<p>Then I had a whole deep think about how we can represent these numbers as a tuple (pattern, n_periods). Maybe we can simply iterate on the periodic numbers in order, ie generating instead of verifying. I thought long and hard, and had claude generate <a href="https://claude.ai/public/artifacts/f15a9bba-6ca0-4b89-b1a9-f3d771912ce1">this artifact</a>:</p>
+<p><img src="/images/Screenshot%202025-12-02%20at%2017.49.07.png" alt="Screenshot 2025-12-02 at 17.49.07" class="obsidian-embed" style="display:block; margin:1.5rem auto; width:70%; max-width:900px; height:auto;" /></p>
+<p>You can see that the order (the numbers inside the tiles) is a little bit tricky to figure out. I thought about the different cases, and I got to something that looked reasonable, but a feeling of tiredness came over me and I decided to write the naive solution. Surprisingly, it took very little time and was correct, and so the second day was done.</p>
+<p>I looked online at solutions and everyone seemed to converge on the bruteforce approach. I asked claude if it can think of something better, and it came up with my suggestion, to generate the periodics instead of verifying. I had it write up a solution, and to my snarky enjoyment, it fell into the pitfalls I anticipated - namely, that two tuples can represent the same number (consider (1, 4) and (11, 2)). I pointed it out, it corrected, but still it was way off in terms of the result. At that point I intervened and explained my approach (to do it serially) and it got excited. I gave it the pointers, and it went ahead and implemented it with one mistake, quickly corrected, and voilà, we got the same result with a 100x speedup. Pretty dope. Btw, here's the solution à la Claude.</p>
+<p>Optimized Solution Approach:</p>
+<ul>
+<li>Core idea: Iterate through valid periodic numbers directly instead of testing every
+number in the range</li>
+<li>Key function: nextPeriodic(n) computes the next periodic number after n by considering
+a small set of candidates:</li>
+<li>Same length: For each valid period p dividing n.length, try pattern n.slice(0,p) or
+n.slice(0,p)+1</li>
+<li>Next length: Use largest period dividing the new length with pattern 10^(period-1)
+(e.g., 999 → 1010, not 1111)</li>
+<li>Algorithm: Start at first periodic in range, then repeatedly call nextPeriodic() until
+exceeding range end</li>
+<li>Performance: Reduces from checking ~27M candidates to generating only ~32 valid
+numbers</li>
+<li>Result: ~95x speedup by transforming O(range_size) brute force into
+O(number_of_solutions) iteration</li>
+</ul>
+<p>I wouldn't completely trust the big-O analysis, but other than that pretty good explanation.</p>
+<p>Here's the final code:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;fs&#39;</span><span class="p">;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s2">&quot;2/input.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;utf-8&#39;</span><span class="p">);</span>
+
+<span class="kd">function</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">[][]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">t</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">))</span>
+<span class="w">        </span><span class="p">.</span><span class="nx">map</span><span class="p">(([</span><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">[</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">a</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">b</span><span class="p">)]);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span><span class="w"> </span><span class="nx">isPeriodic</span><span class="p">(</span><span class="nx">n</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">n</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="nx">p</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span><span class="w"> </span><span class="nx">p</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nx">p</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">valid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">p</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="nx">s</span><span class="p">[</span><span class="nx">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">p</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">valid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">                </span><span class="k">break</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">valid</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// Generate periodic number from pattern and repetitions</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">makePeriodicNumber</span><span class="p">(</span><span class="nx">pattern</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">reps</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">pattern</span><span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="nx">reps</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="c1">// Find first periodic number of given length</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">firstPeriodicOfLength</span><span class="p">(</span><span class="nx">len</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Find LARGEST period that divides len (gives smallest number)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">period</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">len</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span><span class="w"> </span><span class="nx">period</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="nx">period</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">len</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nx">period</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">const</span><span class="w"> </span><span class="nx">pattern</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;1&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39;0&#39;</span><span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="nx">period</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">makePeriodicNumber</span><span class="p">(</span><span class="nx">pattern</span><span class="p">,</span><span class="w"> </span><span class="nx">len</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">period</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// Find next periodic number after n</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">nextPeriodic</span><span class="p">(</span><span class="nx">n</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">n</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">candidates</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
+
+<span class="w">    </span><span class="c1">// Case 1: Next length (always the minimal periodic of that length)</span>
+<span class="w">    </span><span class="nx">candidates</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">firstPeriodicOfLength</span><span class="p">(</span><span class="nx">len</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// Case 2: Same length - try all possible periods</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">period</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="nx">period</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">len</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span><span class="w"> </span><span class="nx">period</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">len</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nx">period</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">reps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">len</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">period</span><span class="p">;</span>
+
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">pattern</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">period</span><span class="p">);</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">patternNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">pattern</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// Try current pattern</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">samePattern</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makePeriodicNumber</span><span class="p">(</span><span class="nx">pattern</span><span class="p">,</span><span class="w"> </span><span class="nx">reps</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">samePattern</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="nx">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">candidates</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">samePattern</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">// Try pattern + 1 (if it doesn&#39;t overflow)</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">nextPattern</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">patternNum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">).</span><span class="nx">toString</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">nextPattern</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">period</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">const</span><span class="w"> </span><span class="nx">nextCandidate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makePeriodicNumber</span><span class="p">(</span><span class="nx">nextPattern</span><span class="p">,</span><span class="w"> </span><span class="nx">reps</span><span class="p">);</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">nextCandidate</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="nx">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">candidates</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">nextCandidate</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(...</span><span class="nx">candidates</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">!</span><span class="nb">isNaN</span><span class="p">(</span><span class="nx">c</span><span class="p">)));</span>
+<span class="p">}</span>
+
+<span class="c1">// Optimized version</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">twoOptimized</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">ranges</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="nx">ranges</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(([</span><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Start at a if it&#39;s periodic, otherwise find next periodic after a</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">isPeriodic</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">nextPeriodic</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nx">current</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">current</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">nextPeriodic</span><span class="p">(</span><span class="nx">current</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">sum</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// Brute force for comparison</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">twoBruteForce</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">ranges</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">ranges</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(([</span><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">a</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">b</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isPeriodic</span><span class="p">(</span><span class="nx">i</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">i</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">sum</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>After wrapping everything up and deciding to write a blog post, I of course immediately said to myself "why didn't you write it on the go, this would have made it less of a hassle". The next option that came to mind was to write a literate jupyter notebook (i've been looking at <a href="https://solve.it.com/">solveit</a> recently) but that's for python. Or is it? quick google AI search told me there's a <em>deno</em> kernel which I installed. That solves two problems, the aforementioned one and the embarrassing REPL of js/ts, with the caveat being, this doesn't reproduce the real ts dev cycle. Still, one thing at a time, get good at the language, and then learn the tooling.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

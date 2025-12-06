@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Dependency Parsing</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="I watched the dependency parsing lecture from Stanford's NLP course about a month ago. I kinda got it fuzzily back then, but I figured I could use..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li class="active"><a href="/category/programming.html">Programming</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/drafts/dependency-parsing.html" rel="bookmark"
+           title="Permalink to Dependency Parsing">Dependency Parsing</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-11-23T14:18:00+02:00">
+                Published: Sun 23 November 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+
+</footer><!-- /.post-info -->      <p>I watched the <a href="https://www.youtube.com/watch?v=KVKvde-_MYc">dependency parsing lecture</a> from Stanford's NLP course about a month ago. I kinda got it fuzzily back then, but I figured I could use a refresher. Instead of rewatching the lecture I want to experiment with an AI-driven active learning approach, so I hooked up the lecture notes, the lecture transcript and the assignment to the new Gemini 3 Pro and asked it to tutor me on the subject.</p>
+<p>We start by talking about dependency parsing as an idea in a dialogue fashion. This does mean that I have to later verify what I learned is correct. Now, in what I know about grammar you have words and relations between them, for example a verb has an object, a subject etc. Dependency parsing define a tree where a word is a head and has dependencies, for example in the phrase "I ate fish", "fish" and "I" are dependents of "ate". Why is that? one heuristic is to use the removal test, does the sentence make sense if I remove the head? in this case, the results are</p>
+<ul>
+<li>I -&gt; ate fish </li>
+<li>ate -&gt; I fish</li>
+<li>fish -&gt; I ate
+the second option differs the most from the sentence in this case which tells us "ate" is the head.</li>
+</ul>
+<p>Now, if a sentence is a tree, then what is the root? the axiomatic definition is that there should be a main verb and that is the root.</p>
+<p>Okay, I wrote this mostly for myself to solidify, let's move on to the algorithm. The algorithm for building a dependency tree that we learn on the lecture is transition parsing. It represents the tree building as a process done by a machine as follows:
+- a stack initialized with [ROOT]
+- the sentence buffer [I, ate, fish]
+- dependency list []
+- a set of actions:
+    - SHIFT: push the first word in the buffer into the stack
+    - LEFT-ARC: makes the top of the stack the owner of the word below, and pops the word below, eg LEFT-ARC on [ROOT, I, ate] would add (ate -&gt; I) to the the dependency list and pop "I".
+    - RIGHT-ARC: similarly, except the top of the stack depends on the word below.</p>
+<p>This defines a tree since a word is removed once it has a parent, and we stop only when all words are removed. I asked gemini, is that process capable of building any arbitrary tree. The answer is no, it requires the tree to be "projective". What that means is if we draw the arcs we defined over the sentence, then no two arcs cross one another (like parentheses). Is this requirement realistic? supposedly in English it is a reasonable assumption. In more flexible languages like Czech, it isn't.</p>
+<p>By the way, I know my treatment above made this seem an easy problem, but consider the following sentences:
+- Moscow sent troops into Afghanistan 
+- Leaving the store unattended, I went outside to watch the parade
+- I am extremely short
+- Would you like brown rice or garlic naan?
+It definitely requires a degree of knowledge in grammar to answer these correctly and confidently. Luckily, the labelers already did that for us, and we only need to train a model.</p>
+<p>Let's move on to the <a href="https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1246/assignments/a2.pdf">exercise</a>.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
