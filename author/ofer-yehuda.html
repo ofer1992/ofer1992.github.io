@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Integrably Sorry - Ofer Yehuda</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                    <li><a href="/category/til.html">TIL</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/anthropic-api-sse-and-eager-tool-dispatch.html">Anthropic API SSE and Eager Tool Dispatch</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2026-07-08T17:44:00+03:00">
+                Published: Wed 08 July 2026
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/til.html">TIL</a>.</p>
+
+</footer><!-- /.post-info --><p>Today I was looking at how Eager Tool Dispatch might be implemented. That's when you execute tool calls while they are streaming. It might sound finicky at first, perhaps you need to parse partial jsons. Luckily that's not the case.</p>
+<p>Anthropic API responses are streamed using SSE (server-sent events). Let's start with an example. Imagine you send "what's the weather in SF and NYC?" to an agent with a <code>get_weather</code> function.</p>
+<p>The streaming response might look something like this.</p>
+<div class="highlight"><pre><span></span><code>+   0ms  message_start        usage.input_tokens=620, output_tokens=5
++   0ms  ping
++   0ms  [idx 0] content_block_start   &lt;text&gt;
++   0ms  [idx 0] content_block_delta   text=&quot;I&#39;ll check the current&quot;
++ 433ms  [idx 0] content_block_delta   text=&quot; weather in both cities&quot; ...
++ 435ms  [idx 0] content_block_stop
++ 435ms  [idx 1] content_block_start   &lt;tool_use id=toolu_vrtx_01ANbu… name=get_weather&gt;
++ 435ms  [idx 1] content_block_delta   partial_json=&#39;&#39;
++ 777ms  [idx 1] content_block_delta   partial_json=&#39;{&quot;city&quot;:&#39;
++ 778ms  [idx 1] content_block_delta   partial_json=&#39; &quot;San Francis&#39;
++ 778ms  [idx 1] content_block_delta   partial_json=&#39;co&quot;&#39;
++ 786ms  [idx 1] content_block_delta   partial_json=&#39;, &quot;unit&quot;: &quot;celsius&quot;}&#39;
++ 789ms  [idx 1] content_block_stop        ◄── ETD fires: dispatch get_weather(SF) now
++ 789ms  [idx 2] content_block_start   &lt;tool_use id=toolu_vrtx_02XyZq… name=get_weather&gt;
++ 790ms  [idx 2] content_block_delta   partial_json=&#39;&#39;
++1002ms  [idx 2] content_block_delta   partial_json=&#39;{&quot;city&quot;:&#39;
++1003ms  [idx 2] content_block_delta   partial_json=&#39; &quot;New Yor&#39;
++1004ms  [idx 2] content_block_delta   partial_json=&#39;k&quot;&#39;
++1010ms  [idx 2] content_block_delta   partial_json=&#39;, &quot;unit&quot;: &quot;celsius&quot;}&#39;
++1011ms  [idx 2] content_block_stop        ◄── ETD fires: dispatch get_weather(NYC) now
++1013ms  message_delta        stop_reason=tool_use, output_tokens=142
++1013ms  message_stop
+</code></pre></div>
+
+<p>Each event has a type (<code>message_start/delta/stop</code>, <code>content_block_start/delta/stop</code>) and content. The response is a sequence of content blocks, each is either text or a tool call, the content is a partial "delta" which you can concatenate, and it explicitly tells you when a block ends, at which point you know you have the full tool call. This let's you dispatch the <code>get_weather</code> call to SF while you wait for the tool call to NY, saving some latency.</p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/a-fable.html" rel="bookmark"
+                           title="Permalink to A Fable">A Fable</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2026-06-12T10:15:00+03:00">
+                Published: Fri 12 June 2026
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/life.html">Life</a>.</p>
+
+</footer><!-- /.post-info -->                <p>Claude 5 Fable, the "safer" brother of Claude Mythos was released this week. I took the chance to play around with it before it becomes API-charged. I told my partner about it and she wanted to know what it can do that Opus can't. How to show this? I used …</p>
+                <a class="readmore" href="/a-fable.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/notes-from-the-firehose-1-three-kinds-of-hard.html" rel="bookmark"
+                           title="Permalink to Notes from the Firehose #1 — Three kinds of hard">Notes from the Firehose #1 — Three kinds of hard</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2026-05-30T18:27:00+03:00">
+                Published: Sat 30 May 2026
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/life.html">Life</a>.</p>
+
+</footer><!-- /.post-info -->                <p>It's been five months since I started my new role as a data scientist at Walmart. I'm still going through the usual early stages of a new job, and the usual challenges that come with them. I wanted to share some thoughts I've been having lately.</p>
+<p>So far I've come …</p>
+                <a class="readmore" href="/notes-from-the-firehose-1-three-kinds-of-hard.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/aoc-2025-day-6.html" rel="bookmark"
+                           title="Permalink to AoC 2025 - Day 6">AoC 2025 - Day 6</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-06T19:47:00+02:00">
+                Published: Sat 06 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->                <div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;node:fs&quot;</span><span class="p">;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s2">&quot;input.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;utf-8&quot;</span><span class="p">);</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`\</span>
+<span class="sb">123 328  51 64 </span>
+<span class="sb"> 45 64  387 23 </span>
+<span class="sb">  6 98  215 314</span>
+<span class="sb">*   +   *   +  `</span><span class="p">;</span>
+</code></pre></div>
+
+<h2>Part 1</h2>
+<p>In the first part of today, the input consists of 3 rows of space separated numbers and a row of space separated …</p>
+                <a class="readmore" href="/aoc-2025-day-6.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/aoc-2025-day-5.html" rel="bookmark"
+                           title="Permalink to AoC 2025 - Day 5">AoC 2025 - Day 5</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-05T11:18:00+02:00">
+                Published: Fri 05 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->                <div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;node:fs&#39;</span><span class="p">;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s1">&#39;input.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;utf-8&#39;</span><span class="p">);</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`\</span>
+<span class="sb">3-5</span>
+<span class="sb">10-14</span>
+<span class="sb">16-20</span>
+<span class="sb">12-18</span>
+
+<span class="sb">1</span>
+<span class="sb">5</span>
+<span class="sb">8</span>
+<span class="sb">11</span>
+<span class="sb">17</span>
+<span class="sb">32`</span><span class="p">;</span>
+</code></pre></div>
+
+<h2>Part 1</h2>
+<p>The first part of the input has a list of inclusive intervals, eg 3-5 for 3, 4, 5 etc. The second part has a …</p>
+                <a class="readmore" href="/aoc-2025-day-5.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/aoc-2025-day-4.html" rel="bookmark"
+                           title="Permalink to AoC 2025 - Day 4">AoC 2025 - Day 4</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-04T11:13:00+02:00">
+                Published: Thu 04 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->                <p>This one was quite easy, I quickly saw it can be solved by convolution but since I was using javascript I suffered with all the array handling and the for loops. After I finished the problem, I wanted to my hands on the python implementation, behold</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np …</span></code></pre></div>
+                <a class="readmore" href="/aoc-2025-day-4.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/aoc-2025-day-3.html" rel="bookmark"
+                           title="Permalink to AoC 2025 - Day 3">AoC 2025 - Day 3</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-03T12:54:00+02:00">
+                Published: Wed 03 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->                <p>Day 3 of AoC 2025. Following up on <img alt="yesterday" src="/advent-of-code-2025.html">, today I'm gonna try to solve the question using typescript, but in a Jupyter notebook, writing along while programming. Today's input looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;node:fs&quot;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s2">&quot;input.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">).</span><span class="nx">slice …</span></code></pre></div>
+                <a class="readmore" href="/aoc-2025-day-3.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/advent-of-code-2025.html" rel="bookmark"
+                           title="Permalink to Advent of Code 2025">Advent of Code 2025</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-12-02T16:38:00+02:00">
+                Published: Tue 02 December 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/aoc.html">aoc</a> </p>
+</footer><!-- /.post-info -->                <p>AoC is back for another year! This time it's a bit shorter, only 12 days. This might be a good change overall, since in 2023 I fizzled out around day 20.</p>
+<p>The first day has us simulating a dial ranging from 0 to 99 on a safe, where we needed …</p>
+                <a class="readmore" href="/advent-of-code-2025.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/preparing-for-an-nlp-interview-day-5-and-6.html" rel="bookmark"
+                           title="Permalink to Preparing for an NLP interview - Day 5 and 6">Preparing for an NLP interview - Day 5 and 6</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-11-02T15:12:00+02:00">
+                Published: Sun 02 November 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->                <h2>Day 5</h2>
+<p>Today we'll go thru two chapters in the NLP transformers book. The first is QA, which is a task I haven't tried before and it seems interesting. There are two approaches: extractive and generative. Generative might be more common today with LLMs, since its just having the model …</p>
+                <a class="readmore" href="/preparing-for-an-nlp-interview-day-5-and-6.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/preparing-for-an-nlp-interview-day-3-and-4.html" rel="bookmark"
+                           title="Permalink to Preparing for an NLP interview - Day 3 and 4">Preparing for an NLP interview - Day 3 and 4</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2025-10-31T11:14:00+02:00">
+                Published: Fri 31 October 2025
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/programming.html">Programming</a>.</p>
+<p>tags: <a href="/tag/nlp.html">nlp</a> <a href="/tag/interview-prep.html">interview-prep</a> </p>
+</footer><!-- /.post-info -->                <p>Another day has come. This one will be somewhat disjointed, I have an ~1.5 hrs in the morning and maybe some later in the evening.</p>
+<p>Yesterday I remembered I watched <a href="https://www.youtube.com/watch?v=FkHAYG8vASQ">this</a> youtube interview with a NLP data scientist and he listed the important stuff you kinda gotta know. I …</p>
+                <a class="readmore" href="/preparing-for-an-nlp-interview-day-3-and-4.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+<p class="paginator">
+    Page 1 / 4
+        <a href="/author/ofer-yehuda2.html">&raquo;</a>
+        <a href="/author/ofer-yehuda4.html">&#8649;</a>
+</p>
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

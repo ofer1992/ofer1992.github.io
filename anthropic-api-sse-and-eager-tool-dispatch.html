@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Anthropic API SSE and Eager Tool Dispatch</title>
+        <link rel="stylesheet" href="/theme/css/custom.css" />
+        <meta name="description" content="Today I was looking at how Eager Tool Dispatch might be implemented. That's when you execute tool calls while they are streaming. It might sound..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Integrably Sorry</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about.html">About</a></li>
+                    <li><a href="/category/dailies.html">Dailies</a></li>
+                    <li><a href="/category/life.html">Life</a></li>
+                    <li><a href="/category/math.html">Math</a></li>
+                    <li><a href="/category/programming.html">Programming</a></li>
+                    <li class="active"><a href="/category/til.html">TIL</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/anthropic-api-sse-and-eager-tool-dispatch.html" rel="bookmark"
+           title="Permalink to Anthropic API SSE and Eager Tool Dispatch">Anthropic API SSE and Eager Tool Dispatch</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2026-07-08T17:44:00+03:00">
+                Published: Wed 08 July 2026
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/ofer-yehuda.html">Ofer Yehuda</a>
+        </address>
+<p>In <a href="/category/til.html">TIL</a>.</p>
+
+</footer><!-- /.post-info -->      <p>Today I was looking at how Eager Tool Dispatch might be implemented. That's when you execute tool calls while they are streaming. It might sound finicky at first, perhaps you need to parse partial jsons. Luckily that's not the case.</p>
+<p>Anthropic API responses are streamed using SSE (server-sent events). Let's start with an example. Imagine you send "what's the weather in SF and NYC?" to an agent with a <code>get_weather</code> function.</p>
+<p>The streaming response might look something like this.</p>
+<div class="highlight"><pre><span></span><code>+   0ms  message_start        usage.input_tokens=620, output_tokens=5
++   0ms  ping
++   0ms  [idx 0] content_block_start   &lt;text&gt;
++   0ms  [idx 0] content_block_delta   text=&quot;I&#39;ll check the current&quot;
++ 433ms  [idx 0] content_block_delta   text=&quot; weather in both cities&quot; ...
++ 435ms  [idx 0] content_block_stop
++ 435ms  [idx 1] content_block_start   &lt;tool_use id=toolu_vrtx_01ANbu… name=get_weather&gt;
++ 435ms  [idx 1] content_block_delta   partial_json=&#39;&#39;
++ 777ms  [idx 1] content_block_delta   partial_json=&#39;{&quot;city&quot;:&#39;
++ 778ms  [idx 1] content_block_delta   partial_json=&#39; &quot;San Francis&#39;
++ 778ms  [idx 1] content_block_delta   partial_json=&#39;co&quot;&#39;
++ 786ms  [idx 1] content_block_delta   partial_json=&#39;, &quot;unit&quot;: &quot;celsius&quot;}&#39;
++ 789ms  [idx 1] content_block_stop        ◄── ETD fires: dispatch get_weather(SF) now
++ 789ms  [idx 2] content_block_start   &lt;tool_use id=toolu_vrtx_02XyZq… name=get_weather&gt;
++ 790ms  [idx 2] content_block_delta   partial_json=&#39;&#39;
++1002ms  [idx 2] content_block_delta   partial_json=&#39;{&quot;city&quot;:&#39;
++1003ms  [idx 2] content_block_delta   partial_json=&#39; &quot;New Yor&#39;
++1004ms  [idx 2] content_block_delta   partial_json=&#39;k&quot;&#39;
++1010ms  [idx 2] content_block_delta   partial_json=&#39;, &quot;unit&quot;: &quot;celsius&quot;}&#39;
++1011ms  [idx 2] content_block_stop        ◄── ETD fires: dispatch get_weather(NYC) now
++1013ms  message_delta        stop_reason=tool_use, output_tokens=142
++1013ms  message_stop
+</code></pre></div>
+
+<p>Each event has a type (<code>message_start/delta/stop</code>, <code>content_block_start/delta/stop</code>) and content. The response is a sequence of content blocks, each is either text or a tool call, the content is a partial "delta" which you can concatenate, and it explicitly tells you when a block ends, at which point you know you have the full tool call. This let's you dispatch the <code>get_weather</code> call to SF while you wait for the tool call to NY, saving some latency.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="https://github.com/ofer1992">github</a></li>
+                            <li><a href="https://x.com/oferyehuda">twitter</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
